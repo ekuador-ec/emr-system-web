@@ -1,0 +1,81 @@
+/* ----- Plus Jakarta Sans ----- */
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/plus-jakarta-sans/PlusJakartaSans-Bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/fonts/plus-jakarta-sans/PlusJakartaSans-ExtraBold.woff2") format("woff2");
+}
+
+/* ----- Schibsted Grotesk ----- */
+@font-face {
+  font-family: "Schibsted Grotesk";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/schibsted-grotesk/SchibstedGrotesk-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Schibsted Grotesk";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/schibsted-grotesk/SchibstedGrotesk-Italic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Schibsted Grotesk";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/schibsted-grotesk/SchibstedGrotesk-Medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Schibsted Grotesk";
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/schibsted-grotesk/SchibstedGrotesk-MediumItalic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Schibsted Grotesk";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/schibsted-grotesk/SchibstedGrotesk-SemiBold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Schibsted Grotesk";
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/schibsted-grotesk/SchibstedGrotesk-SemiBoldItalic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Schibsted Grotesk";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/schibsted-grotesk/SchibstedGrotesk-Bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Schibsted Grotesk";
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/schibsted-grotesk/SchibstedGrotesk-BoldItalic.woff2") format("woff2");
+}
