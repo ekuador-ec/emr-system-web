@@ -63,7 +63,6 @@ export interface InviteUserPayload {
   role: UserRole;
   firstName: string;
   lastName: string;
-  temporaryPassword?: string;
 }
 
 /**
