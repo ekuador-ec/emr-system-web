@@ -117,7 +117,7 @@ export class SupabaseUserRepository implements UserRepository {
       .single<ProfileRow>();
 
     if (error || !data) {
-      throw new Error("Error al actualizar perfil");
+      throw new Error(error?.message || "Error al actualizar perfil");
     }
 
     return mapProfileRow(data);
