@@ -17,4 +17,8 @@ export interface AuthRepository {
    * @returns An unsubscribe function.
    */
   onAuthStateChange(callback: (user: UserProfile | null) => void): () => void;
+
+  sendPasswordResetEmail(email: string): Promise<void>;
+
+  updatePassword(newPassword: string): Promise<void>;
 }

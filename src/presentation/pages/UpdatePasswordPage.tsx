@@ -1,52 +1,48 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { supabase } from '@/infrastructure/config/supabaseClient'
 import { ThemeToggle } from '@/presentation/components/ThemeToggle'
+import { useUpdatePassword } from '@/presentation/hooks/useUpdatePassword'
+import { updatePasswordSchema, type UpdatePasswordFormData } from '@/presentation/schemas/auth.schema'
 
 export function UpdatePasswordPage() {
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [isUpdating, setIsUpdating] = useState(false)
+  const [sessionError, setSessionError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
   const navigate = useNavigate()
+
+  const { mutateAsync: updatePassword, isPending: isUpdating, error: updateError } = useUpdatePassword()
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<UpdatePasswordFormData>({
+    resolver: zodResolver(updatePasswordSchema),
+    defaultValues: {
+      password: '',
+      confirmPassword: '',
+    },
+  })
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
-        setError('El enlace de invitación es inválido o ha expirado. Por favor solicita uno nuevo.')
+        setSessionError('El enlace es inválido o ha expirado. Por favor solicita uno nuevo.')
       }
     })
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres')
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden')
-      return
-    }
-
-    setIsUpdating(true)
-
+  const onSubmit = async (data: UpdatePasswordFormData) => {
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: password,
-      })
-
-      if (updateError) {
-        throw updateError
-      }
-
-      navigate('/', { replace: true })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al actualizar la contraseña')
-      setIsUpdating(false)
+      await updatePassword(data.password)
+      setSuccess(true)
+      setTimeout(() => {
+         navigate('/', { replace: true })
+      }, 3000)
+    } catch {
+      // Error is caught by updateError
     }
   }
 
@@ -68,10 +64,10 @@ export function UpdatePasswordPage() {
       <div className="card" style={{ width: '100%', maxWidth: '420px' }}>
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-8)' }}>
           <h1 style={{ marginBottom: 'var(--space-2)' }}>Configurar Contraseña</h1>
-          <p>Ingresa tu nueva contraseña para activar tu cuenta en el EMR System</p>
+          <p>Ingresa tu nueva contraseña para acceder a tu cuenta en el EMR System</p>
         </div>
 
-        {error && (
+        {sessionError && (
           <div
             style={{
               padding: 'var(--space-3)',
@@ -83,61 +79,104 @@ export function UpdatePasswordPage() {
               fontWeight: 'var(--font-weight-medium)',
             }}
           >
-            {error}
+            {sessionError}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 'var(--space-4)' }}>
-            <label
-              htmlFor="new-password"
-              style={{ display: 'block', marginBottom: 'var(--space-1)' }}
-            >
-              Nueva Contraseña
-            </label>
-            <input
-              id="new-password"
-              type="password"
-              placeholder="Mínimo 6 caracteres"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </div>
-
-          <div style={{ marginBottom: 'var(--space-6)' }}>
-            <label
-              htmlFor="confirm-password"
-              style={{ display: 'block', marginBottom: 'var(--space-1)' }}
-            >
-              Confirmar Contraseña
-            </label>
-            <input
-              id="confirm-password"
-              type="password"
-              placeholder="Repite la contraseña"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={isUpdating || (!!error && error.includes('inválido'))}
+        {updateError && (
+          <div
             style={{
-              width: '100%',
-              padding: 'var(--space-3) var(--space-4)',
-              fontSize: 'var(--font-size-base)',
-              opacity: isUpdating ? 0.7 : 1,
+              padding: 'var(--space-3)',
+              marginBottom: 'var(--space-4)',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--color-danger-light)',
+              color: 'var(--color-danger)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 'var(--font-weight-medium)',
             }}
           >
-            {isUpdating ? 'Guardando...' : 'Guardar y Entrar'}
-          </button>
-        </form>
+            {updateError.message}
+          </div>
+        )}
+
+        {success && (
+          <div
+            style={{
+              padding: 'var(--space-3)',
+              marginBottom: 'var(--space-4)',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--color-success-light)',
+              color: 'var(--color-success)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 'var(--font-weight-medium)',
+              border: '1px solid var(--color-success)',
+            }}
+          >
+            Contraseña actualizada exitosamente. Redirigiendo...
+          </div>
+        )}
+
+        {!success && (
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <div style={{ marginBottom: 'var(--space-4)' }}>
+              <label
+                htmlFor="new-password"
+                style={{ display: 'block', marginBottom: 'var(--space-1)' }}
+              >
+                Nueva Contraseña
+              </label>
+              <input
+                id="new-password"
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                {...register('password')}
+                style={errors.password ? { borderColor: 'var(--color-danger)' } : undefined}
+                disabled={!!sessionError}
+              />
+              {errors.password && (
+                <small style={{ color: 'var(--color-danger)', marginTop: 'var(--space-1)', display: 'block' }}>
+                  {errors.password.message}
+                </small>
+              )}
+            </div>
+
+            <div style={{ marginBottom: 'var(--space-6)' }}>
+              <label
+                htmlFor="confirm-password"
+                style={{ display: 'block', marginBottom: 'var(--space-1)' }}
+              >
+                Confirmar Contraseña
+              </label>
+              <input
+                id="confirm-password"
+                type="password"
+                placeholder="Repite la contraseña"
+                {...register('confirmPassword')}
+                style={errors.confirmPassword ? { borderColor: 'var(--color-danger)' } : undefined}
+                disabled={!!sessionError}
+              />
+              {errors.confirmPassword && (
+                <small style={{ color: 'var(--color-danger)', marginTop: 'var(--space-1)', display: 'block' }}>
+                  {errors.confirmPassword.message}
+                </small>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={isUpdating || !!sessionError}
+              style={{
+                width: '100%',
+                padding: 'var(--space-3) var(--space-4)',
+                fontSize: 'var(--font-size-base)',
+                opacity: isUpdating ? 0.7 : 1,
+              }}
+            >
+              {isUpdating ? 'Guardando...' : 'Guardar y Entrar'}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   )

@@ -91,4 +91,24 @@ export class SupabaseAuthRepository implements AuthRepository {
 
     return () => subscription.unsubscribe();
   }
+
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/update-password`,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  async updatePassword(newPassword: string): Promise<void> {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
 }

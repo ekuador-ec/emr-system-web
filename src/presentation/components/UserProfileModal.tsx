@@ -5,6 +5,66 @@ import { useAuth } from "@/presentation/hooks/useAuth";
 import { useUpdateProfile } from "@/presentation/hooks/useUpdateProfile";
 import { useToastStore } from "@/presentation/components/Toaster";
 import { profileSchema, type ProfileFormValues } from "@/presentation/schemas/user.schema";
+import { useUpdatePassword } from "@/presentation/hooks/useUpdatePassword";
+import { updatePasswordSchema, type UpdatePasswordFormData } from "@/presentation/schemas/auth.schema";
+
+function UpdatePasswordForm() {
+  const { mutateAsync: updatePassword, isPending } = useUpdatePassword();
+  const { addToast } = useToastStore();
+  
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<UpdatePasswordFormData>({
+    resolver: zodResolver(updatePasswordSchema),
+    defaultValues: { password: "", confirmPassword: "" }
+  });
+
+  const onSubmit = async (data: UpdatePasswordFormData) => {
+    try {
+      await updatePassword(data.password);
+      addToast({ type: "success", message: "Contraseña actualizada exitosamente" });
+      reset();
+    } catch (error) {
+       addToast({ type: "error", message: error instanceof Error ? error.message : "Error al actualizar contraseña" });
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+        <div>
+          <label style={{ display: "block", marginBottom: "var(--space-1)", fontSize: "0.875rem" }}>Nueva Contraseña</label>
+          <input
+            type="password"
+            placeholder="Mínimo 6 caracteres"
+            {...register("password")}
+            disabled={isPending}
+            style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)" }}
+          />
+          {errors.password && <span style={{ color: "var(--color-error)", fontSize: "0.75rem" }}>{errors.password.message}</span>}
+        </div>
+        <div>
+          <label style={{ display: "block", marginBottom: "var(--space-1)", fontSize: "0.875rem" }}>Confirmar Contraseña</label>
+          <input
+            type="password"
+            placeholder="Repite la contraseña"
+            {...register("confirmPassword")}
+            disabled={isPending}
+            style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)" }}
+          />
+          {errors.confirmPassword && <span style={{ color: "var(--color-error)", fontSize: "0.75rem" }}>{errors.confirmPassword.message}</span>}
+        </div>
+      </div>
+      <div style={{ marginTop: "var(--space-3)", display: "flex", justifyContent: "flex-end" }}>
+         <button
+            type="submit"
+            disabled={isPending}
+            style={{ padding: "8px 16px", borderRadius: "6px", border: "none", backgroundColor: "var(--color-primary)", color: "white", cursor: isPending ? "not-allowed" : "pointer", opacity: isPending ? 0.7 : 1 }}
+          >
+            {isPending ? "Actualizando..." : "Actualizar Contraseña"}
+          </button>
+      </div>
+    </form>
+  )
+}
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -169,6 +229,7 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
               <label htmlFor="avatar-upload" className="btn-secondary" style={{ cursor: "pointer", display: "inline-block", textAlign: "center", padding: "8px 16px", borderRadius: "10px", backgroundColor: "var(--color-primary)", color: "white" }}>
+                Cambiar foto
               </label>
               <input
                 id="avatar-upload"
@@ -183,6 +244,7 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
                   onClick={handleRemoveAvatar}
                   style={{ background: "none", border: "none", color: "var(--color-error)", cursor: "pointer", fontSize: "0.875rem" }}
                 >
+                  Eliminar foto
                 </button>
               )}
             </div>
@@ -279,6 +341,11 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
             </button>
           </div>
         </form>
+
+        <hr style={{ margin: "var(--space-6) 0", border: "none", borderTop: "1px solid var(--color-border)" }} />
+        
+        <h3 style={{ marginTop: 0, marginBottom: "var(--space-4)", fontSize: "1.125rem" }}>Actualizar Contraseña</h3>
+        <UpdatePasswordForm />
       </div>
 
       <style>
