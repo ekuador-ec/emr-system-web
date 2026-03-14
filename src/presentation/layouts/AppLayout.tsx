@@ -1,11 +1,8 @@
 import { useAuth } from '@/presentation/hooks/useAuth'
 import { usePresenceTracker } from '@/presentation/hooks/usePresenceTracker'
-import { ThemeToggle } from '@/presentation/components/ThemeToggle'
-import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { UserProfileModal } from '@/presentation/components/UserProfileModal'
-import { Toaster } from '@/presentation/components/Toaster'
-import { Sidebar } from '@/presentation/components/Sidebar'
+import { useNavigate } from 'react-router-dom'
+import { ThemeToggle, UserProfileModal, Toaster, Sidebar } from '@/presentation/components'
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, isLoggingOut } = useAuth()
