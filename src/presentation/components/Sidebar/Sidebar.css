@@ -1,0 +1,345 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  height: 100dvh;
+  transition: width var(--transition-normal);
+  position: relative;
+  z-index: 40;
+}
+
+.sidebar.expanded {
+  width: 250px;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background-color: transparent;
+}
+
+.sidebar:hover::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+}
+
+.sidebar-toggle-btn {
+  position: absolute;
+  top: var(--space-6);
+  right: -14px;
+  background-color: var(--color-primary);
+  border: 2px solid var(--color-surface);
+  border-radius: var(--radius-full);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-primary-foreground);
+  z-index: 50;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  padding: 0;
+}
+
+.sidebar-toggle-btn:hover {
+  filter: brightness(1.1);
+  transform: scale(1.1);
+}
+
+.sidebar-header {
+  padding: var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  min-height: 72px; /* Matches header height */
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sidebar-brand-icon {
+  width: 32px;
+  height: 32px;
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+
+.sidebar-brand-text {
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-extrabold);
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--space-4);
+}
+
+.sidebar-group-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  font-weight: 800; /* Extra bold based on mockup */
+  color: var(--color-text-secondary);
+  letter-spacing: 0.05em;
+  padding: var(--space-1) var(--space-2);
+  margin-top: var(--space-2);
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity var(--transition-fast);
+}
+
+.sidebar.collapsed .sidebar-group-label {
+  opacity: 0;
+  height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm); /* Slightly sharper corners */
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm); /* Smaller text like mockup */
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  position: relative;
+}
+
+.sidebar.collapsed .sidebar-item {
+  justify-content: center;
+  padding: var(--space-2) 0;
+}
+
+.sidebar-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-icon);
+  transition: color var(--transition-fast);
+}
+
+.sidebar-item-label {
+  transition: opacity var(--transition-fast);
+}
+
+.sidebar.collapsed .sidebar-item-label {
+  display: none;
+}
+
+.sidebar-item:hover {
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+.sidebar-item:hover .sidebar-item-icon {
+  color: var(--color-text); /* Highlight icon fully white on hover in dark mode */
+}
+
+/* Base style for active item */
+.sidebar-item.active {
+  background-color: var(--color-primary-light); /* Will look dark blue/grey in dark mode */
+  color: var(--color-primary); /* Will look white or primary color */
+  font-weight: var(--font-weight-semibold);
+  /* The mockup shows this as a solid rounded shape, matching our border-radius above */
+}
+
+.sidebar-item.active .sidebar-item-icon {
+  color: var(--color-primary);
+}
+
+/* Bottom info section */
+.sidebar-footer {
+  padding: var(--space-4);
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  transition: all var(--transition-normal);
+}
+
+.sidebar.collapsed .sidebar-footer {
+  padding: var(--space-4) var(--space-2);
+}
+
+.client-info-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.sidebar.collapsed .client-info-container {
+  justify-content: center;
+}
+
+.company-logo-container {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full); /* Make it perfectly rounded as per mockup */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  flex-shrink: 0;
+}
+
+.company-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.company-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0; /* Important for flex children to allow text truncation */
+  overflow: hidden;
+}
+
+.sidebar.collapsed .company-info {
+  display: none;
+}
+
+.company-type {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.company-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.copyright-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}
+
+.sidebar.collapsed .copyright-info {
+  display: none;
+}
+
+.system-version {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+/* Mobile specific styling */
+.mobile-toggle-btn {
+  display: none;
+}
+
+.mobile-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+    width: 260px;
+  }
+  
+  .sidebar-toggle-btn {
+    display: none; /* Hide desktop toggle on mobile */
+  }
+
+  .mobile-toggle-btn {
+    display: flex;
+    position: fixed;
+    bottom: var(--space-6);
+    right: var(--space-6);
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
+    border: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-lg);
+    z-index: 50;
+    cursor: pointer;
+  }
+  
+  .mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 30;
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-normal);
+  }
+  
+  .mobile-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
