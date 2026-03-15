@@ -116,12 +116,12 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
     try {
       await updateProfile({
         userId: user.id,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: data.phone || null,
-        identificationNumber: data.identificationNumber || null,
-        medicalSpecialty: data.medicalSpecialty || null,
-        professionalCode: data.professionalCode || null,
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        phone: data.phone?.trim() || null,
+        identificationNumber: data.identificationNumber?.trim() || null,
+        medicalSpecialty: data.medicalSpecialty?.trim() || null,
+        professionalCode: data.professionalCode?.trim() || null,
         avatarFile: selectedFile || undefined,
         previousAvatarUrl: user.avatarUrl,
         removeAvatar,

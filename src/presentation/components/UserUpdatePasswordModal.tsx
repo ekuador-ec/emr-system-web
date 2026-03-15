@@ -43,7 +43,7 @@ export function UserUpdatePasswordTab({ onClose, isOpen, onDirtyChange }: UserUp
 
   const onSubmit = async (data: UpdatePasswordFormData) => {
     try {
-      await updatePassword(data.password);
+      await updatePassword(data.password.trim());
       addToast({ type: "success", message: "Contraseña actualizada exitosamente" });
     } catch (error) {
       addToast({ type: "error", message: error instanceof Error ? error.message : "Error al actualizar contraseña" });
