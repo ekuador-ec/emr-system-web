@@ -5,6 +5,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/presentation/hooks/useAuth'
 import { usePasswordReset } from '@/presentation/hooks/usePasswordReset'
 import { ThemeToggle } from '@/presentation/components/ThemeToggle'
+import { PasswordInput } from '@/presentation/components/PasswordInput'
 import { 
   loginSchema, 
   resetPasswordRequestSchema,
@@ -179,13 +180,12 @@ export function LoginPage() {
             >
               Contraseña
             </label>
-            <input
+            <PasswordInput
               id="login-password"
-              type="password"
               placeholder="••••••••"
               autoComplete="current-password"
               {...registerLogin('password')}
-              style={loginErrors.password ? { borderColor: 'var(--color-danger)' } : undefined}
+              error={!!loginErrors.password}
             />
             {loginErrors.password && (
               <small style={{ color: 'var(--color-danger)', marginTop: 'var(--space-1)', display: 'block' }}>
