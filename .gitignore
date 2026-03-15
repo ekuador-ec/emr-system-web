@@ -33,4 +33,6 @@ dist-ssr
 # Agent
 .agents/*
 .agent/*
-AGENTS.md
+
+# Supabase
+supabase/*
