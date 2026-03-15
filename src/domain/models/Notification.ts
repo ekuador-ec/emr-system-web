@@ -4,6 +4,7 @@ export interface Notification {
   id: string;
   recipientId: string;
   actorId: string | null;
+  actorName: string | null;
   type: NotificationType;
   entityId: string | null;
   isRead: boolean;

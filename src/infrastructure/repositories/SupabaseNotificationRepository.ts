@@ -20,7 +20,38 @@ export class SupabaseNotificationRepository implements NotificationRepository {
       throw new Error(`Error fetching notifications: ${error.message}`);
     }
 
-    return (data || []).map(this.mapToEntity);
+    if (!data || data.length === 0) return [];
+
+    const actorIds = [...new Set(
+      data.map((row) => row.actor_id).filter(Boolean)
+    )] as string[];
+
+    const actorMap = new Map<string, string>();
+
+    if (actorIds.length > 0) {
+      const { data: actors } = await this.supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .in('id', actorIds);
+
+      if (actors) {
+        for (const actor of actors) {
+          const name = [actor.first_name, actor.last_name].filter(Boolean).join(' ');
+          if (name) actorMap.set(actor.id, name);
+        }
+      }
+    }
+
+    return data.map((row) => ({
+      id: row.id,
+      recipientId: row.recipient_id,
+      actorId: row.actor_id,
+      actorName: row.actor_id ? (actorMap.get(row.actor_id) ?? null) : null,
+      type: row.type,
+      entityId: row.entity_id,
+      isRead: row.is_read,
+      createdAt: new Date(row.created_at),
+    }));
   }
 
   async markAsRead(notificationId: string): Promise<void> {
@@ -44,18 +75,5 @@ export class SupabaseNotificationRepository implements NotificationRepository {
     if (error) {
       throw new Error(`Error marking all notifications as read: ${error.message}`);
     }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private mapToEntity(row: any): Notification {
-    return {
-      id: row.id,
-      recipientId: row.recipient_id,
-      actorId: row.actor_id,
-      type: row.type,
-      entityId: row.entity_id,
-      isRead: row.is_read,
-      createdAt: new Date(row.created_at),
-    };
   }
 }
