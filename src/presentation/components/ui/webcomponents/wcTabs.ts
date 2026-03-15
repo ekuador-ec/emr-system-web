@@ -4,7 +4,7 @@ const ATRIBUTOS = {
   SELECTED_INDEX: 'selected-index'
 } as const;
 
-class WcTabs extends HTMLElement {
+class wcTabs extends HTMLElement {
   private tabSlot?: HTMLSlotElement | null;
   private panelSlot?: HTMLSlotElement | null;
 
@@ -384,7 +384,7 @@ class WcTabs extends HTMLElement {
   }
 }
 
-customElements.define('wc-tabs', WcTabs);
+customElements.define('wc-tabs', wcTabs);
 
 declare module 'react' {
   namespace JSX {

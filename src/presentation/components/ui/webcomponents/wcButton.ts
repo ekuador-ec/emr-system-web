@@ -5,7 +5,7 @@ const ATRIBUTOS = {
   DISABLED: 'disabled'
 } as const;
 
-class WcButton extends HTMLElement {
+class wcButton extends HTMLElement {
 
   constructor() {
     super();
@@ -130,7 +130,7 @@ class WcButton extends HTMLElement {
   }
 }
 
-customElements.define('wc-button', WcButton);
+customElements.define('wc-button', wcButton);
 
 declare module 'react' {
   namespace JSX {

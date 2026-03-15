@@ -1,5 +1,5 @@
 import React from 'react';
-import './WcButton';
+import './wcButton';
 
 const ATRIBUTOS = {
   TITLE: 'title',
@@ -12,7 +12,7 @@ const ATRIBUTOS = {
 
 type WarningType = 'warning' | 'error' | 'success' | 'info';
 
-class WcWarning extends HTMLElement {
+class wcWarning extends HTMLElement {
   private confirmCallback: (() => void) | null = null;
   private cancelCallback: (() => void) | null = null;
   private boundHandleKeyDown: (e: KeyboardEvent) => void;
@@ -508,7 +508,7 @@ class WcWarning extends HTMLElement {
   }
 }
 
-customElements.define('wc-warning', WcWarning);
+customElements.define('wc-warning', wcWarning);
 
 declare module 'react' {
   namespace JSX {

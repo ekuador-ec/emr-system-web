@@ -5,8 +5,8 @@ import { useUpdatePassword } from "@/presentation/hooks/useUpdatePassword";
 import { useToastStore } from "@/presentation/components/Toaster";
 import { updatePasswordSchema, type UpdatePasswordFormData } from "@/presentation/schemas/auth.schema";
 import { Icon } from "@/presentation/components/Sidebar/icons/Icon";
-import "@/presentation/components/ui/webcomponents/WcButton";
-import "@/presentation/components/ui/webcomponents/WcWarning";
+import "@/presentation/components/ui/webcomponents/wcButton";
+import "@/presentation/components/ui/webcomponents/wcWarning";
 
 interface UserUpdatePasswordTabProps {
   onClose: () => void;

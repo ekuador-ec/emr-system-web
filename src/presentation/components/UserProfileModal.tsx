@@ -7,10 +7,10 @@ import { useToastStore } from "@/presentation/components/Toaster";
 import { profileSchema, type ProfileFormValues } from "@/presentation/schemas/user.schema";
 import { UserUpdatePasswordTab } from "./UserUpdatePasswordModal";
 import { Icon } from "@/presentation/components/Sidebar/icons/Icon";
-import "@/presentation/components/ui/webcomponents/WcButton";
-import "@/presentation/components/ui/webcomponents/WcTabs";
-import "@/presentation/components/ui/webcomponents/WcButtonCircle";
-import "@/presentation/components/ui/webcomponents/WcWarning";
+import "@/presentation/components/ui/webcomponents/wcButton";
+import "@/presentation/components/ui/webcomponents/wcTabs";
+import "@/presentation/components/ui/webcomponents/wcButtonCircle";
+import "@/presentation/components/ui/webcomponents/wcWarning";
 
 
 interface UserProfileModalProps {

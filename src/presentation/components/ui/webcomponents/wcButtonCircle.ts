@@ -7,7 +7,7 @@ const ATRIBUTOS = {
   TITLE: 'title'
 } as const;
 
-class WcButtonCircle extends HTMLElement {
+class wcButtonCircle extends HTMLElement {
   private isHovering = false;
 
   constructor() {
@@ -146,7 +146,7 @@ class WcButtonCircle extends HTMLElement {
   }
 }
 
-customElements.define('wc-button-circle', WcButtonCircle);
+customElements.define('wc-button-circle', wcButtonCircle);
 
 declare module 'react' {
   namespace JSX {
