@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { supabase } from '@/infrastructure/config/supabaseClient'
 import { ThemeToggle } from '@/presentation/components/ThemeToggle'
+import { PasswordInput } from '@/presentation/components/PasswordInput'
 import { useUpdatePassword } from '@/presentation/hooks/useUpdatePassword'
 import { updatePasswordSchema, type UpdatePasswordFormData } from '@/presentation/schemas/auth.schema'
 
@@ -125,12 +126,11 @@ export function UpdatePasswordPage() {
               >
                 Nueva Contraseña
               </label>
-              <input
+              <PasswordInput
                 id="new-password"
-                type="password"
                 placeholder="Mínimo 6 caracteres"
                 {...register('password')}
-                style={errors.password ? { borderColor: 'var(--color-danger)' } : undefined}
+                error={!!errors.password}
                 disabled={!!sessionError}
               />
               {errors.password && (
@@ -147,12 +147,11 @@ export function UpdatePasswordPage() {
               >
                 Confirmar Contraseña
               </label>
-              <input
+              <PasswordInput
                 id="confirm-password"
-                type="password"
                 placeholder="Repite la contraseña"
                 {...register('confirmPassword')}
-                style={errors.confirmPassword ? { borderColor: 'var(--color-danger)' } : undefined}
+                error={!!errors.confirmPassword}
                 disabled={!!sessionError}
               />
               {errors.confirmPassword && (

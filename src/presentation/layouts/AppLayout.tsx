@@ -3,6 +3,8 @@ import { usePresenceTracker } from '@/presentation/hooks/usePresenceTracker'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ThemeToggle, UserProfileModal, Toaster, Sidebar } from '@/presentation/components'
+import { NotificationBell } from '@/presentation/components/NotificationBell'
+import { useNotificationSubscription } from '@/presentation/hooks/useNotificationSubscription'
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, isLoggingOut } = useAuth()
@@ -10,6 +12,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
 
   usePresenceTracker(user?.id)
+  useNotificationSubscription(user?.id)
 
   const handleLogout = async () => {
     await logout()
@@ -91,6 +94,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </span>
               </button>
             )}
+            <NotificationBell userId={user?.id} />
             <ThemeToggle />
             <button
               type="button"
