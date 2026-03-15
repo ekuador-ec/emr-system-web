@@ -7,6 +7,7 @@ import { useToastStore } from "@/presentation/components/Toaster";
 import { profileSchema, type ProfileFormValues } from "@/presentation/schemas/user.schema";
 import { useUpdatePassword } from "@/presentation/hooks/useUpdatePassword";
 import { updatePasswordSchema, type UpdatePasswordFormData } from "@/presentation/schemas/auth.schema";
+import { PasswordInput } from "@/presentation/components/PasswordInput";
 
 function UpdatePasswordForm() {
   const { mutateAsync: updatePassword, isPending } = useUpdatePassword();
@@ -32,22 +33,22 @@ function UpdatePasswordForm() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
         <div>
           <label style={{ display: "block", marginBottom: "var(--space-1)", fontSize: "0.875rem" }}>Nueva Contraseña</label>
-          <input
-            type="password"
+          <PasswordInput
             placeholder="Mínimo 6 caracteres"
             {...register("password")}
             disabled={isPending}
+            error={!!errors.password}
             style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)" }}
           />
           {errors.password && <span style={{ color: "var(--color-error)", fontSize: "0.75rem" }}>{errors.password.message}</span>}
         </div>
         <div>
           <label style={{ display: "block", marginBottom: "var(--space-1)", fontSize: "0.875rem" }}>Confirmar Contraseña</label>
-          <input
-            type="password"
+          <PasswordInput
             placeholder="Repite la contraseña"
             {...register("confirmPassword")}
             disabled={isPending}
+            error={!!errors.confirmPassword}
             style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)" }}
           />
           {errors.confirmPassword && <span style={{ color: "var(--color-error)", fontSize: "0.75rem" }}>{errors.confirmPassword.message}</span>}
