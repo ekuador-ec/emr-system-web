@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/infrastructure/config/supabaseClient";
-import { ADMIN_USERS_QUERY_KEY } from "@/presentation/hooks/useAdminUsers";
 
-export function usePresenceSubscription() {
+export function usePresenceSubscription(enabled = true) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    if (!enabled) return;
+
     const channel = supabase
       .channel("presence-changes")
       .on(
@@ -17,7 +18,7 @@ export function usePresenceSubscription() {
           table: "presence_status",
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ADMIN_USERS_QUERY_KEY });
+          queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
         },
       )
       .subscribe();
@@ -25,5 +26,5 @@ export function usePresenceSubscription() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, enabled]);
 }
