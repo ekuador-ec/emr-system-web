@@ -4,6 +4,8 @@ import { useAdminUsers } from '@/presentation/hooks/useAdminUsers'
 import { usePresenceSubscription } from '@/presentation/hooks/usePresence'
 import type { AccountStatus, InviteUserPayload, UserRole, UserWithPresence } from '@/domain/models/User'
 import { USER_ROLE_LABELS, ACCOUNT_STATUS_LABELS } from '@/domain/models/User'
+import { InviteUserModal } from '@/presentation/components/InviteUserModal'
+import { Icon } from '@/presentation/components/Sidebar/icons/Icon'
 
 export function UsersManagementPage() {
   const { user: currentUser } = useAuth()
@@ -56,22 +58,23 @@ export function UsersManagementPage() {
         <button
           type="button"
           className="btn-primary"
-          onClick={() => setShowInviteForm(!showInviteForm)}
+          onClick={() => setShowInviteForm(true)}
+          style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}
         >
-          {showInviteForm ? 'Cancelar' : '+ Invitar Usuario'}
+          <Icon name="icon-user-plus" size={20} />
+          Invitar Usuario
         </button>
       </div>
 
       {/* Invite form */}
-      {showInviteForm && (
-        <InviteForm
-          onInvite={async (payload) => {
-            await inviteUser(payload)
-            setShowInviteForm(false)
-          }}
-          isInviting={isInviting}
-        />
-      )}
+      <InviteUserModal
+        isOpen={showInviteForm}
+        onClose={() => setShowInviteForm(false)}
+        onInvite={async (payload) => {
+          await inviteUser(payload)
+        }}
+        isInviting={isInviting}
+      />
 
       {/* Active users table */}
       <div className="card" style={{ overflowX: 'auto', marginBottom: 'var(--space-6)' }}>
@@ -316,133 +319,7 @@ function StatusBadge({ status }: { status: AccountStatus }) {
   )
 }
 
-function InviteForm({
-  onInvite,
-  isInviting,
-}: {
-  onInvite: (payload: InviteUserPayload) => Promise<void>
-  isInviting: boolean
-}) {
-  const [email, setEmail] = useState('')
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [role, setRole] = useState<UserRole>('doctor')
-  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    try {
-      await onInvite({
-        email: email.trim(),
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        role,
-      })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al invitar usuario')
-    }
-  }
-
-  const roles: UserRole[] = ['admin', 'doctor', 'nurse', 'receptionist', 'lab_technician', 'pharmacist']
-
-  return (
-    <div className="card" style={{ marginBottom: 'var(--space-6)' }}>
-      <h3 style={{ marginBottom: 'var(--space-4)' }}>Invitar Nuevo Usuario</h3>
-
-      {error && (
-        <div
-          style={{
-            padding: 'var(--space-3)',
-            marginBottom: 'var(--space-4)',
-            borderRadius: 'var(--radius-md)',
-            backgroundColor: 'var(--color-danger-light)',
-            color: 'var(--color-danger)',
-            fontSize: 'var(--font-size-sm)',
-          }}
-        >
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit}>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: 'var(--space-4)',
-            marginBottom: 'var(--space-4)',
-          }}
-        >
-          <div>
-            <label htmlFor="invite-first-name" style={{ display: 'block', marginBottom: 'var(--space-1)' }}>
-              Nombre
-            </label>
-            <input
-              id="invite-first-name"
-              type="text"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              required
-              placeholder="Juan"
-            />
-          </div>
-          <div>
-            <label htmlFor="invite-last-name" style={{ display: 'block', marginBottom: 'var(--space-1)' }}>
-              Apellido
-            </label>
-            <input
-              id="invite-last-name"
-              type="text"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              required
-              placeholder="Pérez"
-            />
-          </div>
-          <div>
-            <label htmlFor="invite-email" style={{ display: 'block', marginBottom: 'var(--space-1)' }}>
-              Correo electrónico
-            </label>
-            <input
-              id="invite-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="usuario@email.com"
-            />
-          </div>
-          <div>
-            <label htmlFor="invite-role" style={{ display: 'block', marginBottom: 'var(--space-1)' }}>
-              Rol
-            </label>
-            <select
-              id="invite-role"
-              value={role}
-              onChange={(e) => setRole(e.target.value as UserRole)}
-            >
-              {roles.map((r) => (
-                <option key={r} value={r}>
-                  {USER_ROLE_LABELS[r]}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          className="btn-primary"
-          disabled={isInviting}
-          style={{ opacity: isInviting ? 0.7 : 1 }}
-        >
-          {isInviting ? 'Invitando...' : 'Invitar Usuario'}
-        </button>
-      </form>
-    </div>
-  )
-}
 
 function ConfirmDeleteModal({
   user,
