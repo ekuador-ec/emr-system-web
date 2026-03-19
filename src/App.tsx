@@ -1,10 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { LoginPage } from '@/presentation/pages/LoginPage'
-import { UpdatePasswordPage } from '@/presentation/pages/UpdatePasswordPage'
-import { DashboardPage } from '@/presentation/pages/DashboardPage'
-import { UsersManagementPage } from '@/presentation/pages/UsersManagementPage'
-import { ProtectedRoute } from '@/presentation/components/ProtectedRoute'
-import { AppLayout } from '@/presentation/layouts/AppLayout'
+import { LoginPage } from '@/presentation/modules/auth/pages/LoginPage'
+import { UpdatePasswordPage } from '@/presentation/modules/auth/pages/UpdatePasswordPage'
+import { DashboardPage } from '@/presentation/modules/dashboard/pages/DashboardPage'
+import { UsersManagementPage } from '@/presentation/modules/users/pages/UsersManagementPage'
+import { PatientsPage } from '@/presentation/modules/patient/pages/PatientsPage'
+import { ProtectedRoute } from '@/presentation/modules/auth/components/ProtectedRoute'
+import { AppLayout } from '@/presentation/modules/shared/layouts/AppLayout'
 
 function App() {
   return (
@@ -20,6 +21,17 @@ function App() {
           <ProtectedRoute>
             <AppLayout>
               <DashboardPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/pacientes"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <PatientsPage />
             </AppLayout>
           </ProtectedRoute>
         }
