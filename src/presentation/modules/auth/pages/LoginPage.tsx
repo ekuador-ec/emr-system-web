@@ -70,7 +70,7 @@ export function LoginPage() {
 
   const companyLogoUrl = import.meta.env.VITE_COMPANY_LOGO_URL || '/favicon.ico'
   const companyType = import.meta.env.VITE_COMPANY_TYPE || 'Centro Médico'
-  const companyName = import.meta.env.VITE_COMPANY_NAME || 'Hospital General'
+  const companyName = import.meta.env.VITE_COMPANY_NAME || 'Entorno de Pruebas'
 
   return (
     <div
@@ -93,7 +93,7 @@ export function LoginPage() {
         }}
         className="hidden-mobile"
       >
-        <EkLogo size='lg'/>
+        <EkLogo size='sm'/>
       </div>
 
       {/* Theme toggle - All devices */}
@@ -122,8 +122,6 @@ export function LoginPage() {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '12px',
-              borderRadius: 'var(--radius-lg)',
-              backgroundColor: 'var(--color-background-secondary)',
               padding: 'var(--space-2) var(--space-6)',
               minHeight: '72px',
               maxWidth: '420px',
@@ -160,7 +158,7 @@ export function LoginPage() {
                   minWidth: 0,
                   flex: 1,
                   overflow: 'hidden',
-                  textAlign: 'left',
+                  textAlign: 'center',
                 }}
               >
                 {/* Desktop: alineado a la izquierda, Mobile: centrado */}
@@ -169,9 +167,9 @@ export function LoginPage() {
                     <h2
                       style={{
                         margin: 0,
-                        fontSize: '2.25rem',
+                        fontSize: '1.5rem',
                         fontWeight: 'var(--font-weight-bold)',
-                        color: 'var(--color-text-primary)',
+                        color: 'var(--color-text-secondary)',
                         lineHeight: 1.1,
                         width: '100%',
                         whiteSpace: 'nowrap',
@@ -190,7 +188,7 @@ export function LoginPage() {
                   {companyName && (
                     <span
                       style={{
-                        fontSize: '1.125rem',
+                        fontSize: '1.25rem',
                         fontWeight: 'var(--font-weight-medium)',
                         color: 'var(--color-text-secondary)',
                         whiteSpace: 'nowrap',
@@ -212,7 +210,7 @@ export function LoginPage() {
                     <h2
                       style={{
                         margin: 0,
-                        fontSize: '2.25rem',
+                        fontSize: '1.75rem',
                         fontWeight: 'var(--font-weight-bold)',
                         color: 'var(--color-text-primary)',
                         lineHeight: 1.1,
@@ -220,7 +218,7 @@ export function LoginPage() {
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        textAlign: 'left',
+                        textAlign: 'center',
                       }}
                       title={companyType}
                     >
@@ -233,7 +231,7 @@ export function LoginPage() {
                   {companyName && (
                     <span
                       style={{
-                        fontSize: '1.125rem',
+                        fontSize: '1.5rem',
                         fontWeight: 'var(--font-weight-medium)',
                         color: 'var(--color-text-secondary)',
                         whiteSpace: 'nowrap',
@@ -241,7 +239,7 @@ export function LoginPage() {
                         overflow: 'hidden',
                         width: '100%',
                         display: 'block',
-                        textAlign: 'left',
+                        textAlign: 'center',
                       }}
                       title={companyName}
                     >
@@ -457,7 +455,7 @@ export function LoginPage() {
         }}
       >
         <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <EkLogo size="lg" />
+          <EkLogo size="sm" />
         </div>
       </div>
 
