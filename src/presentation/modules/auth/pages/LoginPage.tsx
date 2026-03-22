@@ -5,6 +5,8 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/presentation/modules/auth/hooks/useAuth'
 import { usePasswordReset } from '@/presentation/modules/auth/hooks/usePasswordReset'
 import { ThemeToggle } from '@/presentation/modules/shared/components/ThemeToggle'
+import { EkLogo } from '@/presentation/modules/shared/components/branding/EkLogo'
+import { Footer } from '@/presentation/modules/shared/components/branding/Footer'
 import { PasswordInput } from '@/presentation/modules/shared/components/PasswordInput'
 import { 
   loginSchema, 
@@ -14,12 +16,12 @@ import {
 } from '@/presentation/modules/auth/schemas/auth.schema'
 
 export function LoginPage() {
-  const { login, isLoggingIn, loginError, isAuthenticated, isLoading } = useAuth()
+  const { login, isLoggingIn, isAuthenticated, isLoading } = useAuth()
   const navigate = useNavigate()
 
   const [isRecovering, setIsRecovering] = useState(false)
   const [recoverySuccess, setRecoverySuccess] = useState(false)
-  const { mutateAsync: requestPasswordReset, isPending: isResetting, error: resetError } = usePasswordReset()
+  const { mutateAsync: requestPasswordReset, isPending: isResetting } = usePasswordReset()
 
   const {
     register: registerLogin,
@@ -66,23 +68,193 @@ export function LoginPage() {
     }
   }
 
+  const companyLogoUrl = import.meta.env.VITE_COMPANY_LOGO_URL || '/favicon.ico'
+  const companyType = import.meta.env.VITE_COMPANY_TYPE || 'Centro Médico'
+  const companyName = import.meta.env.VITE_COMPANY_NAME || 'Hospital General'
+
   return (
     <div
       style={{
         minHeight: '100vh',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 'var(--space-4)',
+        flexDirection: 'column',
         position: 'relative',
       }}
     >
-      {/* Theme toggle */}
+      {/* EK Logo - Desktop only */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 'var(--space-4)',
+          left: 'var(--space-8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        className="hidden-mobile"
+      >
+        <EkLogo size='lg'/>
+      </div>
+
+      {/* Theme toggle - All devices */}
       <div style={{ position: 'absolute', top: 'var(--space-4)', right: 'var(--space-4)' }}>
         <ThemeToggle />
       </div>
 
-      <div className="card" style={{ width: '100%', maxWidth: '420px' }}>
+      {/* Main content */}
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 'var(--space-4)',
+          gap: 'var(--space-6)',
+        }}
+      >
+        {/* Company header */}
+        {(companyLogoUrl || companyType || companyName) && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              borderRadius: 'var(--radius-lg)',
+              backgroundColor: 'var(--color-background-secondary)',
+              padding: 'var(--space-2) var(--space-6)',
+              minHeight: '72px',
+              maxWidth: '420px',
+              margin: '0 auto',
+              boxSizing: 'border-box',
+            }}
+          >
+            {/* Logo solo visible en desktop */}
+            {companyLogoUrl && (
+              <div className="hidden-mobile" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', height: '56px' }}>
+                <img
+                  src={companyLogoUrl}
+                  alt="Logo de la empresa"
+                  style={{
+                    height: '56px',
+                    width: '56px',
+                    objectFit: 'cover',
+                    borderRadius: '50%',
+                    display: 'block',
+                  }}
+                />
+              </div>
+            )}
+            {(companyType || companyName) && (
+              <div
+                className="company-header-texts"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  height: '56px',
+                  lineHeight: 1.1,
+                  alignItems: 'flex-start',
+                  minWidth: 0,
+                  flex: 1,
+                  overflow: 'hidden',
+                  textAlign: 'left',
+                }}
+              >
+                {/* Desktop: alineado a la izquierda, Mobile: centrado */}
+                <div className="show-mobile" style={{ width: '100%', alignItems: 'center', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
+                  {companyType && (
+                    <h2
+                      style={{
+                        margin: 0,
+                        fontSize: '2.25rem',
+                        fontWeight: 'var(--font-weight-bold)',
+                        color: 'var(--color-text-primary)',
+                        lineHeight: 1.1,
+                        width: '100%',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        textAlign: 'center',
+                      }}
+                      title={companyType}
+                    >
+                      {companyType}
+                    </h2>
+                  )}
+                  {companyType && companyName && (
+                    <div style={{ height: '4px' }} />
+                  )}
+                  {companyName && (
+                    <span
+                      style={{
+                        fontSize: '1.125rem',
+                        fontWeight: 'var(--font-weight-medium)',
+                        color: 'var(--color-text-secondary)',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        width: '100%',
+                        display: 'block',
+                        textAlign: 'center',
+                      }}
+                      title={companyName}
+                    >
+                      {companyName}
+                    </span>
+                  )}
+                </div>
+                {/* Desktop: alineado a la izquierda */}
+                <div className="hidden-mobile" style={{ width: '100%' }}>
+                  {companyType && (
+                    <h2
+                      style={{
+                        margin: 0,
+                        fontSize: '2.25rem',
+                        fontWeight: 'var(--font-weight-bold)',
+                        color: 'var(--color-text-primary)',
+                        lineHeight: 1.1,
+                        width: '100%',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        textAlign: 'left',
+                      }}
+                      title={companyType}
+                    >
+                      {companyType}
+                    </h2>
+                  )}
+                  {companyType && companyName && (
+                    <div style={{ height: '4px' }} />
+                  )}
+                  {companyName && (
+                    <span
+                      style={{
+                        fontSize: '1.125rem',
+                        fontWeight: 'var(--font-weight-medium)',
+                        color: 'var(--color-text-secondary)',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        width: '100%',
+                        display: 'block',
+                        textAlign: 'left',
+                      }}
+                      title={companyName}
+                    >
+                      {companyName}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="card" style={{ width: '100%', maxWidth: '420px' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-8)' }}>
           <h1 style={{ marginBottom: 'var(--space-2)' }}>
@@ -94,40 +266,6 @@ export function LoginPage() {
               : 'Ingresa tus credenciales para continuar'}
           </p>
         </div>
-
-        {/* Server error (Login) */}
-        {!isRecovering && loginError && (
-          <div
-            style={{
-              padding: 'var(--space-3)',
-              marginBottom: 'var(--space-4)',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'var(--color-danger-light)',
-              color: 'var(--color-danger)',
-              fontSize: 'var(--font-size-sm)',
-              fontWeight: 'var(--font-weight-medium)',
-            }}
-          >
-            {loginError.message}
-          </div>
-        )}
-
-        {/* Server error (Recovery) */}
-        {isRecovering && resetError && (
-          <div
-            style={{
-              padding: 'var(--space-3)',
-              marginBottom: 'var(--space-4)',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'var(--color-danger-light)',
-              color: 'var(--color-danger)',
-              fontSize: 'var(--font-size-sm)',
-              fontWeight: 'var(--font-weight-medium)',
-            }}
-          >
-            {resetError.message}
-          </div>
-        )}
 
         {/* Success message (Recovery) */}
         {isRecovering && recoverySuccess && (
@@ -302,6 +440,29 @@ export function LoginPage() {
             Contacta al administrador si no tienes una cuenta
           </p>
         )}
+        </div>
+      </div>
+
+      {/* Footer y logo juntos en mobile, solo logo en mobile, footer global en desktop */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 'var(--space-4)',
+          fontSize: 'var(--font-size-xs)',
+          color: 'var(--color-text-secondary)',
+          gap: 'var(--space-2)',
+        }}
+      >
+        <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <EkLogo size="lg" />
+        </div>
+      </div>
+
+      <div className="footer-global">
+        <Footer />
       </div>
     </div>
   )
