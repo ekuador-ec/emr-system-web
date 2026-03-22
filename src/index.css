@@ -107,7 +107,7 @@
 
 /* ----- Base Styles ----- */
 html {
-  font-size: 16px;
+  font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -344,4 +344,33 @@ select:focus {
 /* ----- App Root ----- */
 #root {
   min-height: 100vh;
+}
+
+/* ----- Responsive Utilities ----- */
+.hidden-mobile {
+  display: none !important;
+}
+
+.show-mobile {
+  display: none !important;
+}
+
+@media (min-width: 768px) {
+  .hidden-mobile {
+    display: block !important;
+  }
+
+  .show-mobile {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .hidden-mobile {
+    display: none !important;
+  }
+
+  .show-mobile {
+    display: flex !important;
+  }
 }
