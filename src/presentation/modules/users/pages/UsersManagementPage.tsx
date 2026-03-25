@@ -9,6 +9,7 @@ import type {
 import { USER_ROLE_LABELS, ACCOUNT_STATUS_LABELS } from "@/domain/modules/users/models/User";
 import { InviteUserModal } from "@/presentation/modules/users/components/InviteUserModal";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
+import { useUserStore } from "@/presentation/modules/users/stores/useUserStore";
 import "@/presentation/modules/shared/components/ui/webcomponents/wcButton";
 import "@/presentation/modules/shared/components/ui/webcomponents/wcTabs";
 
@@ -30,7 +31,7 @@ export function UsersManagementPage() {
 
   const { addToast } = useToastStore();
 
-  const [showInviteForm, setShowInviteForm] = useState(false);
+  const { isInviteModalOpen, setInviteModalOpen } = useUserStore();
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
 
@@ -67,7 +68,7 @@ export function UsersManagementPage() {
           <button
             type="button"
             className="btn-primary"
-            onClick={() => setShowInviteForm(true)}
+            onClick={() => setInviteModalOpen(true)}
             style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}
           >
             <Icon name="icon-user-plus" size={20} />
@@ -76,8 +77,8 @@ export function UsersManagementPage() {
         </div>
 
         <InviteUserModal
-          isOpen={showInviteForm}
-          onClose={() => setShowInviteForm(false)}
+          isOpen={isInviteModalOpen}
+          onClose={() => setInviteModalOpen(false)}
           onInvite={async (payload) => {
             await inviteUser(payload)
             if (!isActivated) loadUsers();
@@ -167,7 +168,7 @@ export function UsersManagementPage() {
         <button
           type="button"
           className="btn-primary"
-          onClick={() => setShowInviteForm(true)}
+          onClick={() => setInviteModalOpen(true)}
           style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}
         >
           <Icon name="icon-user-plus" size={20} />
@@ -176,8 +177,8 @@ export function UsersManagementPage() {
       </div>
 
       <InviteUserModal
-        isOpen={showInviteForm}
-        onClose={() => setShowInviteForm(false)}
+        isOpen={isInviteModalOpen}
+        onClose={() => setInviteModalOpen(false)}
         onInvite={async (payload) => {
           await inviteUser(payload)
         }}

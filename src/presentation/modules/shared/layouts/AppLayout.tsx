@@ -1,6 +1,8 @@
 import { useAuth } from "@/presentation/modules/auth/hooks/useAuth";
 import { usePresenceTracker } from "@/presentation/modules/users/hooks/usePresenceTracker";
-import { useState, useRef, useEffect } from "react";
+import { useUserStore } from "@/presentation/modules/users/stores/useUserStore";
+import { useAdminUsers } from "@/presentation/modules/users/hooks/useAdminUsers";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/presentation/modules/shared/components/ThemeToggle";
 import { UserProfileModal } from "@/presentation/modules/users/components/UserProfileModal";
@@ -14,13 +16,17 @@ import { usePatientStore } from "@/presentation/modules/patient/stores/usePatien
 import { PatientCreateModal } from "@/presentation/modules/patient/components/Patients/PatientCreateModal";
 import { PatientQuickSearchModal } from "@/presentation/modules/patient/components/Patients/PatientQuickSearchModal";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
+import { QuickActionBar } from "@/presentation/modules/shared/components/QuickActionBar";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, isLoggingOut } = useAuth();
   const navigate = useNavigate();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [isPatientMenuOpen, setIsPatientMenuOpen] = useState(false);
-  const patientMenuRef = useRef<HTMLDivElement>(null);
+
+  const { setInviteModalOpen } = useUserStore();
+  // Safe to use here because it's a hook wrapping react-query; calling loadUsers will fetch data 
+  // and populate cache, making the management page automatically activate upon navigation.
+  const { loadUsers } = useAdminUsers();
 
   const {
     isCreateModalOpen,
@@ -34,16 +40,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   usePresenceTracker(user?.id);
   useNotificationSubscription(user?.id);
   usePatientSubscription();
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (patientMenuRef.current && !patientMenuRef.current.contains(event.target as Node)) {
-        setIsPatientMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -148,95 +144,75 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <div
           style={{
             display: "flex",
+            flexWrap: "wrap",
             alignItems: "center",
             padding: "var(--space-2) var(--space-6)",
             backgroundColor: "var(--color-bg-secondary)",
             borderBottom: "1px solid var(--color-border)",
-            gap: "var(--space-4)",
+            gap: "var(--space-2)",
           }}
+          title="Acciones Rápidas"
         >
-          <div style={{ position: "relative" }} ref={patientMenuRef}>
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={() => setIsPatientMenuOpen(!isPatientMenuOpen)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-2)",
-                fontSize: "var(--font-size-sm)",
-                fontWeight: "var(--font-weight-medium)",
-              }}
-            >
-              <Icon name="icon-users" size={16} />
-              Pacientes
-              <div style={{ marginLeft: "var(--space-1)", display: "flex" }}>
-                <Icon name="icon-chevron-down" size={14} />
-              </div>
-            </button>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-2)",
+            color: "var(--color-text-secondary)",
+            fontSize: "var(--font-size-sm)",
+            fontWeight: "var(--font-weight-medium)",
+            whiteSpace: "nowrap",
+            marginRight: "var(--space-4)"
+          }}>
+            <Icon name="icon-dashboard" size={16} />
+            <span style={{ display: "inline-block" }} className="quick-actions-title">Acciones Rápidas:</span>
+          </div>
 
-            {isPatientMenuOpen && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  marginTop: "var(--space-1)",
-                  backgroundColor: "var(--color-surface)",
-                  border: "1px solid var(--color-border)",
-                  borderRadius: "var(--radius-md)",
-                  boxShadow: "var(--shadow-md)",
-                  minWidth: "200px",
-                  zIndex: 50,
-                  display: "flex",
-                  flexDirection: "column",
-                  padding: "var(--space-1) 0",
-                }}
-              >
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  onClick={() => {
-                    setQuickSearchModalOpen(true);
-                    setIsPatientMenuOpen(false);
-                  }}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "var(--space-2)",
-                    width: "100%",
-                    justifyContent: "flex-start",
-                    padding: "var(--space-2) var(--space-4)",
-                    borderRadius: 0,
-                    color: "var(--color-text-primary)",
-                  }}
-                >
-                  <Icon name="icon-search" size={16} />
-                  Buscar Paciente
-                </button>
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  onClick={() => {
-                    setCreateModalOpen(true);
-                    setIsPatientMenuOpen(false);
-                  }}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "var(--space-2)",
-                    width: "100%",
-                    justifyContent: "flex-start",
-                    padding: "var(--space-2) var(--space-4)",
-                    borderRadius: 0,
-                    color: "var(--color-text-primary)",
-                  }}
-                >
-                  <Icon name="icon-user-plus" size={16} />
-                  Registrar Nuevo
-                </button>
-              </div>
-            )}
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+            <QuickActionBar
+              module="Pacientes"
+              icon="icon-users"
+              actions={[
+                { label: 'Buscar Paciente', icon: 'icon-search', onClick: () => setQuickSearchModalOpen(true) },
+                { label: 'Registrar Nuevo', icon: 'icon-user-plus', onClick: () => setCreateModalOpen(true) }
+              ]}
+            />
+            
+            <QuickActionBar
+              module="Usuarios"
+              icon="icon-user"
+              actions={[
+                { 
+                  label: 'Cargar usuarios', 
+                  icon: 'icon-users', 
+                  onClick: () => {
+                    loadUsers();
+                    navigate("/admin/users");
+                  } 
+                },
+                { 
+                  label: 'Invitar Usuario', 
+                  icon: 'icon-user-plus', 
+                  onClick: () => {
+                    setInviteModalOpen(true);
+                    navigate("/admin/users");
+                  } 
+                }
+              ]}
+            />
+
+            <QuickActionBar
+              module="Historias Clínicas"
+              icon="icon-clinical-history"
+              actions={[]}
+              disabled={true}
+            />
+
+            <QuickActionBar
+              module="Evoluciones Médicas"
+              icon="icon-medical-evolution"
+              actions={[]}
+              disabled={true}
+            />
           </div>
         </div>
 
