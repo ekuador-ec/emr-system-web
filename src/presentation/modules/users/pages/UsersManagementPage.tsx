@@ -7,7 +7,6 @@ import type {
   UserWithPresence,
 } from "@/domain/modules/users/models/User";
 import { USER_ROLE_LABELS, ACCOUNT_STATUS_LABELS } from "@/domain/modules/users/models/User";
-import { InviteUserModal } from "@/presentation/modules/users/components/InviteUserModal";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import { useUserStore } from "@/presentation/modules/users/stores/useUserStore";
 import "@/presentation/modules/shared/components/ui/webcomponents/wcButton";
@@ -21,8 +20,6 @@ export function UsersManagementPage() {
     isLoading,
     isActivated,
     loadUsers,
-    inviteUser,
-    isInviting,
     toggleUserStatus,
     isTogglingStatus,
     softDeleteUser,
@@ -31,7 +28,7 @@ export function UsersManagementPage() {
 
   const { addToast } = useToastStore();
 
-  const { isInviteModalOpen, setInviteModalOpen } = useUserStore();
+  const { setInviteModalOpen } = useUserStore();
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
 
@@ -75,16 +72,6 @@ export function UsersManagementPage() {
             Invitar Usuario
           </button>
         </div>
-
-        <InviteUserModal
-          isOpen={isInviteModalOpen}
-          onClose={() => setInviteModalOpen(false)}
-          onInvite={async (payload) => {
-            await inviteUser(payload)
-            if (!isActivated) loadUsers();
-          }}
-          isInviting={isInviting}
-        />
 
         <div
           className="card"
@@ -175,15 +162,6 @@ export function UsersManagementPage() {
           Invitar Usuario
         </button>
       </div>
-
-      <InviteUserModal
-        isOpen={isInviteModalOpen}
-        onClose={() => setInviteModalOpen(false)}
-        onInvite={async (payload) => {
-          await inviteUser(payload)
-        }}
-        isInviting={isInviting}
-      />
 
        <wc-tabs>
         <wc-button variant="tab" slot="tab">

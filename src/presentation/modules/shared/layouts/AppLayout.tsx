@@ -2,6 +2,7 @@ import { useAuth } from "@/presentation/modules/auth/hooks/useAuth";
 import { usePresenceTracker } from "@/presentation/modules/users/hooks/usePresenceTracker";
 import { useUserStore } from "@/presentation/modules/users/stores/useUserStore";
 import { useAdminUsers } from "@/presentation/modules/users/hooks/useAdminUsers";
+import { InviteUserModal } from "@/presentation/modules/users/components/InviteUserModal";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/presentation/modules/shared/components/ThemeToggle";
@@ -15,7 +16,6 @@ import { usePatientSubscription } from "@/presentation/modules/patient/hooks/use
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import { PatientCreateModal } from "@/presentation/modules/patient/components/Patients/PatientCreateModal";
 import { PatientQuickSearchModal } from "@/presentation/modules/patient/components/Patients/PatientQuickSearchModal";
-import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import { QuickActionBar } from "@/presentation/modules/shared/components/QuickActionBar";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -23,10 +23,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  const { setInviteModalOpen } = useUserStore();
+  const { setInviteModalOpen, isInviteModalOpen } = useUserStore();
   // Safe to use here because it's a hook wrapping react-query; calling loadUsers will fetch data 
   // and populate cache, making the management page automatically activate upon navigation.
-  const { loadUsers } = useAdminUsers();
+  const { loadUsers, inviteUser, isInviting, isActivated: isUsersLoaded } = useAdminUsers();
 
   const {
     isCreateModalOpen,
@@ -163,14 +163,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             whiteSpace: "nowrap",
             marginRight: "var(--space-4)"
           }}>
-            <Icon name="icon-dashboard" size={16} />
             <span style={{ display: "inline-block" }} className="quick-actions-title">Acciones Rápidas:</span>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
             <QuickActionBar
               module="Pacientes"
-              icon="icon-users"
+              icon="icon-patient"
               actions={[
                 { label: 'Buscar Paciente', icon: 'icon-search', onClick: () => setQuickSearchModalOpen(true) },
                 { label: 'Registrar Nuevo', icon: 'icon-user-plus', onClick: () => setCreateModalOpen(true) }
@@ -179,7 +178,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             
             <QuickActionBar
               module="Usuarios"
-              icon="icon-user"
+              icon="icon-users"
               actions={[
                 { 
                   label: 'Cargar usuarios', 
@@ -194,7 +193,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   icon: 'icon-user-plus', 
                   onClick: () => {
                     setInviteModalOpen(true);
-                    navigate("/admin/users");
                   } 
                 }
               ]}
@@ -239,6 +237,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <PatientQuickSearchModal 
         isOpen={isQuickSearchModalOpen}
         onClose={() => setQuickSearchModalOpen(false)}
+      />
+
+      <InviteUserModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setInviteModalOpen(false)}
+        onInvite={async (payload) => {
+          await inviteUser(payload);
+          // If the table was never loaded but we invite, we load it so if they navigate it's there
+          if (!isUsersLoaded) loadUsers();
+        }}
+        isInviting={isInviting}
       />
     </div>
   );
