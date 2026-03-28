@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SupabaseUserRepository } from "@/infrastructure/modules/users/repositories/SupabaseUserRepository";
 import { InviteUser } from "@/application/modules/users/use-cases/inviteUser";
 import { ToggleUserStatus } from "@/application/modules/users/use-cases/toggleUserStatus";
 import { SoftDeleteUser } from "@/application/modules/users/use-cases/softDeleteUser";
 import type { AccountStatus, InviteUserPayload } from "@/domain/modules/users/models/User";
+import { useUserStore } from "@/presentation/modules/users/stores/useUserStore";
 
 const userRepository = new SupabaseUserRepository();
 const inviteUseCase = new InviteUser(userRepository);
@@ -18,9 +19,8 @@ const TEN_MINUTES = 1000 * 60 * 10;
 
 export function useAdminUsers() {
   const queryClient = useQueryClient();
-  const [isActivated, setIsActivated] = useState(() => {
-    return !!queryClient.getQueryData(ADMIN_USERS_QUERY_KEY);
-  });
+  const isActivated = useUserStore((state) => state.isUsersLoaded);
+  const setIsActivated = useUserStore((state) => state.setUsersLoaded);
 
   const {
     data: users,

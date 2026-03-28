@@ -1,0 +1,134 @@
+/* QuickActionBar.css */
+
+.quick-action-bar-container {
+  position: relative;
+  display: inline-block;
+}
+
+.quick-action-bar-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-normal);
+}
+
+.quick-action-bar-btn.open {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-primary);
+}
+
+.quick-action-bar-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(100%);
+}
+
+.qab-chevron {
+  display: flex;
+  margin-left: var(--space-1);
+  transition: transform 0.2s ease-in-out;
+}
+
+.qab-chevron.open {
+  transform: rotate(180deg);
+}
+
+.qab-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: var(--space-1);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  min-width: 200px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-1) 0;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.qab-action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  justify-content: flex-start;
+  padding: var(--space-2) var(--space-4);
+  border-radius: 0;
+  color: var(--color-text-secondary);
+  min-height: 44px;
+  /* Móvil tap target */
+  transition: all var(--transition-fast);
+}
+
+.qab-action-btn svg {
+  color: var(--color-icon);
+  transition: color var(--transition-fast);
+}
+
+.qab-action-btn:hover:not(.disabled) {
+  background-color: transparent;
+  color: var(--color-text);
+  transform: translateX(4px); /* Adding a slight animation commonly associated with vertical sub-menus */
+}
+
+.qab-action-btn:hover:not(.disabled) svg {
+  color: var(--color-text);
+}
+
+.qab-action-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.qab-empty-state {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+  .qab-module-label {
+    display: none;
+    /* Ocultar el texto en móvil */
+  }
+
+  .quick-action-bar-btn {
+    padding: var(--space-2);
+    min-height: 44px;
+    /* Móvil tap target */
+    min-width: 44px;
+    justify-content: center;
+  }
+
+  .qab-chevron {
+    display: none;
+    /* Ocular el chevron en móvil, solo mantener el ícono del módulo */
+  }
+
+  .qab-dropdown {
+    /* Ajustar dropdown en pantallas pequeñas para no salir del viewport */
+    min-width: 180px;
+    left: auto;
+    /* Remover left: 0 */
+  }
+}
