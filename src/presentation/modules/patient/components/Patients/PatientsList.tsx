@@ -97,10 +97,10 @@ export function PatientsList({ patientsResult }: PatientsListProps) {
                     className="btn-ghost"
                     onClick={() => setSelectedPatientId(patient.id)}
                     style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--font-size-xs)" }}
-                    title="Ver/Editar Historia Clínica"
+                    title="Ver Detalles del Paciente"
                   >
-                    <Icon name="icon-folder" size={16} />
-                    Historia
+                    <Icon name="icon-user" size={16} />
+                    Detalles
                   </button>
                   <button
                     type="button"
@@ -134,7 +134,7 @@ export function PatientsList({ patientsResult }: PatientsListProps) {
           )}
         </tbody>
       </table>
-
+      
       {/* Pagination Controls */}
       {totalPages > 1 && (
         <div

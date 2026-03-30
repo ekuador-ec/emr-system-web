@@ -1,9 +1,11 @@
+import { useNavigate } from 'react-router-dom';
 import { usePatient } from "@/presentation/modules/patient/hooks/usePatients";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import "./PatientDetailsDrawer.css";
 
 export function PatientDetailsDrawer() {
+  const navigate = useNavigate();
   const { selectedPatientId, setSelectedPatientId, setEditingPatientId } = usePatientStore();
   const { data: patient, isLoading, isError } = usePatient(selectedPatientId || "");
 
@@ -20,7 +22,7 @@ export function PatientDetailsDrawer() {
       >
         <div className="drawer-header">
           <h2 style={{ margin: 0, fontSize: "var(--font-size-lg)" }}>
-            Historia Clinica del Paciente
+            Detalles del Paciente
           </h2>
           <button
             type="button"
@@ -118,8 +120,20 @@ export function PatientDetailsDrawer() {
         </div>
 
         {patient && (
-          <div className="drawer-footer">
-             <button type="button" className="btn-secondary" onClick={() => {
+          <div className="drawer-footer" style={{ flexDirection: 'row', gap: 'var(--space-2)' }}>
+             <button 
+              type="button" 
+              className="btn-primary" 
+              style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#312e81', borderColor: '#312e81' }}
+              onClick={() => {
+                navigate(`/pacientes/${patient.id}/historia`);
+                setSelectedPatientId(null);
+              }}
+             >
+                <Icon name="icon-folder" size={18} />
+                Ir a Historia Clínica
+             </button>
+             <button type="button" className="btn-secondary" style={{ width: '100%' }} onClick={() => {
                 setEditingPatientId(patient.id);
                 setSelectedPatientId(null);
              }}>
