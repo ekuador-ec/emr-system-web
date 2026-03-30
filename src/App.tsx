@@ -4,6 +4,8 @@ import { UpdatePasswordPage } from '@/presentation/modules/auth/pages/UpdatePass
 import { DashboardPage } from '@/presentation/modules/dashboard/pages/DashboardPage'
 import { UsersManagementPage } from '@/presentation/modules/users/pages/UsersManagementPage'
 import { PatientsPage } from '@/presentation/modules/patient/pages/PatientsPage'
+import { MedicalRecordPage } from '@/presentation/modules/medical-record/pages/MedicalRecordPage'
+import { MedicalRecordsPage } from '@/presentation/modules/medical-record/pages/MedicalRecordsPage'
 import { ProtectedRoute } from '@/presentation/modules/auth/components/ProtectedRoute'
 import { AppLayout } from '@/presentation/modules/shared/layouts/AppLayout'
 
@@ -32,6 +34,28 @@ function App() {
           <ProtectedRoute>
             <AppLayout>
               <PatientsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/pacientes/:patientId/historia"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <MedicalRecordPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/historias-clinicas"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <MedicalRecordsPage />
             </AppLayout>
           </ProtectedRoute>
         }
