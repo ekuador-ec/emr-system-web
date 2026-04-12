@@ -60,3 +60,20 @@ El proyecto está estrictamente dividido en 4 capas. El código generado DEBE re
 - **Cero Emojis:** Está ESTRICTAMENTE PROHIBIDO utilizar emojis en el código fuente, archivos de configuración, comentarios, respuestas textuales y mensajes de commit.
 - **Restricción de Comentarios:** NO utilizar comentarios en el interior del código a menos que sea estrictamente necesario para explicar decisiones técnicas inusuales o lógicas de negocio complejas (explica el *por qué*, no el *qué*). El código debe ser completamente autodescriptivo.
 - **Modificaciones Precisas:** Al editar archivos mediante herramientas, no reescribir un archivo completo si solo se requiere un ajuste en pocas líneas. Las modificaciones deben ser atómicas y focalizadas.
+
+## Reglas de Uso de Componentes Frontend
+
+- **Botones con texto (acciones primarias/secundarias):** Usar SIEMPRE `WcButton`.
+- **Botones de solo icono (acciones rápidas):** Usar SIEMPRE `WcButtonIcon`.
+- **Búsqueda:** Usar SIEMPRE `WcSearchInput`. Si necesita botón de buscar, debe integrarse en el mismo componente mediante props.
+- **Tabs y secciones con pestañas:** Usar SIEMPRE `WcTabsFolder`. Evitar crear tabs custom ad hoc.
+- **Tablas de datos:** Usar SIEMPRE `WcTables` para listado tabular con paginación/acciones.
+- **Acciones por fila en tablas:** Usar `TableActionCell` + `WcButtonIcon`.
+- **Avatar en tabla:** Usar `TableAvatarCell` (incluye fallback visual consistente).
+- **Filtros rápidos:** Usar `UsersQuickFilterPopover`. No crear popovers paralelos para el mismo propósito.
+- **Iconografía del sistema:** Usar `Icon` con `system-icons.svg`. Evitar SVG inline salvo necesidad técnica justificada.
+- **Consistencia responsive:** Reutilizar el mismo componente y adaptarlo por CSS; no crear componentes distintos solo para mobile.
+- **Sin mezcla de estilos nativos innecesaria:** Evitar `button` nativo estilizado manualmente si ya aplica `WcButton`/`WcButtonIcon`.
+- **Extensión de diseño:** Si falta una variante visual, extender el componente base por props/clase antes de crear uno nuevo.
+- **Consistencia de intención:** `WcButton` para acciones de flujo/intención; `WcButtonIcon` para acciones compactas y contextuales.
+- **Paginación por vista:** Definir constantes por modo (`table/cards`) y evitar números mágicos en JSX.
