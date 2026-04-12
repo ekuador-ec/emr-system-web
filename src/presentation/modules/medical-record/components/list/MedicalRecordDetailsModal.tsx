@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/presentation/modules/auth/hooks/useAuth";
 import { canEditMedicalRecord } from "@/presentation/core/security/medicalRecordPermissions";
 import type { MedicalRecordListItem } from "@/domain/modules/medical-record/models/MedicalRecord";
-import "@/presentation/modules/shared/components/ui/webcomponents/wcButton";
+import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 
 interface MedicalRecordDetailsModalProps {
   record: MedicalRecordListItem | null;
@@ -136,13 +136,13 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
                 }}
               >
                 <span style={{ fontWeight: 500, color: "var(--color-text)" }}>{record.patientName}</span>
-                <wc-button
+                <WcButton
                   variant="terciary"
                   onClick={() => setSelectedPatientId(record.patientId)}
                 >
                   <Icon name="icon-user" size={16} />
                   Ver Detalle
-                </wc-button>
+                </WcButton>
               </div>
             </div>
 
@@ -201,17 +201,17 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
             </div>
 
             <div style={{ display: "flex", gap: "var(--space-3)", paddingTop: "var(--space-2)" }}>
-              <wc-button
+              <WcButton
                 variant="terciary"
                 onClick={() => navigate(`/pacientes/${record.patientId}/historia`)}
                 style={{ width: "100%" }}
               >
                 <Icon name="icon-folder" size={18} />
                 Ver Historia Completa
-              </wc-button>
+              </WcButton>
 
               {canEdit && (
-                <wc-button
+                <WcButton
                   variant="primary"
                   disabled
                   title="Proximamente"
@@ -219,7 +219,7 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
                 >
                   <Icon name="icon-plus" size={18} />
                   Nueva Evolucion Medica
-                </wc-button>
+                </WcButton>
               )}
             </div>
           </div>

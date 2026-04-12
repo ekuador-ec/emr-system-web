@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useOrganizationConfig } from '@/presentation/modules/medical-record/hooks/useOrganizationConfig';
 import { Icon } from '@/presentation/modules/shared/components/Sidebar/icons/Icon';
-import '@/presentation/modules/shared/components/ui/webcomponents/wcButton';
+import WcButton from '@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton';
 
 export function MedicalRecordHeader() {
   const navigate = useNavigate();
@@ -35,14 +35,14 @@ export function MedicalRecordHeader() {
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--space-4)", flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--space-4)" }}>
-          <wc-button
+          <WcButton
             variant="terciary"
             onClick={() => navigate(-1 as any)}
             title="Volver"
           >
             <Icon name="icon-arrow-left" size={18} />
             Volver
-          </wc-button>
+          </WcButton>
           <div>
             <h2 style={{ margin: 0, fontWeight: 700, color: "var(--color-text)" }}>
               {config.institutionName}

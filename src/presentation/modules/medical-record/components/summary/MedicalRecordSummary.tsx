@@ -4,7 +4,7 @@ import { canEditMedicalRecord, canChangeMedicalRecordStatus } from '@/presentati
 import { usePatientStore } from '@/presentation/modules/patient/stores/usePatientStore';
 import { useToastStore } from '@/presentation/modules/shared/components/Toaster';
 import { Icon } from '@/presentation/modules/shared/components/Sidebar/icons/Icon';
-import '@/presentation/modules/shared/components/ui/webcomponents/wcButton';
+import WcButton from '@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton';
 
 interface MedicalRecordSummaryProps {
   patientId: string;
@@ -56,14 +56,14 @@ export function MedicalRecordSummary({ patientId }: MedicalRecordSummaryProps) {
           <p style={{ margin: 0, marginBottom: "var(--space-4)", fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
             Este paciente aun no tiene una historia clinica registrada.
           </p>
-          <wc-button
+          <WcButton
             variant="primary"
             disabled={isCreating}
             onClick={() => createMedicalRecord(patientId)}
           >
             <Icon name="icon-plus" size={16} />
             {isCreating ? "Creando..." : "Crear Historia Clinica"}
-          </wc-button>
+          </WcButton>
         </div>
       );
     }
@@ -140,14 +140,14 @@ export function MedicalRecordSummary({ patientId }: MedicalRecordSummaryProps) {
           </div>
 
           {canAdmin && (
-            <wc-button
+            <WcButton
               variant={medicalRecord.isActive ? "danger" : "primary"}
               disabled={isUpdating}
               onClick={handleToggleStatus}
             >
               <Icon name={medicalRecord.isActive ? "icon-archive" : "icon-check"} size={16} />
               {medicalRecord.isActive ? "Archivar HC" : "Activar HC"}
-            </wc-button>
+            </WcButton>
           )}
         </div>
       </div>
@@ -218,13 +218,13 @@ export function MedicalRecordSummary({ patientId }: MedicalRecordSummaryProps) {
             <span><strong style={{ fontWeight: 500 }}>Sangre:</strong> {medicalRecord.patientBloodType || 'N/A'}</span>
           </div>
         </div>
-        <wc-button
+        <WcButton
           variant="terciary"
           onClick={() => setSelectedPatientId(patientId)}
         >
           <Icon name="icon-user" size={16} />
           Ver Detalle del Paciente
-        </wc-button>
+        </WcButton>
       </div>
 
       <div
@@ -322,12 +322,12 @@ export function MedicalRecordSummary({ patientId }: MedicalRecordSummaryProps) {
              <div style={{ height: '24px', width: '1px', backgroundColor: 'var(--color-border)', margin: '0 var(--space-1)' }} />
 
              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-               <wc-button variant="primary">
+               <WcButton variant="primary">
                  Buscar
-               </wc-button>
-               <wc-button variant="terciary">
+               </WcButton>
+               <WcButton variant="terciary">
                  Limpiar
-               </wc-button>
+               </WcButton>
              </div>
           </div>
         </div>

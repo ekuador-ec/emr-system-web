@@ -5,7 +5,7 @@ import { useUpdatePassword } from "@/presentation/modules/auth/hooks/useUpdatePa
 import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import { updatePasswordSchema, type UpdatePasswordFormData } from "@/presentation/modules/auth/schemas/auth.schema";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
-import "@/presentation/modules/shared/components/ui/webcomponents/wcButton";
+import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import "@/presentation/modules/shared/components/ui/webcomponents/wcWarning";
 
 interface UserUpdatePasswordTabProps {
@@ -151,10 +151,10 @@ export function UserUpdatePasswordTab({ onClose, isOpen, onDirtyChange }: UserUp
           </div>
           
           <div style={{ marginTop: "var(--space-8)", paddingTop: "var(--space-4)", borderTop: "1px solid var(--color-border)", display: "flex", justifyContent: "flex-end", gap: "var(--space-3)" }}>
-            <wc-button variant="secondary" onClick={handleCancel} disabled={isPending}>Cancelar</wc-button>
-            <wc-button variant="primary" disabled={isPending} onClick={handleSubmit(onSubmit)}>
+            <WcButton variant="secondary" onClick={handleCancel} disabled={isPending}>Cancelar</WcButton>
+            <WcButton variant="primary" disabled={isPending} onClick={handleSubmit(onSubmit)}>
               {isPending ? "Actualizando..." : "Actualizar Contraseña"}
-            </wc-button>
+            </WcButton>
           </div>
         </form>
 

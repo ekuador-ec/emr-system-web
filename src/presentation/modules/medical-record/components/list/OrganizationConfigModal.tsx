@@ -5,7 +5,7 @@ import { useOrganizationConfig, useUpdateOrganizationConfig } from "@/presentati
 import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import { organizationConfigSchema, type OrganizationConfigFormValues } from "@/presentation/modules/medical-record/schemas/organizationConfig.schema";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
-import "@/presentation/modules/shared/components/ui/webcomponents/wcButton";
+import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import "@/presentation/modules/shared/components/ui/webcomponents/wcWarning";
 
 interface OrganizationConfigModalProps {
@@ -303,22 +303,22 @@ export function OrganizationConfigModal({ isOpen, onClose }: OrganizationConfigM
           </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-3)", paddingTop: "var(--space-4)", borderTop: "1px solid var(--color-border)" }}>
-            <wc-button
+            <WcButton
               variant="secondary"
               disabled={isPending}
               onClick={handleClose}
             >
               <Icon name="icon-x" size={16} />
               Cancelar
-            </wc-button>
-            <wc-button
+            </WcButton>
+            <WcButton
               variant="primary"
               disabled={isPending}
               onClick={handleSubmit(onSubmit)}
             >
               <Icon name="icon-check" size={16} />
               {isPending ? "Guardando..." : "Guardar Cambios"}
-            </wc-button>
+            </WcButton>
           </div>
         </form>
       </div>

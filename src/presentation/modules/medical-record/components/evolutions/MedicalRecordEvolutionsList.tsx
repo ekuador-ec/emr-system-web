@@ -1,5 +1,5 @@
 import { Icon } from '@/presentation/modules/shared/components/Sidebar/icons/Icon';
-import '@/presentation/modules/shared/components/ui/webcomponents/wcButton';
+import WcButton from '@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton';
 
 interface MedicalRecordEvolutionsListProps {
   medicalRecordId: string;
@@ -28,7 +28,7 @@ export function MedicalRecordEvolutionsList({ medicalRecordId: _medicalRecordId 
           <Icon name="icon-clipboard" size={20} />
           Evoluciones Medicas
         </h3>
-        <wc-button
+        <WcButton
           variant="primary"
           disabled
           title="Proximamente"
@@ -36,7 +36,7 @@ export function MedicalRecordEvolutionsList({ medicalRecordId: _medicalRecordId 
         >
           <Icon name="icon-plus" size={16} />
           Nueva Evolucion
-        </wc-button>
+        </WcButton>
       </div>
 
       <div

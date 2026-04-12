@@ -10,7 +10,7 @@ import { useAuth } from "@/presentation/modules/auth/hooks/useAuth";
 import { canChangeMedicalRecordStatus } from "@/presentation/core/security/medicalRecordPermissions";
 import type { MedicalRecordListItem } from "@/domain/modules/medical-record/models/MedicalRecord";
 import { PatientDetailsDrawer } from "@/presentation/modules/patient/components/Patients/PatientDetailsDrawer";
-import "@/presentation/modules/shared/components/ui/webcomponents/wcButton";
+import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 
 export function MedicalRecordsPage() {
   const { filters } = useMedicalRecordStore();
@@ -40,13 +40,13 @@ export function MedicalRecordsPage() {
           </p>
         </div>
         {canAdmin && (
-          <wc-button
+          <WcButton
             variant="terciary"
             onClick={() => setIsConfigOpen(true)}
           >
             <Icon name="icon-settings" size={20} />
             Configurar Encabezado
-          </wc-button>
+          </WcButton>
         )}
       </div>
 
