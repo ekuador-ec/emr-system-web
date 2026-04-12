@@ -1,0 +1,124 @@
+.wc-button-icon {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  color: var(--color-surface);
+  background-color: var(--color-primary);
+}
+
+.wc-button-icon.is-sm {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+}
+
+.wc-button-icon.is-md {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.wc-button-icon.is-lg {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.wc-button-icon.is-square {
+  border-radius: var(--radius-sm);
+}
+
+.wc-button-icon.is-circle {
+  border-radius: var(--radius-full);
+}
+
+.wc-button-icon.is-primary {
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+}
+
+.wc-button-icon.is-primary:hover {
+  background-color: var(--color-primary-hover);
+  color: #ffffff;
+}
+
+.wc-button-icon.is-secondary,
+.wc-button-icon.is-outline {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.wc-button-icon.is-secondary:hover,
+.wc-button-icon.is-outline:hover {
+  background-color: var(--color-bg);
+}
+
+.wc-button-icon.is-ghost {
+  background-color: transparent;
+  color: var(--color-text);
+  border: 1px solid transparent;
+}
+
+.wc-button-icon.is-ghost:hover {
+  background-color: var(--color-bg);
+}
+
+.wc-button-icon.is-terciary {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.wc-button-icon.is-terciary:hover {
+  background-color: var(--color-primary-hover);
+  color: #ffffff;
+}
+
+.wc-button-icon.is-danger {
+  background-color: var(--color-danger);
+  color: #ffffff;
+}
+
+.wc-button-icon.is-danger:hover {
+  opacity: 0.9;
+}
+
+.wc-button-icon:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.wc-button-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.wc-button-icon.is-sm svg {
+  width: 14px;
+  height: 14px;
+}
+
+.wc-button-icon.is-lg svg {
+  width: 18px;
+  height: 18px;
+}
