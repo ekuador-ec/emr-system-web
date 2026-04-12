@@ -1,5 +1,4 @@
 import React from 'react';
-import './wcButton';
 
 const ATRIBUTOS = {
   TITLE: 'title',
@@ -53,8 +52,8 @@ class wcWarning extends HTMLElement {
   private setupEvents() {
     this.removeEvents(); // Ensure no duplicate listeners
 
-    const confirmBtn = this.shadowRoot?.querySelector('wc-button[data-action="confirm"]') as HTMLElement;
-    const cancelBtn = this.shadowRoot?.querySelector('wc-button[data-action="cancel"]') as HTMLElement;
+    const confirmBtn = this.shadowRoot?.querySelector('.wc-warning-btn--confirm') as HTMLElement;
+    const cancelBtn = this.shadowRoot?.querySelector('.wc-warning-btn--cancel') as HTMLElement;
     const backdrop = this.shadowRoot?.querySelector('.wc-warning-backdrop') as HTMLElement;
 
     confirmBtn?.addEventListener('click', this.boundHandleConfirm);
@@ -64,8 +63,8 @@ class wcWarning extends HTMLElement {
   }
 
   private removeEvents() {
-    const confirmBtn = this.shadowRoot?.querySelector('wc-button[data-action="confirm"]') as HTMLElement;
-    const cancelBtn = this.shadowRoot?.querySelector('wc-button[data-action="cancel"]') as HTMLElement;
+    const confirmBtn = this.shadowRoot?.querySelector('.wc-warning-btn--confirm') as HTMLElement;
+    const cancelBtn = this.shadowRoot?.querySelector('.wc-warning-btn--cancel') as HTMLElement;
     const backdrop = this.shadowRoot?.querySelector('.wc-warning-backdrop') as HTMLElement;
 
     confirmBtn?.removeEventListener('click', this.boundHandleConfirm);
@@ -262,6 +261,42 @@ class wcWarning extends HTMLElement {
           padding: 16px 24px 20px 24px;
           border-top: 1px solid var(--color-border);
           background: var(--color-bg);
+        }
+
+        .wc-warning-btn {
+          padding: 8px 16px;
+          border-radius: 6px;
+          font-family: inherit;
+          font-size: 0.875rem;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid var(--color-border);
+          cursor: pointer;
+          transition: all 0.2s ease;
+          min-height: 36px;
+        }
+
+        .wc-warning-btn--cancel {
+          background-color: var(--color-surface);
+          color: var(--color-text);
+        }
+
+        .wc-warning-btn--cancel:hover {
+          background-color: var(--color-primary-hover);
+          color: #ffffff;
+          border-color: var(--color-primary-hover);
+        }
+
+        .wc-warning-btn--confirm {
+          background-color: var(--color-danger);
+          color: #ffffff;
+          border-color: var(--color-danger);
+        }
+
+        .wc-warning-btn--confirm:hover {
+          opacity: 0.9;
         }
 
         /* Desktop: 1024px and above */
@@ -483,8 +518,8 @@ class wcWarning extends HTMLElement {
             <p class="wc-warning-message" id="warning-message">${this.escapeHtml(message)}</p>
           </div>
           <div class="wc-warning-actions">
-            <wc-button variant="terciary" data-action="cancel" title="${this.escapeHtml(cancelText)}">${this.escapeHtml(cancelText)}</wc-button>
-            <wc-button variant="danger" data-action="confirm" title="${this.escapeHtml(confirmText)}">${this.escapeHtml(confirmText)}</wc-button>
+            <button type="button" class="wc-warning-btn wc-warning-btn--cancel" data-action="cancel" title="${this.escapeHtml(cancelText)}">${this.escapeHtml(cancelText)}</button>
+            <button type="button" class="wc-warning-btn wc-warning-btn--confirm" data-action="confirm" title="${this.escapeHtml(confirmText)}">${this.escapeHtml(confirmText)}</button>
           </div>
         </div>
       </div>
@@ -527,4 +562,3 @@ declare module 'react' {
     }
   }
 }
-
