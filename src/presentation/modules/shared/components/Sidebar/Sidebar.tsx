@@ -44,7 +44,9 @@ export function Sidebar() {
       label: 'Administración',
       items: [
         { path: '/catalogos', label: 'Catálogos', icon: 'icon-catalogs' },
-        ...(isAdmin ? [{ path: '/admin/users', label: 'Usuarios', icon: 'icon-users' }] : [])
+        ...(isAdmin ? [
+          { path: '/admin/users', label: 'Usuarios', icon: 'icon-users' }
+        ] : [])
       ]
     },
     {

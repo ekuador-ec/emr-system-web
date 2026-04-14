@@ -1,12 +1,12 @@
-import React from 'react';
+import type { DetailedHTMLProps } from "react";
 
-const ATRIBUTOS = {
-  SELECTED_INDEX: 'selected-index'
+const ATTRIBUTES = {
+  SELECTED_INDEX: "selected-index",
 } as const;
 
 class wcTabs extends HTMLElement {
-  private tabSlot?: HTMLSlotElement | null;
-  private panelSlot?: HTMLSlotElement | null;
+  private tabSlot: HTMLSlotElement | null = null;
+  private panelSlot: HTMLSlotElement | null = null;
 
   private readonly onHostClick = (e: Event) => {
     const target = (e.target as HTMLElement | null)?.closest('[slot="tab"]');
@@ -69,15 +69,15 @@ class wcTabs extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return [ATRIBUTOS.SELECTED_INDEX];
+    return [ATTRIBUTES.SELECTED_INDEX];
   }
 
   connectedCallback() {
     this.render();
     this.setupEvents();
 
-    if (!this.hasAttribute(ATRIBUTOS.SELECTED_INDEX)) {
-      this.setAttribute(ATRIBUTOS.SELECTED_INDEX, '0');
+    if (!this.hasAttribute(ATTRIBUTES.SELECTED_INDEX)) {
+      this.setAttribute(ATTRIBUTES.SELECTED_INDEX, "0");
     }
 
     this.updateTabs();
@@ -92,7 +92,7 @@ class wcTabs extends HTMLElement {
 
   attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
     if (oldValue === newValue) return;
-    if (name === ATRIBUTOS.SELECTED_INDEX) {
+    if (name === ATTRIBUTES.SELECTED_INDEX) {
       this.updateTabs();
       this.dispatchEvent(
         new CustomEvent('tab-change', {
@@ -109,8 +109,8 @@ class wcTabs extends HTMLElement {
     this.addEventListener('click', this.onHostClick);
     this.addEventListener('keydown', this.onHostKeyDown);
 
-    this.tabSlot = this.shadowRoot?.querySelector('slot[name="tab"]');
-    this.panelSlot = this.shadowRoot?.querySelector('slot[name="panel"]');
+    this.tabSlot = this.shadowRoot?.querySelector('slot[name="tab"]') ?? null;
+    this.panelSlot = this.shadowRoot?.querySelector('slot[name="panel"]') ?? null;
     this.tabSlot?.addEventListener('slotchange', this.onSlotChange);
     this.panelSlot?.addEventListener('slotchange', this.onSlotChange);
   }
@@ -127,7 +127,7 @@ class wcTabs extends HTMLElement {
     const totalTabs = this.getTabs().length;
     if (totalTabs === 0) return 0;
 
-    const rawIndex = parseInt(this.getAttribute(ATRIBUTOS.SELECTED_INDEX) || '0', 10);
+    const rawIndex = parseInt(this.getAttribute(ATTRIBUTES.SELECTED_INDEX) || "0", 10);
     if (Number.isNaN(rawIndex)) return 0;
     return Math.min(Math.max(rawIndex, 0), totalTabs - 1);
   }
@@ -140,7 +140,7 @@ class wcTabs extends HTMLElement {
     const current = this.getSelectedIndex();
 
     if (safeIndex !== current) {
-      this.setAttribute(ATRIBUTOS.SELECTED_INDEX, safeIndex.toString());
+      this.setAttribute(ATTRIBUTES.SELECTED_INDEX, safeIndex.toString());
     } else {
       this.updateTabs();
     }
@@ -156,10 +156,10 @@ class wcTabs extends HTMLElement {
     if (tabs.length === 0) return;
 
     const index = this.getSelectedIndex();
-    const hostId = this.id || 'wc-tabs';
+    const hostId = this.id || "wc-tabs";
 
-    if ((this.getAttribute(ATRIBUTOS.SELECTED_INDEX) || '0') !== index.toString()) {
-      this.setAttribute(ATRIBUTOS.SELECTED_INDEX, index.toString());
+    if ((this.getAttribute(ATTRIBUTES.SELECTED_INDEX) || "0") !== index.toString()) {
+      this.setAttribute(ATTRIBUTES.SELECTED_INDEX, index.toString());
       return;
     }
 
@@ -182,28 +182,16 @@ class wcTabs extends HTMLElement {
     panels.forEach((panel, i) => {
       const tabId = tabs[i]?.id || `${hostId}-tab-${i}`;
       const panelId = panel.id || `${hostId}-panel-${i}`;
-      const isActive = i === index;
-
       panel.id = panelId;
-      panel.setAttribute('role', 'tabpanel');
-      panel.setAttribute('aria-labelledby', tabId);
+      panel.setAttribute("role", "tabpanel");
+      panel.setAttribute("aria-labelledby", tabId);
 
       if (i === index) {
-        panel.classList.add('active');
-        panel.removeAttribute('hidden');
+        panel.removeAttribute("hidden");
       } else {
-        panel.classList.remove('active');
-        panel.setAttribute('hidden', 'true');
-      }
-
-      if (isActive) {
-        panel.classList.add('is-visible');
-      } else {
-        panel.classList.remove('is-visible');
+        panel.setAttribute("hidden", "true");
       }
     });
-
-    this.setAttribute('data-ready', 'true');
   }
 
   render() {
@@ -272,16 +260,8 @@ class wcTabs extends HTMLElement {
           transform: translateY(1px);
         }
 
-        .panels-container {
-          display: block;
-        }
-
         ::slotted([slot="panel"]) {
           animation: tab-fade-in 220ms ease;
-        }
-
-        ::slotted([slot="panel"]:not(.active)) {
-          display: none;
         }
 
         @keyframes tab-fade-in {
@@ -377,21 +357,23 @@ class wcTabs extends HTMLElement {
       <div class="tabs-header" role="tablist" aria-label="Navegacion de pestanas">
         <slot name="tab"></slot>
       </div>
-      <div class="panels-container">
+      <div>
         <slot name="panel"></slot>
       </div>
     `;
   }
 }
 
-customElements.define('wc-tabs', wcTabs);
+if (!customElements.get("wc-tabs")) {
+  customElements.define("wc-tabs", wcTabs);
+}
 
-declare module 'react' {
+declare module "react" {
   namespace JSX {
     interface IntrinsicElements {
-      'wc-tabs': React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement> & {
-          'selected-index'?: string | number;
+      "wc-tabs": DetailedHTMLProps<
+        import("react").HTMLAttributes<HTMLElement> & {
+          "selected-index"?: string | number;
         },
         HTMLElement
       >;
