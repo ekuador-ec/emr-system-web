@@ -1,6 +1,7 @@
 import type { AuthRepository } from "@/domain/modules/auth/repositories/AuthRepository";
 import type { UserProfile } from "@/domain/modules/users/models/User";
 import { supabase } from "@/infrastructure/core/supabaseClient";
+import { translateAuthErrorCode } from "@/infrastructure/modules/auth/errors/authErrorMessages";
 import { mapProfileRow } from "@/infrastructure/modules/users/mappers/profileMapper";
 import type { ProfileRow } from "@/infrastructure/modules/users/mappers/profileMapper";
 
@@ -12,7 +13,7 @@ export class SupabaseAuthRepository implements AuthRepository {
     });
 
     if (error) {
-      throw new Error(error.message);
+      throw new Error(translateAuthErrorCode(error.code));
     }
 
     if (!data.user) {
