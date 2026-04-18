@@ -145,7 +145,7 @@ export function MedicalRecordSummary({ patientId }: MedicalRecordSummaryProps) {
               disabled={isUpdating}
               onClick={handleToggleStatus}
             >
-              <Icon name={medicalRecord.isActive ? "icon-archive" : "icon-check"} size={16} />
+              <Icon name={medicalRecord.isActive ? "icon-archive" : "icon-unarchive"} size={16} />
               {medicalRecord.isActive ? "Archivar HC" : "Activar HC"}
             </WcButton>
           )}
@@ -166,7 +166,7 @@ export function MedicalRecordSummary({ patientId }: MedicalRecordSummaryProps) {
       >
         <div>
           <span style={{ display: "flex", alignItems: "center", gap: "var(--space-1)", fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px" }}>
-            <Icon name="icon-calendar" size={12} />
+            <Icon name="icon-calendar-user" size={12} />
             Creada
           </span>
           <span style={{ color: "var(--color-text)", fontWeight: 500 }}>
@@ -180,7 +180,7 @@ export function MedicalRecordSummary({ patientId }: MedicalRecordSummaryProps) {
         </div>
         <div>
           <span style={{ display: "flex", alignItems: "center", gap: "var(--space-1)", fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px" }}>
-            <Icon name="icon-calendar" size={12} />
+            <Icon name="icon-calendar-time" size={12} />
             Ultima edicion
           </span>
           <span style={{ color: "var(--color-text)", fontWeight: 500 }}>
@@ -222,7 +222,7 @@ export function MedicalRecordSummary({ patientId }: MedicalRecordSummaryProps) {
           variant="terciary"
           onClick={() => setSelectedPatientId(patientId)}
         >
-          <Icon name="icon-user" size={16} />
+          <Icon name="icon-card-info" size={16} />
           Ver Detalle del Paciente
         </WcButton>
       </div>

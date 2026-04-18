@@ -105,7 +105,7 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
                     style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--font-size-xs)" }}
                     title="Ver Detalles"
                   >
-                    <Icon name="icon-eye" size={16} />
+                    <Icon name="icon-see-details" size={16} />
                     Detalles
                   </button>
                   <button
@@ -115,7 +115,7 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
                     style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--font-size-xs)" }}
                     title="Ver Historia Clínica"
                   >
-                    <Icon name="icon-folder" size={16} />
+                    <Icon name="icon-medical-record" size={16} />
                     Historia
                   </button>
                   {canAdmin && (

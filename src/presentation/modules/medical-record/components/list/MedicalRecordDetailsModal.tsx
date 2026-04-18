@@ -140,7 +140,7 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
                   variant="terciary"
                   onClick={() => setSelectedPatientId(record.patientId)}
                 >
-                  <Icon name="icon-user" size={16} />
+                  <Icon name="icon-card-info" size={16} />
                   Ver Detalle
                 </WcButton>
               </div>
@@ -172,7 +172,7 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
             >
               <div>
                 <span style={{ display: "flex", alignItems: "center", gap: "var(--space-1)", fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px" }}>
-                  <Icon name="icon-calendar" size={12} />
+                  <Icon name="icon-calendar-user" size={12} />
                   Creado
                 </span>
                 <span style={{ color: "var(--color-text)", fontWeight: 500 }}>
@@ -186,7 +186,7 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
               </div>
               <div>
                 <span style={{ display: "flex", alignItems: "center", gap: "var(--space-1)", fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px" }}>
-                  <Icon name="icon-calendar" size={12} />
+                  <Icon name="icon-calendar-time" size={12} />
                   Ultima edicion
                 </span>
                 <span style={{ color: "var(--color-text)", fontWeight: 500 }}>

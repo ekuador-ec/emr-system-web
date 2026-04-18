@@ -99,7 +99,7 @@ export function PatientsList({ patientsResult }: PatientsListProps) {
                     style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--font-size-xs)" }}
                     title="Ver Detalles del Paciente"
                   >
-                    <Icon name="icon-user" size={16} />
+                    <Icon name="icon-card-info" size={16} />
                     Detalles
                   </button>
                   <button

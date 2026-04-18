@@ -183,7 +183,7 @@ export function OrganizationConfigModal({ isOpen, onClose }: OrganizationConfigM
           <div style={{ marginBottom: "var(--space-4)" }}>
             <label htmlFor="config-operationalUnit" style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-1)", fontSize: "0.875rem" }}>
               <span style={{ color: "var(--color-text-secondary)", display: "flex" }}>
-                <Icon name="icon-briefcase" size={16} />
+                <Icon name="icon-medical-center" size={16} />
               </span>
               Unidad Operativa
             </label>
@@ -208,7 +208,7 @@ export function OrganizationConfigModal({ isOpen, onClose }: OrganizationConfigM
             <div>
               <label htmlFor="config-operationalUnitCode" style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-1)", fontSize: "0.875rem" }}>
                 <span style={{ color: "var(--color-text-secondary)", display: "flex" }}>
-                  <Icon name="icon-hash" size={16} />
+                  <Icon name="icon-code" size={16} />
                 </span>
                 Cod. Unidad
               </label>
