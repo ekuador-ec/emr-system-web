@@ -16,7 +16,7 @@ import {
 } from '@/presentation/modules/auth/schemas/auth.schema'
 
 export function LoginPage() {
-  const { login, isLoggingIn, isAuthenticated, isLoading } = useAuth()
+  const { login, isLoggingIn, isAuthenticated, isLoading, loginError } = useAuth()
   const navigate = useNavigate()
 
   const [isRecovering, setIsRecovering] = useState(false)
@@ -49,6 +49,8 @@ export function LoginPage() {
   if (isAuthenticated && !isLoading) {
     return <Navigate to="/" replace />
   }
+  
+  const loginErrorMessage = loginError instanceof Error ? loginError.message : null
 
   const onLogin = async (data: LoginFormData) => {
     try {
@@ -286,6 +288,22 @@ export function LoginPage() {
         {!isRecovering ? (
           /* Login Form */
           <form onSubmit={handleLoginSubmit(onLogin)} noValidate>
+          {loginErrorMessage && (
+            <div
+              style={{
+                padding: 'var(--space-3)',
+                marginBottom: 'var(--space-4)',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'var(--color-danger-light)',
+                color: 'var(--color-danger)',
+                fontSize: 'var(--font-size-sm)',
+                fontWeight: 'var(--font-weight-medium)',
+                border: '1px solid var(--color-danger)',
+              }}
+            >
+              {loginErrorMessage}
+            </div>
+          )}
           <div style={{ marginBottom: 'var(--space-4)' }}>
             <label
               htmlFor="login-email"
