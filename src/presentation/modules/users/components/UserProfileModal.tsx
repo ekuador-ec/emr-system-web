@@ -11,6 +11,7 @@ import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
 import { WcTabsFolder } from "@/presentation/modules/shared/components/ui/webcomponents/Tabs/wcTabsFolder";
 import "@/presentation/modules/shared/components/ui/webcomponents/wcWarning";
+import { ImageCropperModal } from "@/presentation/modules/shared/components/ui/ImageCropperModal";
 
 
 interface UserProfileModalProps {
@@ -30,6 +31,9 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
   const [removeAvatar, setRemoveAvatar] = useState(false);
   const [isPasswordDirty, setIsPasswordDirty] = useState(false);
   const [tabsKey, setTabsKey] = useState(0);
+  
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [rawImageSrc, setRawImageSrc] = useState<string | null>(null);
 
   const {
     register,
@@ -83,10 +87,19 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      setSelectedFile(file);
-      setRemoveAvatar(false);
-      setPreviewUrl(URL.createObjectURL(file));
+      setRawImageSrc(URL.createObjectURL(file));
+      setCropperOpen(true);
+      // Reset input value to allow selecting the same file again if canceled
+      e.target.value = "";
     }
+  };
+
+  const handleCropSave = (croppedFile: File, previewUrl: string) => {
+    setSelectedFile(croppedFile);
+    setPreviewUrl(previewUrl);
+    setRemoveAvatar(false);
+    setCropperOpen(false);
+    setRawImageSrc(null);
   };
 
   const handleRemoveAvatar = () => {
@@ -188,12 +201,17 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
                 <img
                   src={previewUrl}
                   alt="Avatar"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", opacity: isPending ? 0.5 : 1 }}
                 />
               ) : (
                 <span style={{ fontSize: "2rem", color: "var(--color-text-secondary)", fontWeight: "600" }}>
                   {user.firstName?.charAt(0) || user.email.charAt(0)}
                 </span>
+              )}
+              {isPending && (
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                   <Icon name="icon-loader" size={24} className="spin-animation" style={{ color: "var(--color-primary)" }} />
+                </div>
               )}
             </div>
             <div style={{ position: "absolute", bottom: "-6px", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "var(--space-3)" }}>
@@ -451,6 +469,16 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
          <WcTabsFolder key={tabsKey} tabs={tabs} />
       </div>
 
+      <ImageCropperModal
+        isOpen={cropperOpen}
+        imageSrc={rawImageSrc}
+        onClose={() => {
+          setCropperOpen(false);
+          setRawImageSrc(null);
+        }}
+        onCropSave={handleCropSave}
+      />
+
       <input
         id="avatar-upload"
         type="file"
@@ -624,6 +652,14 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
             wc-button {
               width: 100%;
             }
+          }
+
+          @keyframes spin {
+             from { transform: rotate(0deg); }
+             to { transform: rotate(360deg); }
+          }
+          .spin-animation {
+             animation: spin 1s linear infinite;
           }
         `}
       </style>
