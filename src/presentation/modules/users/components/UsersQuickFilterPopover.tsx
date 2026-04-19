@@ -1,4 +1,3 @@
-import type { AccountStatus, UserRole } from "@/domain/modules/users/models/User";
 import { USER_ROLE_LABELS } from "@/domain/modules/users/models/User";
 import {
   WcFilterPopover,
@@ -10,9 +9,10 @@ import type {
 export type OnlineFilter = "all" | "online" | "offline";
 
 export type UsersQuickFilterState = {
-  role: "all" | UserRole;
-  status: "all" | AccountStatus;
+  role: string[];
+  status: string[];
   online: OnlineFilter;
+  includeDeleted: string;
 };
 
 type UsersQuickFilterPopoverProps = {
@@ -31,20 +31,18 @@ export function UsersQuickFilterPopover(props: UsersQuickFilterPopoverProps) {
       key: "role",
       id: "users-filter-role",
       label: "Rol",
-      options: [
-        { value: "all", label: "Todos" },
-        ...Object.entries(USER_ROLE_LABELS).map(([value, label]) => ({
-          value,
-          label,
-        })),
-      ],
+      multiSelect: true,
+      options: Object.entries(USER_ROLE_LABELS).map(([value, label]) => ({
+        value,
+        label,
+      })),
     },
     {
       key: "status",
       id: "users-filter-status",
       label: "Estado de cuenta",
+      multiSelect: true,
       options: [
-        { value: "all", label: "Todos" },
         { value: "active", label: "Activo" },
         { value: "inactive", label: "Inactivo" },
         { value: "suspended", label: "Suspendido" },
@@ -53,11 +51,20 @@ export function UsersQuickFilterPopover(props: UsersQuickFilterPopoverProps) {
     {
       key: "online",
       id: "users-filter-online",
-      label: "En linea",
+      label: "Conexion",
       options: [
         { value: "all", label: "Todos" },
         { value: "online", label: "En linea" },
         { value: "offline", label: "Fuera de linea" },
+      ],
+    },
+    {
+      key: "includeDeleted",
+      id: "users-filter-deleted",
+      label: "Usuarios eliminados",
+      options: [
+        { value: "no", label: "Ocultar" },
+        { value: "yes", label: "Incluir (auditoria)" },
       ],
     },
   ];

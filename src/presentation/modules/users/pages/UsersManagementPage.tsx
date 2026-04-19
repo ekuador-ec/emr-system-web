@@ -4,8 +4,8 @@ import { useAdminUsers } from "@/presentation/modules/users/hooks/useAdminUsers"
 import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import type {
   AccountStatus,
+  UserFilters,
   UserProfile,
-  UserWithPresence,
 } from "@/domain/modules/users/models/User";
 import {
   USER_ROLE_LABELS,
@@ -33,6 +33,7 @@ import type {
   WcTableColumn,
   WcTableRow,
 } from "@/presentation/modules/shared/components/ui/webcomponents/Tables/wcTables";
+import { useProfilesSubscription } from "@/presentation/modules/users/hooks/useProfilesSubscription";
 import "@/presentation/modules/users/pages/UsersManagementPage.css";
 
 type UserTableRow = WcTableRow & {
@@ -54,23 +55,94 @@ const USERS_CARDS_PAGE_SIZE = 8;
 const USERS_VIEW_MODE_STORAGE_KEY = "users-management:view-mode";
 
 const DEFAULT_USER_FILTERS: UsersQuickFilterState = {
-  role: "all",
-  status: "active",
+  role: [],
+  status: ["active"],
   online: "all",
+  includeDeleted: "no",
 };
 
-function normalizeText(value: unknown): string {
-  return String(value ?? "").trim().toLowerCase();
+function areArraysEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const sortedA = [...a].sort();
+  const sortedB = [...b].sort();
+  return sortedA.every((v, i) => v === sortedB[i]);
 }
 
 function countAppliedFilters(filters: UsersQuickFilterState): number {
   let count = 0;
 
-  if (filters.role !== DEFAULT_USER_FILTERS.role) count += 1;
-  if (filters.status !== DEFAULT_USER_FILTERS.status) count += 1;
+  if (filters.role.length > 0) count += 1;
+  if (!areArraysEqual(filters.status, DEFAULT_USER_FILTERS.status)) count += 1;
   if (filters.online !== DEFAULT_USER_FILTERS.online) count += 1;
+  if (filters.includeDeleted !== DEFAULT_USER_FILTERS.includeDeleted) count += 1;
 
   return count;
+}
+
+function hasNonDefaultFilters(
+  filters: UsersQuickFilterState,
+  searchTerm: string,
+): boolean {
+  return countAppliedFilters(filters) > 0 || searchTerm.length > 0;
+}
+
+const ONLINE_LABELS: Record<string, string> = {
+  online: "En linea",
+  offline: "Fuera de linea",
+};
+
+function getActiveFilterTags(
+  filters: UsersQuickFilterState,
+  searchTerm: string,
+): Array<{ key: string; label: string }> {
+  const tags: Array<{ key: string; label: string }> = [];
+
+  if (!areArraysEqual(filters.status, DEFAULT_USER_FILTERS.status)) {
+    const labels = filters.status.map(
+      (s) => ACCOUNT_STATUS_LABELS[s as AccountStatus] ?? s,
+    );
+    tags.push({
+      key: "status",
+      label: `Estado: ${labels.length > 0 ? labels.join(", ") : "Todos"}`,
+    });
+  }
+
+  if (filters.role.length > 0) {
+    const labels = filters.role.map(
+      (r) => (isUserRole(r) ? USER_ROLE_LABELS[r] : r),
+    );
+    tags.push({ key: "role", label: `Rol: ${labels.join(", ")}` });
+  }
+
+  if (filters.online !== "all") {
+    tags.push({
+      key: "online",
+      label: ONLINE_LABELS[filters.online] ?? filters.online,
+    });
+  }
+
+  if (filters.includeDeleted === "yes") {
+    tags.push({ key: "includeDeleted", label: "Incluye eliminados" });
+  }
+
+  if (searchTerm.length > 0) {
+    tags.push({ key: "search", label: `Busqueda: "${searchTerm}"` });
+  }
+
+  return tags;
+}
+
+function buildServerFilters(
+  uiFilters: UsersQuickFilterState,
+  searchTerm: string,
+): UserFilters {
+  return {
+    roles: uiFilters.role.length > 0 ? uiFilters.role as UserFilters["roles"] : undefined,
+    statuses: uiFilters.status.length > 0 ? uiFilters.status as UserFilters["statuses"] : undefined,
+    online: uiFilters.online === "all" ? null : (uiFilters.online as "online" | "offline"),
+    searchTerm: searchTerm || null,
+    includeDeleted: uiFilters.includeDeleted === "yes",
+  };
 }
 
 function isUserRole(value: string): value is keyof typeof USER_ROLE_LABELS {
@@ -186,9 +258,20 @@ function getCardsPaginationItems(totalPages: number, currentPage: number): Array
 
 export function UsersManagementPage() {
   const { user: currentUser } = useAuth();
+
+  const [appliedFilters, setAppliedFilters] =
+    useState<UsersQuickFilterState>(DEFAULT_USER_FILTERS);
+  const [draftFilters, setDraftFilters] =
+    useState<UsersQuickFilterState>(DEFAULT_USER_FILTERS);
+  const [searchValue, setSearchValue] = useState("");
+
+  const serverFilters = useMemo(
+    () => buildServerFilters(appliedFilters, searchValue),
+    [appliedFilters, searchValue],
+  );
+
   const {
-    activeUsers,
-    deletedUsers,
+    users,
     isLoading,
     isActivated,
     loadUsers,
@@ -196,14 +279,20 @@ export function UsersManagementPage() {
     isTogglingStatus,
     softDeleteUser,
     isSoftDeleting,
-  } = useAdminUsers();
+    restoreDeletedUser,
+    isRestoring,
+  } = useAdminUsers(serverFilters);
 
   const { addToast } = useToastStore();
 
-  const { setInviteModalOpen, setUsersLoaded } = useUserStore();
+  const { setInviteModalOpen } = useUserStore();
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [restoreConfirmId, setRestoreConfirmId] = useState<string | null>(null);
+  const [suspendConfirm, setSuspendConfirm] = useState<{
+    userId: string;
+    status: AccountStatus;
+  } | null>(null);
   const [searchInputValue, setSearchInputValue] = useState("");
-  const [searchValue, setSearchValue] = useState("");
   const [openFilterPanel, setOpenFilterPanel] = useState<FilterPanelPlacement | null>(null);
   const [isMobileViewport, setIsMobileViewport] = useState(() =>
     typeof window !== "undefined"
@@ -213,17 +302,12 @@ export function UsersManagementPage() {
   const [viewMode, setViewMode] = useState<UsersViewMode>("table");
   const [hydratedViewModeKey, setHydratedViewModeKey] = useState<string | null>(null);
   const [cardsCurrentPage, setCardsCurrentPage] = useState(1);
-  const [appliedFilters, setAppliedFilters] =
-    useState<UsersQuickFilterState>(DEFAULT_USER_FILTERS);
-  const [draftFilters, setDraftFilters] =
-    useState<UsersQuickFilterState>(DEFAULT_USER_FILTERS);
 
-  const handleToggleStatus = async (params: {
-    userId: string;
-    status: AccountStatus;
-  }) => {
-    await toggleUserStatus(params);
-    const label = params.status === "suspended" ? "suspendida" : "activada";
+  const handleConfirmToggleStatus = async () => {
+    if (!suspendConfirm) return;
+    await toggleUserStatus(suspendConfirm);
+    const label = suspendConfirm.status === "suspended" ? "suspendida" : "activada";
+    setSuspendConfirm(null);
     addToast({ type: "success", message: `Cuenta ${label} exitosamente` });
   };
 
@@ -233,9 +317,14 @@ export function UsersManagementPage() {
     addToast({ type: "success", message: "Usuario eliminado exitosamente" });
   };
 
-  useEffect(() => {
-    setUsersLoaded(false);
-  }, [setUsersLoaded]);
+  const handleConfirmRestore = async () => {
+    if (!restoreConfirmId) return;
+    await restoreDeletedUser(restoreConfirmId);
+    setRestoreConfirmId(null);
+    addToast({ type: "success", message: "Usuario restaurado exitosamente" });
+  };
+
+  useProfilesSubscription(isActivated);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -267,11 +356,6 @@ export function UsersManagementPage() {
   useEffect(() => {
     setCardsCurrentPage(1);
   }, [searchValue, appliedFilters, viewMode, isMobileViewport]);
-
-  const allUsers = useMemo(
-    () => [...activeUsers, ...deletedUsers],
-    [activeUsers, deletedUsers],
-  );
   const usersViewModeStorageKey = useMemo(
     () => getUsersViewModeStorageKey(currentUser?.id ?? null),
     [currentUser?.id],
@@ -306,46 +390,17 @@ export function UsersManagementPage() {
     [appliedFilters],
   );
 
-  const filteredUsers = useMemo(() => {
-    const normalizedSearch = normalizeText(searchValue);
+  const filterTags = useMemo(
+    () => getActiveFilterTags(appliedFilters, searchValue),
+    [appliedFilters, searchValue],
+  );
 
-    return allUsers.filter((user) => {
-      const fullName = `${user.firstName} ${user.lastName}`.trim();
-      const isDeleted = Boolean(user.deletedAt);
+  const filtersAreNonDefault = useMemo(
+    () => hasNonDefaultFilters(appliedFilters, searchValue),
+    [appliedFilters, searchValue],
+  );
 
-      const matchesSearch =
-        normalizedSearch.length === 0 ||
-        [
-          normalizeText(fullName),
-          normalizeText(user.email),
-        ].some((value) => value.includes(normalizedSearch));
-
-      const matchesActiveLifecycle = !isDeleted;
-
-      const matchesRole =
-        appliedFilters.role === "all" ||
-        user.role === appliedFilters.role;
-
-      const matchesStatus =
-        appliedFilters.status === "all" ||
-        user.accountStatus === appliedFilters.status;
-
-      const matchesOnline =
-        appliedFilters.online === "all" ||
-        (appliedFilters.online === "online" && user.isOnline) ||
-        (appliedFilters.online === "offline" && !user.isOnline);
-
-      return (
-        matchesSearch &&
-        matchesActiveLifecycle &&
-        matchesRole &&
-        matchesStatus &&
-        matchesOnline
-      );
-    });
-  }, [allUsers, appliedFilters, searchValue]);
-
-  const userTableRows: UserTableRow[] = filteredUsers.map((user) => ({
+  const userTableRows: UserTableRow[] = users.map((user) => ({
     id: user.id,
     fullName: `${user.firstName} ${user.lastName}`,
     email: user.email,
@@ -380,6 +435,27 @@ export function UsersManagementPage() {
 
   const userColumns: WcTableColumn[] = [
     {
+      key: "accountStatus",
+      name: "Estado",
+      width: "150px",
+      render: (row) => {
+        const isDeleted = row.isDeleted === true;
+        const label = isDeleted
+          ? "Eliminado"
+          : ACCOUNT_STATUS_LABELS[toAccountStatus(row.accountStatus)];
+        const tone = isDeleted
+          ? "deleted"
+          : toAccountStatus(row.accountStatus);
+
+        return (
+          <span className={`users-status-cell users-status-cell--${tone}`}>
+            <span className="users-status-dot" />
+            {label}
+          </span>
+        );
+      },
+    },
+    {
       key: "fullName",
       name: "Nombre",
       render: (row) => (
@@ -403,15 +479,6 @@ export function UsersManagementPage() {
         if (!isUserRole(roleValue)) return "--";
         return USER_ROLE_LABELS[roleValue];
       },
-    },
-    {
-      key: "accountStatus",
-      name: "Estado",
-      align: "center",
-      render: (row) =>
-        row.isDeleted
-          ? "Eliminado"
-          : ACCOUNT_STATUS_LABELS[toAccountStatus(row.accountStatus)],
     },
     {
       key: "phone",
@@ -442,7 +509,19 @@ export function UsersManagementPage() {
         if (!userId) return null;
         return (
           <TableActionCell>
-            {!isSelfUser && !isDeleted ? (
+            {!isSelfUser && isDeleted ? (
+              <WcButtonIcon
+                variant="primary"
+                shape="square"
+                size="sm"
+                className="users-table-action-icon"
+                icon="icon-check"
+                title="Restaurar usuario"
+                aria-label="Restaurar usuario"
+                disabled={isRestoring}
+                onClick={() => setRestoreConfirmId(userId)}
+              />
+            ) : !isSelfUser && !isDeleted ? (
               <>
                 <WcButtonIcon
                   variant="primary"
@@ -453,7 +532,7 @@ export function UsersManagementPage() {
                   title={accountStatus === "active" ? "Suspender usuario" : "Activar usuario"}
                   aria-label={accountStatus === "active" ? "Suspender usuario" : "Activar usuario"}
                   disabled={isTogglingStatus}
-                  onClick={() => handleToggleStatus({ userId, status: nextStatus })}
+                  onClick={() => setSuspendConfirm({ userId, status: nextStatus })}
                 />
                 <WcButtonIcon
                   variant="danger"
@@ -492,6 +571,34 @@ export function UsersManagementPage() {
     setDraftFilters(DEFAULT_USER_FILTERS);
     setAppliedFilters(DEFAULT_USER_FILTERS);
     setOpenFilterPanel(null);
+  };
+
+  const clearAllFiltersAndSearch = () => {
+    clearFilters();
+    setSearchInputValue("");
+    setSearchValue("");
+  };
+
+  const removeFilterTag = (tagKey: string) => {
+    if (tagKey === "search") {
+      setSearchInputValue("");
+      setSearchValue("");
+      return;
+    }
+
+    const resetMap: Partial<UsersQuickFilterState> = {
+      role: DEFAULT_USER_FILTERS.role,
+      status: DEFAULT_USER_FILTERS.status,
+      online: DEFAULT_USER_FILTERS.online,
+      includeDeleted: DEFAULT_USER_FILTERS.includeDeleted,
+    };
+
+    const resetValue = resetMap[tagKey as keyof UsersQuickFilterState];
+    if (resetValue === undefined) return;
+
+    const next = { ...appliedFilters, [tagKey]: resetValue };
+    setAppliedFilters(next);
+    setDraftFilters(next);
   };
 
   const applySearch = () => {
@@ -574,7 +681,17 @@ export function UsersManagementPage() {
 
   const selectedDeleteUser =
     deleteConfirmId !== null
-      ? allUsers.find((user) => user.id === deleteConfirmId) ?? null
+      ? users.find((user) => user.id === deleteConfirmId) ?? null
+      : null;
+
+  const selectedRestoreUser =
+    restoreConfirmId !== null
+      ? users.find((user) => user.id === restoreConfirmId) ?? null
+      : null;
+
+  const selectedSuspendUser =
+    suspendConfirm !== null
+      ? users.find((user) => user.id === suspendConfirm.userId) ?? null
       : null;
 
   return (
@@ -624,10 +741,41 @@ export function UsersManagementPage() {
             content: (
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
                 {isActivated ? renderSearchControls("panel") : null}
+
+                {isActivated && filterTags.length > 0 ? (
+                  <div className="users-active-filters-banner">
+                    <div className="users-active-filters-banner__tags">
+                      {filterTags.map((tag) => (
+                        <span key={tag.key} className="users-active-filters-tag">
+                          <span className="users-active-filters-tag__label">
+                            {tag.label}
+                          </span>
+                          <button
+                            type="button"
+                            className="users-active-filters-tag__remove"
+                            onClick={() => removeFilterTag(tag.key)}
+                            title={`Quitar filtro: ${tag.label}`}
+                            aria-label={`Quitar filtro: ${tag.label}`}
+                          >
+                            <Icon name="icon-x" size={10} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className="users-active-filters-banner__clear"
+                      onClick={clearAllFiltersAndSearch}
+                    >
+                      Limpiar todo
+                    </button>
+                  </div>
+                ) : null}
+
                 {!isActivated ? (
                   <div className="users-load-cta">
                     <p className="users-load-cta__description">
-                      Presione el boton para cargar  los usuarios.
+                      Presione el boton para cargar los usuarios activos del sistema.
                     </p>
                     <WcButton
                       variant="primary"
@@ -638,104 +786,134 @@ export function UsersManagementPage() {
                       Cargar usuarios
                     </WcButton>
                   </div>
+                ) : isLoading ? (
+                  <div className="card users-cards-empty">
+                    Cargando usuarios...
+                  </div>
+                ) : userTableRows.length === 0 ? (
+                  <div className="users-empty-state">
+                    <Icon name="icon-users" size={32} />
+                    {filtersAreNonDefault ? (
+                      <>
+                        <p className="users-empty-state__title">
+                          Sin resultados
+                        </p>
+                        <p className="users-empty-state__description">
+                          No se encontraron usuarios con los filtros aplicados.
+                          Intente modificar los criterios de busqueda o limpiar los filtros.
+                        </p>
+                        <WcButton
+                          variant="secondary"
+                          onClick={clearAllFiltersAndSearch}
+                        >
+                          Limpiar filtros
+                        </WcButton>
+                      </>
+                    ) : (
+                      <>
+                        <p className="users-empty-state__title">
+                          No hay usuarios activos
+                        </p>
+                        <p className="users-empty-state__description">
+                          No se encontraron usuarios activos en el sistema.
+                          Puede invitar nuevos usuarios o ajustar los filtros para ver otros estados.
+                        </p>
+                      </>
+                    )}
+                  </div>
                 ) : !isMobileViewport && viewMode === "table" ? (
                   <div>
                     <WcTables
                       columns={userColumns}
                       rows={userTableRows}
-                      emptyMessage={isLoading ? "Cargando usuarios..." : "No hay usuarios registrados"}
+                      emptyMessage="No hay usuarios registrados"
                       pageSize={10}
                     />
                   </div>
                 ) : (
                   <div className="users-cards-view">
-                    {userTableRows.length === 0 ? (
-                      <div className="card users-cards-empty">
-                        {isLoading ? "Cargando usuarios..." : "No hay usuarios registrados"}
-                      </div>
-                    ) : (
-                      <>
-                        <div className="users-cards-grid">
-                        {paginatedCardRows.map((row) => {
-                            const roleValue = typeof row.role === "string" ? row.role : "";
-                            const roleLabel = isUserRole(roleValue) ? USER_ROLE_LABELS[roleValue] : "--";
-                            const statusLabel = row.isDeleted
-                              ? "Eliminado"
-                              : ACCOUNT_STATUS_LABELS[toAccountStatus(row.accountStatus)];
-                            const userId = typeof row.id === "string" ? row.id : "";
-                            const accountStatus = toAccountStatus(row.accountStatus);
-                            const nextStatus: AccountStatus =
-                              accountStatus === "active" ? "suspended" : "active";
+                    <div className="users-cards-grid">
+                      {paginatedCardRows.map((row) => {
+                        const roleValue = typeof row.role === "string" ? row.role : "";
+                        const roleLabel = isUserRole(roleValue) ? USER_ROLE_LABELS[roleValue] : "--";
+                        const statusLabel = row.isDeleted
+                          ? "Eliminado"
+                          : ACCOUNT_STATUS_LABELS[toAccountStatus(row.accountStatus)];
+                        const userId = typeof row.id === "string" ? row.id : "";
+                        const accountStatus = toAccountStatus(row.accountStatus);
+                        const nextStatus: AccountStatus =
+                          accountStatus === "active" ? "suspended" : "active";
 
-                            return (
-                              <WcUserCard
-                                key={row.id}
-                                avatarUrl={typeof row.avatarUrl === "string" ? row.avatarUrl : undefined}
-                                fullName={typeof row.fullName === "string" ? row.fullName : "--"}
-                                email={typeof row.email === "string" ? row.email : "--"}
-                                roleLabel={roleLabel}
-                                statusLabel={statusLabel}
-                                phone={typeof row.phone === "string" ? row.phone : "--"}
-                                lastSeen={formatDateTime(typeof row.lastSeen === "string" ? row.lastSeen : null)}
-                                canManage={!row.isSelf && !row.isDeleted && Boolean(userId)}
-                                isTogglingStatus={isTogglingStatus}
-                                statusActionIcon={accountStatus === "active" ? "icon-lock" : "icon-check"}
-                                statusActionLabel={accountStatus === "active" ? "Suspender usuario" : "Activar usuario"}
-                                onToggleStatus={() => handleToggleStatus({ userId, status: nextStatus })}
-                                onDelete={() => setDeleteConfirmId(userId)}
-                              />
-                            );
-                        })}
-                      </div>
+                        return (
+                          <WcUserCard
+                            key={row.id}
+                            avatarUrl={typeof row.avatarUrl === "string" ? row.avatarUrl : undefined}
+                            fullName={typeof row.fullName === "string" ? row.fullName : "--"}
+                            email={typeof row.email === "string" ? row.email : "--"}
+                            roleLabel={roleLabel}
+                            statusLabel={statusLabel}
+                            phone={typeof row.phone === "string" ? row.phone : "--"}
+                            lastSeen={formatDateTime(typeof row.lastSeen === "string" ? row.lastSeen : null)}
+                            canManage={!row.isSelf && Boolean(userId)}
+                            isDeleted={row.isDeleted === true}
+                            isTogglingStatus={isTogglingStatus}
+                            isRestoring={isRestoring}
+                            statusActionIcon={accountStatus === "active" ? "icon-lock" : "icon-check"}
+                            statusActionLabel={accountStatus === "active" ? "Suspender usuario" : "Activar usuario"}
+                            onToggleStatus={() => setSuspendConfirm({ userId, status: nextStatus })}
+                            onDelete={() => setDeleteConfirmId(userId)}
+                            onRestore={() => setRestoreConfirmId(userId)}
+                          />
+                        );
+                      })}
+                    </div>
 
-                        {cardsTotalRows > 0 ? (
-                          <div className="users-cards-pagination">
-                            <p className="users-cards-pagination__summary">
-                              {`Mostrando ${cardsPageStart}-${cardsPageEnd} de ${cardsTotalRows} usuarios`}
-                            </p>
+                    {cardsTotalRows > 0 ? (
+                      <div className="users-cards-pagination">
+                        <p className="users-cards-pagination__summary">
+                          {`Mostrando ${cardsPageStart}-${cardsPageEnd} de ${cardsTotalRows} usuarios`}
+                        </p>
 
-                            <div className="users-cards-pagination__controls">
+                        <div className="users-cards-pagination__controls">
+                          <WcButton
+                            variant="primary"
+                            className="users-cards-pagination-btn"
+                            onClick={() => setCardsCurrentPage((previous) => Math.max(1, previous - 1))}
+                            disabled={safeCardsPage === 1}
+                            aria-label="Pagina anterior"
+                          >
+                            {"<"}
+                          </WcButton>
+
+                          {cardsPaginationItems.map((item, index) =>
+                            item === "ellipsis" ? (
+                              <span key={`cards-ellipsis-${index}`} className="users-cards-pagination__ellipsis">
+                                ...
+                              </span>
+                            ) : (
                               <WcButton
-                                variant="primary"
-                                className="users-cards-pagination-btn"
-                                onClick={() => setCardsCurrentPage((previous) => Math.max(1, previous - 1))}
-                                disabled={safeCardsPage === 1}
-                                aria-label="Pagina anterior"
+                                key={`cards-page-${item}`}
+                                variant={safeCardsPage === item ? "primary" : "secondary"}
+                                className={`users-cards-pagination-btn${safeCardsPage === item ? " users-cards-pagination-btn--active" : ""}`}
+                                onClick={() => setCardsCurrentPage(item)}
                               >
-                                {"<"}
+                                {item}
                               </WcButton>
+                            ),
+                          )}
 
-                              {cardsPaginationItems.map((item, index) =>
-                                item === "ellipsis" ? (
-                                  <span key={`cards-ellipsis-${index}`} className="users-cards-pagination__ellipsis">
-                                    ...
-                                  </span>
-                                ) : (
-                                  <WcButton
-                                    key={`cards-page-${item}`}
-                                    variant={safeCardsPage === item ? "primary" : "secondary"}
-                                    className={`users-cards-pagination-btn${safeCardsPage === item ? " users-cards-pagination-btn--active" : ""}`}
-                                    onClick={() => setCardsCurrentPage(item)}
-                                  >
-                                    {item}
-                                  </WcButton>
-                                ),
-                              )}
-
-                              <WcButton
-                                variant="primary"
-                                className="users-cards-pagination-btn"
-                                onClick={() => setCardsCurrentPage((previous) => Math.min(cardsTotalPages, previous + 1))}
-                                disabled={safeCardsPage === cardsTotalPages}
-                                aria-label="Pagina siguiente"
-                              >
-                                {">"}
-                              </WcButton>
-                            </div>
-                          </div>
-                        ) : null}
-                      </>
-                    )}
+                          <WcButton
+                            variant="primary"
+                            className="users-cards-pagination-btn"
+                            onClick={() => setCardsCurrentPage((previous) => Math.min(cardsTotalPages, previous + 1))}
+                            disabled={safeCardsPage === cardsTotalPages}
+                            aria-label="Pagina siguiente"
+                          >
+                            {">"}
+                          </WcButton>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 )}
               </div>
@@ -745,11 +923,56 @@ export function UsersManagementPage() {
       />
 
       {deleteConfirmId && selectedDeleteUser && (
-        <ConfirmDeleteModal
-          user={selectedDeleteUser}
+        <ConfirmUserActionModal
+          variant="danger"
+          title="Confirmar Eliminacion"
+          message={
+            <>Estas seguro de que deseas eliminar a <strong style={{ color: "var(--color-text)" }}>{selectedDeleteUser.firstName} {selectedDeleteUser.lastName}</strong>?</>
+          }
+          detail="Esta accion deshabilitara su acceso al sistema. Los datos del usuario se conservaran para trazabilidad de registros medicos."
+          confirmLabel="Si, Eliminar"
+          loadingLabel="Eliminando..."
+          isLoading={isSoftDeleting}
           onConfirm={() => handleDelete(deleteConfirmId)}
           onCancel={() => setDeleteConfirmId(null)}
-          isDeleting={isSoftDeleting}
+        />
+      )}
+
+      {restoreConfirmId && selectedRestoreUser && (
+        <ConfirmUserActionModal
+          variant="primary"
+          title="Confirmar Restauracion"
+          message={
+            <>Estas seguro de que deseas restaurar a <strong style={{ color: "var(--color-text)" }}>{selectedRestoreUser.firstName} {selectedRestoreUser.lastName}</strong>?</>
+          }
+          detail="Al restaurar este usuario, su cuenta sera reactivada y podra iniciar sesion nuevamente con acceso completo al sistema segun su rol asignado."
+          confirmLabel="Si, Restaurar"
+          loadingLabel="Restaurando..."
+          isLoading={isRestoring}
+          onConfirm={handleConfirmRestore}
+          onCancel={() => setRestoreConfirmId(null)}
+        />
+      )}
+
+      {suspendConfirm && selectedSuspendUser && (
+        <ConfirmUserActionModal
+          variant={suspendConfirm.status === "suspended" ? "danger" : "primary"}
+          title={suspendConfirm.status === "suspended" ? "Confirmar Suspension" : "Confirmar Activacion"}
+          message={
+            suspendConfirm.status === "suspended"
+              ? <>Estas seguro de que deseas suspender a <strong style={{ color: "var(--color-text)" }}>{selectedSuspendUser.firstName} {selectedSuspendUser.lastName}</strong>?</>
+              : <>Estas seguro de que deseas activar a <strong style={{ color: "var(--color-text)" }}>{selectedSuspendUser.firstName} {selectedSuspendUser.lastName}</strong>?</>
+          }
+          detail={
+            suspendConfirm.status === "suspended"
+              ? "El usuario no podra iniciar sesion ni acceder al sistema mientras su cuenta permanezca suspendida. Podra reactivarla en cualquier momento."
+              : "El usuario podra iniciar sesion y acceder al sistema nuevamente con los permisos de su rol asignado."
+          }
+          confirmLabel={suspendConfirm.status === "suspended" ? "Si, Suspender" : "Si, Activar"}
+          loadingLabel={suspendConfirm.status === "suspended" ? "Suspendiendo..." : "Activando..."}
+          isLoading={isTogglingStatus}
+          onConfirm={handleConfirmToggleStatus}
+          onCancel={() => setSuspendConfirm(null)}
         />
       )}
     </div>
@@ -767,17 +990,25 @@ function formatDateTime(value: string | null): string {
   }).format(new Date(value));
 }
 
-function ConfirmDeleteModal({
-  user,
-  onConfirm,
-  onCancel,
-  isDeleting,
-}: {
-  user: UserWithPresence;
+import type { ReactNode } from "react";
+
+type ConfirmUserActionModalProps = {
+  variant: "danger" | "primary";
+  title: string;
+  message: ReactNode;
+  detail: string;
+  confirmLabel: string;
+  loadingLabel: string;
+  isLoading: boolean;
   onConfirm: () => void;
   onCancel: () => void;
-  isDeleting: boolean;
-}) {
+};
+
+function ConfirmUserActionModal(props: ConfirmUserActionModalProps) {
+  const confirmVariant = props.variant === "danger" ? "danger" : "primary";
+  const titleColor =
+    props.variant === "danger" ? "var(--color-danger)" : "var(--color-primary)";
+
   return (
     <div
       style={{
@@ -790,7 +1021,7 @@ function ConfirmDeleteModal({
         zIndex: 1000,
         padding: "var(--space-4)",
       }}
-      onClick={onCancel}
+      onClick={props.onCancel}
     >
       <div
         className="card"
@@ -800,17 +1031,13 @@ function ConfirmDeleteModal({
         <h3
           style={{
             marginBottom: "var(--space-3)",
-            color: "var(--color-danger)",
+            color: titleColor,
           }}
         >
-          Confirmar Eliminacion
+          {props.title}
         </h3>
         <p style={{ marginBottom: "var(--space-2)" }}>
-          Estas seguro de que deseas eliminar a{" "}
-          <strong style={{ color: "var(--color-text)" }}>
-            {user.firstName} {user.lastName}
-          </strong>
-          ?
+          {props.message}
         </p>
         <p
           style={{
@@ -819,9 +1046,7 @@ function ConfirmDeleteModal({
             color: "var(--color-text-secondary)",
           }}
         >
-          Esta accion deshabilitara su acceso al sistema. Los datos del usuario
-          se conservaran para trazabilidad de registros medicos. Esta accion no
-          se puede deshacer facilmente.
+          {props.detail}
         </p>
         <div
           style={{
@@ -831,18 +1056,20 @@ function ConfirmDeleteModal({
           }}
         >
           <WcButton
-            variant="secondary"
-            onClick={onCancel}
-            disabled={isDeleting}
+            variant="terciary"
+            onClick={props.onCancel}
+            disabled={props.isLoading}
           >
+            <Icon name="icon-x" size={14} />
             Cancelar
           </WcButton>
           <WcButton
-            variant="danger"
-            onClick={onConfirm}
-            disabled={isDeleting}
+            variant={confirmVariant}
+            onClick={props.onConfirm}
+            disabled={props.isLoading}
           >
-            {isDeleting ? "Eliminando..." : "Si, Eliminar"}
+            <Icon name="icon-check" size={14} />
+            {props.isLoading ? props.loadingLabel : props.confirmLabel}
           </WcButton>
         </div>
       </div>
