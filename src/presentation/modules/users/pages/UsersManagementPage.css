@@ -1,33 +1,28 @@
-.users-status-cell {
+.users-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: var(--font-size-sm);
-  font-weight: 500;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
   white-space: nowrap;
 }
 
-.users-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
+.users-status-badge--active {
+  background-color: #d1fae5;
+  color: #047857;
 }
 
-.users-status-cell--active .users-status-dot {
-  background-color: #22c55e;
+.users-status-badge--suspended {
+  background-color: #fef3c7;
+  color: #b45309;
 }
 
-.users-status-cell--suspended .users-status-dot {
-  background-color: #f59e0b;
-}
-
-.users-status-cell--inactive .users-status-dot {
-  background-color: #9ca3af;
-}
-
-.users-status-cell--deleted .users-status-dot {
-  background-color: #ef4444;
+.users-status-badge--inactive,
+.users-status-badge--deleted {
+  background-color: #fee2e2;
+  color: #b91c1c;
 }
 
 .users-filters-toolbar-top {
