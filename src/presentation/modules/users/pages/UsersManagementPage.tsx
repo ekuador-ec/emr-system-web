@@ -400,18 +400,29 @@ export function UsersManagementPage() {
     [appliedFilters, searchValue],
   );
 
-  const userTableRows: UserTableRow[] = users.map((user) => ({
-    id: user.id,
-    fullName: `${user.firstName} ${user.lastName}`,
-    email: user.email,
-    role: user.role,
-    accountStatus: user.accountStatus,
-    phone: user.phone ?? "--",
-    lastSeen: user.lastSeen,
-    isSelf: user.id === currentUser?.id,
-    isDeleted: Boolean(user.deletedAt),
-    avatarUrl: user.avatarUrl || undefined,
-  }));
+  const userTableRows: UserTableRow[] = useMemo(() => {
+    const getStatusWeight = (user: UserProfile) => {
+      if (user.deletedAt) return 3;
+      if (user.accountStatus === "active") return 1;
+      if (user.accountStatus === "suspended") return 2;
+      return 3;
+    };
+
+    return [...users]
+      .sort((a, b) => getStatusWeight(a) - getStatusWeight(b))
+      .map((user) => ({
+        id: user.id,
+        fullName: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        role: user.role,
+        accountStatus: user.accountStatus,
+        phone: user.phone ?? "--",
+        lastSeen: user.lastSeen,
+        isSelf: user.id === currentUser?.id,
+        isDeleted: Boolean(user.deletedAt),
+        avatarUrl: user.avatarUrl || undefined,
+      }));
+  }, [users, currentUser?.id]);
 
   const cardsTotalRows = userTableRows.length;
   const cardsTotalPages = Math.max(1, Math.ceil(cardsTotalRows / USERS_CARDS_PAGE_SIZE));
@@ -438,6 +449,7 @@ export function UsersManagementPage() {
       key: "accountStatus",
       name: "Estado",
       width: "150px",
+      align: "center",
       render: (row) => {
         const isDeleted = row.isDeleted === true;
         const label = isDeleted
@@ -448,8 +460,7 @@ export function UsersManagementPage() {
           : toAccountStatus(row.accountStatus);
 
         return (
-          <span className={`users-status-cell users-status-cell--${tone}`}>
-            <span className="users-status-dot" />
+          <span className={`users-status-badge users-status-badge--${tone}`}>
             {label}
           </span>
         );
@@ -497,7 +508,7 @@ export function UsersManagementPage() {
     {
       key: "actions",
       name: "Acciones",
-      align: "center",
+      align: "left",
       width: "120px",
       render: (row) => {
         const userId = typeof row.id === "string" ? row.id : "";
