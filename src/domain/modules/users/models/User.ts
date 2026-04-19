@@ -66,6 +66,18 @@ export interface InviteUserPayload {
 }
 
 /**
+ * Filters accepted by the admin user listing query.
+ * Empty arrays are treated as "no filter" (returns all).
+ */
+export interface UserFilters {
+  roles?: UserRole[];
+  statuses?: AccountStatus[];
+  online?: "online" | "offline" | null;
+  searchTerm?: string | null;
+  includeDeleted?: boolean;
+}
+
+/**
  * Human-readable labels for user roles (Spanish).
  */
 export const USER_ROLE_LABELS: Record<UserRole, string> = {

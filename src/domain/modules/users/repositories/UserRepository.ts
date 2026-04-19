@@ -2,6 +2,7 @@ import type {
   AccountStatus,
   InviteUserPayload,
   PresenceEntry,
+  UserFilters,
   UserProfile,
   UserWithPresence,
 } from "@/domain/modules/users/models/User";
@@ -14,6 +15,8 @@ export interface UserRepository {
 
   getAllUsers(): Promise<UserWithPresence[]>;
 
+  getFilteredUsers(filters: UserFilters): Promise<UserWithPresence[]>;
+
   getUserById(id: string): Promise<UserProfile>;
 
   inviteUser(payload: InviteUserPayload): Promise<UserProfile>;
@@ -21,6 +24,8 @@ export interface UserRepository {
   toggleUserStatus(userId: string, status: AccountStatus): Promise<void>;
 
   softDeleteUser(userId: string): Promise<void>;
+
+  restoreDeletedUser(userId: string): Promise<void>;
 
   updateProfile(userId: string, data: Partial<UserProfile>): Promise<UserProfile>;
 

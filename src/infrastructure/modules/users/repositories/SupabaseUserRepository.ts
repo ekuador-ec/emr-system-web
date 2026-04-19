@@ -3,6 +3,7 @@ import type {
   AccountStatus,
   InviteUserPayload,
   PresenceEntry,
+  UserFilters,
   UserProfile,
   UserWithPresence,
 } from "@/domain/modules/users/models/User";
@@ -13,6 +14,37 @@ import type { ProfileRow, ProfileWithPresenceRow } from "@/infrastructure/module
 export class SupabaseUserRepository implements UserRepository {
   async getAllUsers(): Promise<UserWithPresence[]> {
     const { data, error } = await supabase.rpc("get_all_users_admin");
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return (data as ProfileWithPresenceRow[]).map(mapProfileWithPresenceRow);
+  }
+
+  async getFilteredUsers(filters: UserFilters): Promise<UserWithPresence[]> {
+    const params: Record<string, unknown> = {};
+
+    if (filters.roles?.length) {
+      params.filter_roles = filters.roles;
+    }
+    if (filters.statuses?.length) {
+      params.filter_statuses = filters.statuses;
+    }
+    if (filters.online) {
+      params.filter_online = filters.online;
+    }
+    if (filters.searchTerm) {
+      params.search_term = filters.searchTerm;
+    }
+    if (filters.includeDeleted) {
+      params.include_deleted = true;
+    }
+
+    const { data, error } = await supabase.rpc(
+      "get_filtered_users_admin",
+      params,
+    );
 
     if (error) {
       throw new Error(error.message);
@@ -93,6 +125,22 @@ export class SupabaseUserRepository implements UserRepository {
 
     if (!result.success) {
       throw new Error(result.error ?? "Error al eliminar usuario");
+    }
+  }
+
+  async restoreDeletedUser(userId: string): Promise<void> {
+    const { data, error } = await supabase.rpc("restore_deleted_user", {
+      target_user_id: userId,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const result = data as { success: boolean; error?: string };
+
+    if (!result.success) {
+      throw new Error(result.error ?? "Error al restaurar usuario");
     }
   }
 
