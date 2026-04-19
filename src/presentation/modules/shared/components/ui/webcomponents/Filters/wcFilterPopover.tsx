@@ -3,7 +3,7 @@ import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Ico
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import "@/presentation/modules/shared/components/ui/webcomponents/Filters/wcFilterPopover.css";
 
-export type WcFilterValues = Record<string, string>;
+export type WcFilterValues = Record<string, string | string[]>;
 
 export type WcFilterOption = {
   value: string;
@@ -15,6 +15,7 @@ export type WcFilterField<TValues extends WcFilterValues> = {
   id: string;
   label: string;
   options: WcFilterOption[];
+  multiSelect?: boolean;
 };
 
 type WcFilterPopoverProps<TValues extends WcFilterValues> = {
@@ -97,6 +98,18 @@ export function WcFilterPopover<TValues extends WcFilterValues>(
     });
   };
 
+  const handleMultiSelectToggle = (key: keyof TValues, optionValue: string) => {
+    const currentArray = (values[key] as string[]) ?? [];
+    const nextArray = currentArray.includes(optionValue)
+      ? currentArray.filter((v) => v !== optionValue)
+      : [...currentArray, optionValue];
+
+    onChange({
+      ...values,
+      [key]: nextArray,
+    });
+  };
+
   return (
     <div className="wc-filter-popover__anchor" ref={anchorRef}>
       <WcButton
@@ -104,7 +117,7 @@ export function WcFilterPopover<TValues extends WcFilterValues>(
         className="wc-filter-popover__trigger"
         onClick={onToggle}
       >
-        <Icon name={triggerIcon ?? "icon-catalogs"} size={14} />
+        <Icon name={triggerIcon ?? "icon-filters"} size={14} />
         {triggerText}
       </WcButton>
 
@@ -116,18 +129,53 @@ export function WcFilterPopover<TValues extends WcFilterValues>(
                 <label className="wc-filter-popover__label" htmlFor={field.id}>
                   {field.label}
                 </label>
-                <select
-                  id={field.id}
-                  className="wc-filter-popover__input"
-                  value={values[field.key]}
-                  onChange={(event) => handleFieldChange(field.key, event.target.value)}
-                >
-                  {field.options.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                {field.multiSelect ? (
+                  <div
+                    className="wc-filter-popover__multi-options"
+                    role="group"
+                    aria-labelledby={field.id}
+                  >
+                    {field.options.map((option) => {
+                      const checked = ((values[field.key] as string[]) ?? []).includes(
+                        option.value,
+                      );
+                      const inputId = `${field.id}--${option.value}`;
+                      return (
+                        <label
+                          key={option.value}
+                          className={`wc-filter-popover__chip${checked ? " is-checked" : ""}`}
+                          htmlFor={inputId}
+                        >
+                          <input
+                            id={inputId}
+                            type="checkbox"
+                            className="wc-filter-popover__chip-input"
+                            checked={checked}
+                            onChange={() =>
+                              handleMultiSelectToggle(field.key, option.value)
+                            }
+                          />
+                          <span className="wc-filter-popover__chip-label">
+                            {option.label}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <select
+                    id={field.id}
+                    className="wc-filter-popover__input"
+                    value={values[field.key] as string}
+                    onChange={(event) => handleFieldChange(field.key, event.target.value)}
+                  >
+                    {field.options.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
             ))}
           </div>

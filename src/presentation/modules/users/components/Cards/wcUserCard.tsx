@@ -10,11 +10,14 @@ export type WcUserCardProps = {
   lastSeen: string;
   avatarUrl?: string;
   canManage: boolean;
+  isDeleted?: boolean;
   isTogglingStatus?: boolean;
+  isRestoring?: boolean;
   statusActionLabel: string;
   statusActionIcon: string;
   onToggleStatus: () => void;
   onDelete: () => void;
+  onRestore?: () => void;
 };
 
 type StatusTone = "active" | "inactive" | "suspended" | "deleted" | "neutral";
@@ -87,27 +90,43 @@ function WcUserCard(props: WcUserCardProps) {
         <span className="wc-user-card__actions-label">Acciones</span>
         {props.canManage ? (
           <div className="wc-user-card__actions-group">
-            <WcButtonIcon
-              variant="primary"
-              shape="square"
-              size="sm"
-              className="wc-user-card__action wc-user-card__action--status"
-              icon={props.statusActionIcon}
-              title={props.statusActionLabel}
-              aria-label={props.statusActionLabel}
-              disabled={props.isTogglingStatus}
-              onClick={props.onToggleStatus}
-            />
-            <WcButtonIcon
-              variant="danger"
-              shape="square"
-              size="sm"
-              className="wc-user-card__action wc-user-card__action--delete"
-              icon="icon-trash"
-              title="Eliminar usuario"
-              aria-label="Eliminar usuario"
-              onClick={props.onDelete}
-            />
+            {props.isDeleted && props.onRestore ? (
+              <WcButtonIcon
+                variant="primary"
+                shape="square"
+                size="sm"
+                className="wc-user-card__action wc-user-card__action--status"
+                icon="icon-check"
+                title="Restaurar usuario"
+                aria-label="Restaurar usuario"
+                disabled={props.isRestoring}
+                onClick={props.onRestore}
+              />
+            ) : (
+              <>
+                <WcButtonIcon
+                  variant="primary"
+                  shape="square"
+                  size="sm"
+                  className="wc-user-card__action wc-user-card__action--status"
+                  icon={props.statusActionIcon}
+                  title={props.statusActionLabel}
+                  aria-label={props.statusActionLabel}
+                  disabled={props.isTogglingStatus}
+                  onClick={props.onToggleStatus}
+                />
+                <WcButtonIcon
+                  variant="danger"
+                  shape="square"
+                  size="sm"
+                  className="wc-user-card__action wc-user-card__action--delete"
+                  icon="icon-trash"
+                  title="Eliminar usuario"
+                  aria-label="Eliminar usuario"
+                  onClick={props.onDelete}
+                />
+              </>
+            )}
           </div>
         ) : (
           <span className="wc-user-card__empty-actions">Sin acciones</span>
