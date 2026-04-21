@@ -21,8 +21,25 @@ export class SupabasePatientRepository implements PatientRepository {
       query = query.eq('is_active', filters.isActive);
     }
 
+    if (filters?.idNumber) {
+      query = query.ilike('id_number', `%${filters.idNumber}%`);
+    }
+
+    if (filters?.gender) {
+      query = query.eq('gender', filters.gender);
+    }
+
+    if (filters?.firstName) {
+      query = query.ilike('first_name', `${filters.firstName}%`);
+    }
+
+    if (filters?.lastName) {
+      // Check in both last_name and second_last_name matching starts with initial
+      query = query.or(`last_name.ilike.${filters.lastName}%,second_last_name.ilike.${filters.lastName}%`);
+    }
+
     if (filters?.search) {
-      query = query.or(`id_number.ilike.%${filters.search}%,first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%`);
+      query = query.or(`id_number.ilike.${filters.search}%,first_name.ilike.${filters.search}%,last_name.ilike.${filters.search}%`);
     }
 
     const { data, count, error } = await query;
@@ -134,9 +151,9 @@ export class SupabasePatientRepository implements PatientRepository {
         patient_id: createdPatientId,
         name: contact.name,
         kinship: contact.kinship,
-        kinship_other: contact.kinshipOther,
+        kinship_other: contact.kinshipOther || null,
         phone: contact.phone,
-        address: contact.address,
+        address: contact.address || null,
       }));
       const { error: contactsError } = await supabase
         .from('patient_emergency_contacts')
@@ -148,10 +165,10 @@ export class SupabasePatientRepository implements PatientRepository {
       const antecedentsPayload = clinicalAntecedents.map((ant) => ({
         patient_id: createdPatientId,
         antecedent_type: ant.antecedentType,
-        pathology_id: ant.pathologyId,
-        description: ant.description,
-        diagnosis_date: ant.diagnosisDate,
-        treatment: ant.treatment,
+        pathology_id: ant.pathologyId || null,
+        description: ant.description || null,
+        diagnosis_date: ant.diagnosisDate || null,
+        treatment: ant.treatment || null,
       }));
       const { error: antecedentsError } = await supabase
         .from('patient_clinical_antecedents')
@@ -198,13 +215,100 @@ export class SupabasePatientRepository implements PatientRepository {
     if (patient.infoSourceObservations !== undefined) payload.info_source_observations = patient.infoSourceObservations;
     if (patient.isActive !== undefined) payload.is_active = patient.isActive;
 
-    const { error } = await supabase
-      .from('patients')
-      .update(payload)
-      .eq('id', id);
+    if (Object.keys(payload).length > 0) {
+      const { error } = await supabase
+        .from('patients')
+        .update(payload)
+        .eq('id', id);
 
-    if (error) {
-      throw new Error(error.message);
+      if (error) {
+        throw new Error(error.message);
+      }
+    }
+
+    if (patient.emergencyContacts !== undefined) {
+      const { error: deleteContactsError } = await supabase
+        .from('patient_emergency_contacts')
+        .delete()
+        .eq('patient_id', id);
+
+      if (deleteContactsError) {
+        throw new Error(`Error deleting old contacts: ${deleteContactsError.message}`);
+      }
+
+      if (patient.emergencyContacts.length > 0) {
+        const contactsPayload = patient.emergencyContacts.map((contact) => ({
+          patient_id: id,
+          name: contact.name,
+          kinship: contact.kinship,
+          kinship_other: contact.kinshipOther || null,
+          phone: contact.phone,
+          address: contact.address || null,
+        }));
+        const { error: contactsError } = await supabase
+          .from('patient_emergency_contacts')
+          .insert(contactsPayload);
+        if (contactsError) throw new Error(`Error saving contacts: ${contactsError.message}`);
+      }
+    }
+
+    if (patient.clinicalAntecedents !== undefined) {
+      // 1. Fetch current active antecedents
+      const { data: existingAntecedents, error: fetchError } = await supabase
+        .from('patient_clinical_antecedents')
+        .select('id')
+        .eq('patient_id', id)
+        .eq('is_active', true);
+
+      if (fetchError) {
+        throw new Error(`Error fetching existing antecedents: ${fetchError.message}`);
+      }
+
+      const incomingIds = patient.clinicalAntecedents.map(a => a.id).filter(Boolean) as string[];
+      const existingIds = (existingAntecedents || []).map((a: any) => a.id as string);
+      const idsToDeactivate = existingIds.filter(exId => !incomingIds.includes(exId));
+
+      // 2. Soft-delete missing ones (RLS prevents physical delete)
+      if (idsToDeactivate.length > 0) {
+        const { error: deactivateError } = await supabase
+          .from('patient_clinical_antecedents')
+          .update({ is_active: false })
+          .in('id', idsToDeactivate);
+
+        if (deactivateError) {
+          throw new Error(`Error deactivating antecedents: ${deactivateError.message}`);
+        }
+      }
+
+      // 3. Upsert incoming antecedents
+      for (const ant of patient.clinicalAntecedents) {
+        const antPayload = {
+          patient_id: id,
+          antecedent_type: ant.antecedentType,
+          pathology_id: ant.pathologyId || null,
+          description: ant.description || null,
+          diagnosis_date: ant.diagnosisDate || null,
+          treatment: ant.treatment || null,
+          is_active: true, // ensure it remains active
+        };
+
+        if (ant.id) {
+          // Update existing
+          const { error: updateError } = await supabase
+            .from('patient_clinical_antecedents')
+            .update(antPayload)
+            .eq('id', ant.id);
+            
+          if (updateError) throw new Error(`Error updating antecedent: ${updateError.message}`);
+        } else {
+          // Insert new
+          const { error: insertError } = await supabase
+            .from('patient_clinical_antecedents')
+            .insert(antPayload);
+            
+          if (insertError) throw new Error(`Error saving antecedents: ${insertError.message}`);
+        }
+      }
     }
 
     return this.getPatientById(id) as Promise<Patient>;

@@ -531,6 +531,7 @@ export function PatientCreateModal({ patientId, onClose }: PatientCreateModalPro
                     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
                       {contactFields.map((field, index) => (
                         <div key={field.id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "var(--space-4)", alignItems: "start", padding: "var(--space-4)", backgroundColor: "var(--color-bg-secondary)", borderRadius: "var(--radius-md)", position: "relative" }}>
+                          <input type="hidden" {...register(`emergencyContacts.${index}.id` as const)} />
                           <div>
                             <label className="form-label">Nombre *</label>
                             <input {...register(`emergencyContacts.${index}.name` as const)} className={`input-field ${errors.emergencyContacts?.[index]?.name ? 'error' : ''}`} />
@@ -605,6 +606,7 @@ export function PatientCreateModal({ patientId, onClose }: PatientCreateModalPro
                     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
                       {antecedentFields.map((field, index) => (
                         <div key={field.id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "var(--space-4)", alignItems: "start", padding: "var(--space-4)", backgroundColor: "var(--color-bg-secondary)", borderRadius: "var(--radius-md)" }}>
+                          <input type="hidden" {...register(`clinicalAntecedents.${index}.id` as const)} />
                           <div>
                             <label className="form-label">Tipo *</label>
                             <select {...register(`clinicalAntecedents.${index}.antecedentType` as const)} className={`input-field ${errors.clinicalAntecedents?.[index]?.antecedentType ? 'error' : ''}`}>

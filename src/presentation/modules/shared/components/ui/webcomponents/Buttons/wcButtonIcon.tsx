@@ -42,7 +42,7 @@ function WcButtonIcon(props: WcButtonIconProps) {
     >
       {icon ? (
         <svg aria-hidden="true">
-          <use href={`/icons/system-icons.svg#${icon}`} />
+          <use href={`/icons/system-icons.svg#${icon}`} xlinkHref={`/icons/system-icons.svg#${icon}`} />
         </svg>
       ) : (
         children

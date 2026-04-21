@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const emergencyContactSchema = z.object({
+  id: z.string().uuid().nullable().optional(),
   name: z.string().min(1, 'El nombre es requerido').max(200),
   kinship: z.enum([
     'PADRE', 'MADRE', 'CONYUGE', 'PAREJA', 'HIJO', 'HERMANO', 'ABUELO', 'NIETO',
@@ -21,6 +22,7 @@ export const emergencyContactSchema = z.object({
 });
 
 export const clinicalAntecedentSchema = z.object({
+  id: z.string().uuid().nullable().optional(),
   antecedentType: z.enum([
     'ALERGICO', 'CLINICO', 'GINECOLOGICO', 'OBSTETRICO', 'TRAUMATOLOGICO',
     'QUIRURGICO', 'FARMACOLOGICO', 'TRANSFUSIONAL', 'FAMILIAR', 'PATOLOGICO',

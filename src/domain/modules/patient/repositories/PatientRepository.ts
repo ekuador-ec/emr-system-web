@@ -6,8 +6,14 @@ import type {
   UpdatePatientDTO,
 } from '@/domain/modules/patient/models/Patient';
 
+import type { GenderEnum } from '@/domain/modules/catalog/models/Catalog';
+
 export interface PatientFilters {
-  search?: string; // Search by ID number, names
+  search?: string; // Generic legacy fallback search
+  idNumber?: string;
+  firstName?: string;
+  lastName?: string;
+  gender?: GenderEnum;
   isActive?: boolean;
   page?: number;
   limit?: number;

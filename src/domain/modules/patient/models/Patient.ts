@@ -98,8 +98,10 @@ export type CreatePatientDTO = Omit<
   clinicalAntecedents?: Omit<PatientClinicalAntecedent, 'id' | 'patientId' | 'isActive' | 'createdAt' | 'updatedAt'>[];
 };
 
-export type UpdatePatientDTO = Partial<Omit<CreatePatientDTO, 'idNumber'>> & {
+export type UpdatePatientDTO = Partial<Omit<CreatePatientDTO, 'idNumber' | 'emergencyContacts' | 'clinicalAntecedents'>> & {
   isActive?: boolean;
+  emergencyContacts?: (Omit<PatientEmergencyContact, 'id' | 'patientId' | 'createdAt' | 'updatedAt'> & { id?: string })[];
+  clinicalAntecedents?: (Omit<PatientClinicalAntecedent, 'id' | 'patientId' | 'isActive' | 'createdAt' | 'updatedAt'> & { id?: string })[];
 };
 
 // Optimized model for list views (Tables, search results)

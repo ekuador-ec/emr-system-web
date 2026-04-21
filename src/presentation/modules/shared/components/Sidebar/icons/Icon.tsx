@@ -21,7 +21,7 @@ export function Icon({ name, size = 20, className, style }: IconProps) {
       strokeLinejoin="round" 
       aria-hidden="true"
     >
-      <use href={`/icons/system-icons.svg#${name}`} />
+      <use href={`/icons/system-icons.svg#${name}`} xlinkHref={`/icons/system-icons.svg#${name}`} />
     </svg>
   )
 }

@@ -1,8 +1,18 @@
+import { useState } from "react";
+import type { ReactNode } from "react";
 import type { PaginatedResult, PatientListItem } from "@/domain/modules/patient/models/Patient";
-import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import { useTogglePatientStatus } from "@/presentation/modules/patient/hooks/usePatients";
+import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
+import {
+  WcTables,
+  TableActionCell,
+  TableStatusBadge,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Tables/wcTables";
+import type { WcTableColumn, WcTableRow } from "@/presentation/modules/shared/components/ui/webcomponents/Tables/wcTables";
+import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
+import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 
 interface PatientsListProps {
   patientsResult?: PaginatedResult<PatientListItem>;
@@ -13,129 +23,148 @@ export function PatientsList({ patientsResult }: PatientsListProps) {
   const { mutate: toggleStatus, isPending: isToggling } = useTogglePatientStatus();
   const { addToast } = useToastStore();
 
+  const [confirmStatus, setConfirmStatus] = useState<{ id: string; isActive: boolean; fullName: string } | null>(null);
+
   if (!patientsResult) return null;
 
   const { data: patients, total, page, limit } = patientsResult;
-  const totalPages = Math.ceil(total / limit);
 
-  const handlePageChange = (newPage: number) => {
-    setPatientFilters({ page: newPage });
-  };
+  const handleConfirmToggleStatus = () => {
+    if (!confirmStatus) return;
+    const { id, isActive } = confirmStatus;
 
-  const handleToggleStatus = (id: string, currentStatus: boolean) => {
     toggleStatus(
-      { id, isActive: !currentStatus },
+      { id, isActive: !isActive },
       {
         onSuccess: () => {
           addToast({
             type: "success",
-            message: `Paciente ${!currentStatus ? "activado" : "archivado"} exitosamente`,
+            message: `Paciente ${!isActive ? "activado" : "archivado"} exitosamente`,
           });
+          setConfirmStatus(null);
         },
         onError: (err) => {
           addToast({
             type: "error",
             message: `Error al cambiar estado: ${err.message}`,
           });
+          setConfirmStatus(null);
         }
       }
     );
   };
 
-  return (
-    <div className="card" style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "var(--font-size-sm)" }}>
-        <thead>
-          <tr style={{ borderBottom: "2px solid var(--color-border)", textAlign: "left" }}>
-            <th style={thStyle}>Cédula</th>
-            <th style={thStyle}>Paciente</th>
-            <th style={thStyle}>Contacto</th>
-            <th style={thStyle}>Estado</th>
-            <th style={thStyle}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {patients.map((patient) => (
-            <tr key={patient.id} style={{ borderBottom: "1px solid var(--color-border)" }}>
-              <td style={tdStyle}>{patient.idNumber}</td>
-              <td style={tdStyle}>
-                <div style={{ fontWeight: "var(--font-weight-medium)" }}>
-                  {patient.firstName} {patient.lastName} {patient.secondLastName || ""}
-                </div>
-                {patient.bloodType && (
-                  <span style={{ fontSize: "var(--font-size-xs)", color: "var(--color-text-secondary)" }}>
-                    Grupo Sanguíneo: {patient.bloodType}
-                  </span>
-                )}
-              </td>
-              <td style={tdStyle}>
-                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                  {patient.phone ? <span>{patient.phone}</span> : <span style={{ color: "var(--color-text-tertiary)" }}>Sin teléfono</span>}
-                  {patient.email ? <span style={{ color: "var(--color-text-secondary)" }}>{patient.email}</span> : null}
-                </div>
-              </td>
-              <td style={tdStyle}>
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    padding: "var(--space-1) var(--space-2)",
-                    borderRadius: "var(--radius-full)",
-                    fontSize: "var(--font-size-xs)",
-                    fontWeight: "var(--font-weight-semibold)",
-                    backgroundColor: patient.isActive ? "var(--color-success-light)" : "var(--color-warning-light)",
-                    color: patient.isActive ? "var(--color-success)" : "var(--color-warning)",
-                  }}
-                >
-                  {patient.isActive ? "Activo" : "Archivado"}
-                </span>
-              </td>
-              <td style={tdStyle}>
-                <div style={{ display: "flex", gap: "var(--space-2)" }}>
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    onClick={() => setSelectedPatientId(patient.id)}
-                    style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--font-size-xs)" }}
-                    title="Ver Detalles del Paciente"
-                  >
-                    <Icon name="icon-card-info" size={16} />
-                    Detalles
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    onClick={() => setEditingPatientId(patient.id)}
-                    style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--font-size-xs)" }}
-                    title="Editar Paciente"
-                  >
-                    <Icon name="icon-edit" size={16} />
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    className={patient.isActive ? "btn-danger" : "btn-secondary"}
-                    onClick={() => handleToggleStatus(patient.id, patient.isActive)}
-                    disabled={isToggling}
-                    style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--font-size-xs)" }}
-                  >
-                    {patient.isActive ? "Archivar" : "Activar"}
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-          {patients.length === 0 && (
-            <tr>
-              <td colSpan={5} style={{ ...tdStyle, textAlign: "center", color: "var(--color-text-secondary)", padding: "var(--space-8)" }}>
-                No se encontraron pacientes con los criterios de búsqueda.
-              </td>
-            </tr>
+  const columns: WcTableColumn[] = [
+    {
+      key: "status",
+      name: "Estado",
+      align: "center",
+      render: (row) => (
+        <TableStatusBadge
+          status={row.isActive ? "success" : "warning"}
+          label={row.isActive ? "Activo" : "Archivado"}
+          color={row.isActive ? "success" : "warning"}
+        />
+      ),
+    },
+    {
+      key: "idNumber",
+      name: "Cédula",
+      align: "center",
+    },
+    {
+      key: "patient",
+      name: "Paciente",
+      render: (row) => (
+        <div>
+          <div style={{ fontWeight: "var(--font-weight-medium)" }}>
+            {row.fullName as string}
+          </div>
+          {row.bloodType && (
+            <span style={{ fontSize: "var(--font-size-xs)", color: "var(--color-text-secondary)" }}>
+              Grupo Sanguíneo: {row.bloodType as string}
+            </span>
           )}
-        </tbody>
-      </table>
+        </div>
+      ),
+    },
+    {
+      key: "contact",
+      name: "Contacto",
+      align: "center",
+      render: (row) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }}>
+          {row.phone ? <span>{row.phone as string}</span> : <span style={{ color: "var(--color-text-tertiary)" }}>Sin teléfono</span>}
+          {row.email ? <span style={{ color: "var(--color-text-secondary)" }}>{row.email as string}</span> : null}
+        </div>
+      ),
+    },
+    {
+      key: "actions",
+      name: "Acciones",
+      align: "center",
+      render: (row) => {
+        const id = row.id as string;
+        const isActive = row.isActive as boolean;
+        const fullName = row.fullName as string;
+        
+        return (
+          <TableActionCell>
+            <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center", justifyContent: "center" }}>
+              <WcButtonIcon
+                variant="terciary"
+                shape="square"
+                size="sm"
+                icon="icon-card-info"
+                title="Ver Detalles del Paciente"
+                aria-label="Ver Detalles del Paciente"
+                onClick={() => setSelectedPatientId(id)}
+              />
+              <WcButtonIcon
+                variant="terciary"
+                shape="square"
+                size="sm"
+                icon="icon-edit"
+                title="Editar Paciente"
+                aria-label="Editar Paciente"
+                onClick={() => setEditingPatientId(id)}
+              />
+              <WcButton
+                variant={isActive ? "danger" : "secondary"}
+                onClick={() => setConfirmStatus({ id, isActive, fullName })}
+                disabled={isToggling && confirmStatus?.id === id}
+                style={{ fontSize: "var(--font-size-xs)", padding: "var(--space-1) var(--space-2)" }}
+              >
+                {isActive ? "Archivar" : "Activar"}
+              </WcButton>
+            </div>
+          </TableActionCell>
+        );
+      },
+    },
+  ];
+
+  const rows: WcTableRow[] = patients.map((patient) => ({
+    id: patient.id,
+    idNumber: patient.idNumber,
+    fullName: `${patient.firstName} ${patient.lastName} ${patient.secondLastName || ""}`.trim(),
+    bloodType: patient.bloodType,
+    phone: patient.phone,
+    email: patient.email,
+    isActive: patient.isActive,
+  }));
+
+  const totalPages = Math.ceil(total / limit);
+
+  return (
+    <div className="card" style={{ padding: "0" }}>
+      <WcTables
+        columns={columns}
+        rows={rows}
+        emptyMessage="No se encontraron pacientes con los criterios de búsqueda."
+        showPagination={false}
+      />
       
-      {/* Pagination Controls */}
       {totalPages > 1 && (
         <div
           style={{
@@ -144,50 +173,145 @@ export function PatientsList({ patientsResult }: PatientsListProps) {
             alignItems: "center",
             padding: "var(--space-4)",
             borderTop: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-bg-primary)",
+            borderBottomLeftRadius: "var(--radius-lg)",
+            borderBottomRightRadius: "var(--radius-lg)",
           }}
         >
           <span style={{ fontSize: "var(--font-size-sm)", color: "var(--color-text-secondary)" }}>
             Mostrando {(page - 1) * limit + 1} a {Math.min(page * limit, total)} de {total} resultados
           </span>
           <div style={{ display: "flex", gap: "var(--space-1)" }}>
-            <button
-              type="button"
-              className="btn-ghost"
+            <WcButton
+              variant="terciary"
               disabled={page === 1}
-              onClick={() => handlePageChange(page - 1)}
+              onClick={() => setPatientFilters({ page: page - 1 })}
               style={{ padding: "var(--space-1) var(--space-2)" }}
             >
               Anterior
-            </button>
+            </WcButton>
             <span style={{ padding: "var(--space-1) var(--space-3)", fontSize: "var(--font-size-sm)", fontWeight: "var(--font-weight-medium)" }}>
               Página {page} de {totalPages}
             </span>
-            <button
-              type="button"
-              className="btn-ghost"
+            <WcButton
+              variant="terciary"
               disabled={page === totalPages}
-              onClick={() => handlePageChange(page + 1)}
+              onClick={() => setPatientFilters({ page: page + 1 })}
               style={{ padding: "var(--space-1) var(--space-2)" }}
             >
               Siguiente
-            </button>
+            </WcButton>
           </div>
         </div>
+      )}
+
+      {confirmStatus && (
+        <ConfirmActionModal
+          variant={confirmStatus.isActive ? "danger" : "primary"}
+          title={confirmStatus.isActive ? "Confirmar Archivado" : "Confirmar Activación"}
+          message={
+            <>
+              ¿Estás seguro de que deseas {confirmStatus.isActive ? "archivar" : "activar"} al paciente{" "}
+              <strong style={{ color: "var(--color-text)" }}>{confirmStatus.fullName}</strong>?
+            </>
+          }
+          detail={
+            confirmStatus.isActive
+              ? "Al archivar al paciente, su ficha clínica dejará de estar visible por defecto en los listados activos, pero su historial médico se conservará intacto en el sistema de manera segura."
+              : "Al activar al paciente, volverá a estar disponible en los listados principales para su gestión y asignación de atenciones médicas."
+          }
+          confirmLabel={confirmStatus.isActive ? "Sí, Archivar" : "Sí, Activar"}
+          loadingLabel={confirmStatus.isActive ? "Archivando..." : "Activando..."}
+          isLoading={isToggling}
+          onConfirm={handleConfirmToggleStatus}
+          onCancel={() => setConfirmStatus(null)}
+        />
       )}
     </div>
   );
 }
 
-const thStyle: React.CSSProperties = {
-  padding: "var(--space-3) var(--space-2)",
-  fontWeight: "var(--font-weight-semibold)",
-  fontSize: "var(--font-size-xs)",
-  color: "var(--color-text-secondary)",
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
+type ConfirmActionModalProps = {
+  variant: "danger" | "primary";
+  title: string;
+  message: ReactNode;
+  detail: string;
+  confirmLabel: string;
+  loadingLabel: string;
+  isLoading: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
 };
 
-const tdStyle: React.CSSProperties = {
-  padding: "var(--space-3) var(--space-2)",
-  verticalAlign: "middle",
-};
+function ConfirmActionModal(props: ConfirmActionModalProps) {
+  const confirmVariant = props.variant === "danger" ? "danger" : "primary";
+  const titleColor =
+    props.variant === "danger" ? "var(--color-danger)" : "var(--color-primary)";
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+        padding: "var(--space-4)",
+      }}
+      onClick={props.onCancel}
+    >
+      <div
+        className="card"
+        style={{ maxWidth: "480px", width: "100%" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3
+          style={{
+            marginBottom: "var(--space-3)",
+            color: titleColor,
+          }}
+        >
+          {props.title}
+        </h3>
+        <p style={{ marginBottom: "var(--space-2)" }}>
+          {props.message}
+        </p>
+        <p
+          style={{
+            marginBottom: "var(--space-6)",
+            fontSize: "var(--font-size-xs)",
+            color: "var(--color-text-secondary)",
+          }}
+        >
+          {props.detail}
+        </p>
+        <div
+          style={{
+            display: "flex",
+            gap: "var(--space-3)",
+            justifyContent: "flex-end",
+          }}
+        >
+          <WcButton
+            variant="terciary"
+            onClick={props.onCancel}
+            disabled={props.isLoading}
+          >
+            <Icon name="icon-x" size={14} />
+            Cancelar
+          </WcButton>
+          <WcButton
+            variant={confirmVariant}
+            onClick={props.onConfirm}
+            disabled={props.isLoading}
+          >
+            <Icon name="icon-check" size={14} />
+            {props.isLoading ? props.loadingLabel : props.confirmLabel}
+          </WcButton>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,7 +1,12 @@
 import { create } from 'zustand';
+import type { GenderEnum } from '@/domain/modules/catalog/models/Catalog';
 
 interface PatientFiltersState {
-  search: string;
+  search?: string;
+  idNumber?: string;
+  firstName?: string;
+  lastName?: string;
+  gender?: GenderEnum | '';
   isActive?: boolean;
   page: number;
   limit: number;
@@ -28,7 +33,6 @@ export const usePatientStore = create<PatientState>((set) => ({
   editingPatientId: null,
   selectedPatientId: null,
   patientFilters: {
-    search: '',
     page: 1,
     limit: 10,
   },
@@ -45,7 +49,7 @@ export const usePatientStore = create<PatientState>((set) => ({
   setHasSearched: (hasSearched) => set({ hasSearched }),
   resetPatientFilters: () =>
     set({
-      patientFilters: { search: '', page: 1, limit: 10 },
+      patientFilters: { page: 1, limit: 10 },
       hasSearched: false,
     }),
 }));
