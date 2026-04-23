@@ -1,194 +1,131 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
+import WcSearchInput from "@/presentation/modules/shared/components/ui/webcomponents/Searchs/wcSearchInput";
+import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
+import {
+  PatientQuickFilterPopover,
+  type PatientQuickFilterState,
+} from "@/presentation/modules/patient/components/Patients/PatientQuickFilterPopover";
 import type { GenderEnum } from "@/domain/modules/catalog/models/Catalog";
 
+const DEFAULT_FILTERS: PatientQuickFilterState = {
+  gender: ["all"],
+  isActive: ["all"],
+};
+
 export function PatientSearchFilters() {
-  const { setPatientFilters, setHasSearched, resetPatientFilters } = usePatientStore();
+  const { setPatientFilters, hasSearched, setHasSearched, resetPatientFilters } = usePatientStore();
   const { addToast } = useToastStore();
 
-  const [localIdNumber, setLocalIdNumber] = useState("");
-  const [localFirstName, setLocalFirstName] = useState("");
-  const [localLastName, setLocalLastName] = useState("");
-  const [localGender, setLocalGender] = useState<GenderEnum | "all">("all");
-  const [localIsActive, setLocalIsActive] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isFilterPopoverOpen, setIsFilterPopoverOpen] = useState(false);
+  const [localFilters, setLocalFilters] = useState<PatientQuickFilterState>(DEFAULT_FILTERS);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (localFilters.gender[0] !== "all") count++;
+    if (localFilters.isActive[0] !== "all") count++;
+    return count;
+  }, [localFilters]);
 
-    const idNumber = localIdNumber.trim();
-    const firstName = localFirstName.trim();
-    const lastName = localLastName.trim();
-
-    if (!idNumber && !firstName && !lastName) {
-      addToast({
-        type: "error",
-        message: "Debe ingresar al menos un criterio (Cédula, Nombres o Apellidos) para buscar.",
-      });
-      return;
-    }
-
+  const applySearch = (query: string, filters: PatientQuickFilterState) => {
     let isActiveFilter: boolean | undefined = undefined;
-    if (localIsActive === "active") isActiveFilter = true;
-    if (localIsActive === "inactive") isActiveFilter = false;
+    if (filters.isActive[0] === "active") isActiveFilter = true;
+    if (filters.isActive[0] === "inactive") isActiveFilter = false;
+
+    let genderFilter: GenderEnum | undefined = undefined;
+    if (filters.gender[0] !== "all") genderFilter = filters.gender[0] as GenderEnum;
+
+    const cleanQuery = query.trim();
+    const isIdNumber = /^\d+$/.test(cleanQuery);
 
     setPatientFilters({
-      idNumber: idNumber || undefined,
-      firstName: firstName || undefined,
-      lastName: lastName || undefined,
-      gender: localGender === "all" ? undefined : localGender as GenderEnum,
+      idNumber: isIdNumber ? cleanQuery : undefined,
+      search: !isIdNumber && cleanQuery ? cleanQuery : undefined,
+      gender: genderFilter,
       isActive: isActiveFilter,
-      page: 1, // Reset to first page on new search
+      page: 1,
     });
-
     setHasSearched(true);
   };
 
+  const handleApplyFilters = () => {
+    applySearch(searchQuery, localFilters);
+    setIsFilterPopoverOpen(false);
+  };
+
+  const handleClearFilters = () => {
+    setLocalFilters(DEFAULT_FILTERS);
+  };
+
+  const handleSearchSubmit = () => {
+    if (!searchQuery.trim() && activeFiltersCount === 0) {
+      addToast({
+        type: "warning",
+        message: "Por favor ingrese un término de búsqueda o aplique un filtro.",
+      });
+      return;
+    }
+    applySearch(searchQuery, localFilters);
+  };
+
   const handleClear = () => {
-    setLocalIdNumber("");
-    setLocalFirstName("");
-    setLocalLastName("");
-    setLocalGender("all");
-    setLocalIsActive("all"); // default
+    setSearchQuery("");
+    setLocalFilters(DEFAULT_FILTERS);
     resetPatientFilters();
   };
 
+  const hasAnyFilterOrSearch = 
+    searchQuery.trim().length > 0 || 
+    activeFiltersCount > 0 ||
+    hasSearched;
+
   return (
-    <div className="card" style={{ padding: "var(--space-4)" }}>
-      <form
-        onSubmit={handleSearch}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--space-4)",
-        }}
-      >
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-4)" }}>
-          <div style={{ flex: "1 1 200px", display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
-            <label htmlFor="search-id" style={{ fontSize: "var(--font-size-sm)", fontWeight: "var(--font-weight-medium)" }}>
-              Número de Cédula
-            </label>
-            <div style={{ position: "relative", width: "100%" }}>
-              <input
-                id="search-id"
-                type="text"
-                placeholder="Ej: 1712345678"
-                value={localIdNumber}
-                onChange={(e) => setLocalIdNumber(e.target.value)}
-                className="input-field"
-                style={{ paddingRight: "30px", width: "100%" }}
-              />
-              {localIdNumber && (
-                <button
-                  type="button"
-                  onClick={() => setLocalIdNumber("")}
-                  style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", cursor: "pointer", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", padding: "4px" }}
-                  aria-label="Limpiar cédula"
-                >
-                  <Icon name="icon-x" size={14} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div style={{ flex: "1 1 200px", display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
-            <label htmlFor="search-firstname" style={{ fontSize: "var(--font-size-sm)", fontWeight: "var(--font-weight-medium)" }}>
-              Nombres
-            </label>
-            <div style={{ position: "relative", width: "100%" }}>
-              <input
-                id="search-firstname"
-                type="text"
-                placeholder="Ej: Juan Pablo"
-                value={localFirstName}
-                onChange={(e) => setLocalFirstName(e.target.value)}
-                className="input-field"
-                style={{ paddingRight: "30px", width: "100%" }}
-              />
-              {localFirstName && (
-                <button
-                  type="button"
-                  onClick={() => setLocalFirstName("")}
-                  style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", cursor: "pointer", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", padding: "4px" }}
-                  aria-label="Limpiar nombres"
-                >
-                  <Icon name="icon-x" size={14} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div style={{ flex: "1 1 200px", display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
-            <label htmlFor="search-lastname" style={{ fontSize: "var(--font-size-sm)", fontWeight: "var(--font-weight-medium)" }}>
-              Apellidos
-            </label>
-            <div style={{ position: "relative", width: "100%" }}>
-              <input
-                id="search-lastname"
-                type="text"
-                placeholder="Ej: Perez Muñoz"
-                value={localLastName}
-                onChange={(e) => setLocalLastName(e.target.value)}
-                className="input-field"
-                style={{ paddingRight: "30px", width: "100%" }}
-              />
-              {localLastName && (
-                <button
-                  type="button"
-                  onClick={() => setLocalLastName("")}
-                  style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", cursor: "pointer", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", padding: "4px" }}
-                  aria-label="Limpiar apellidos"
-                >
-                  <Icon name="icon-x" size={14} />
-                </button>
-              )}
-            </div>
-          </div>
-          
-          <div style={{ flex: "1 1 150px", display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
-            <label htmlFor="search-gender" style={{ fontSize: "var(--font-size-sm)", fontWeight: "var(--font-weight-medium)" }}>
-              Género
-            </label>
-            <select
-              id="search-gender"
-              value={localGender}
-              onChange={(e) => setLocalGender(e.target.value as GenderEnum | "all")}
-              className="input-field"
-            >
-              <option value="all">Todos</option>
-              <option value="MASCULINO">Masculino</option>
-              <option value="FEMENINO">Femenino</option>
-            </select>
-          </div>
-
-          <div style={{ flex: "1 1 150px", display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
-            <label htmlFor="status-patient" style={{ fontSize: "var(--font-size-sm)", fontWeight: "var(--font-weight-medium)" }}>
-              Estado
-            </label>
-            <select
-              id="status-patient"
-              value={localIsActive}
-              onChange={(e) => setLocalIsActive(e.target.value)}
-              className="input-field"
-            >
-              <option value="active">Solo Activos</option>
-              <option value="inactive">Solo Inactivos (Archivados)</option>
-              <option value="all">Todos</option>
-            </select>
-          </div>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-2)", marginTop: "var(--space-2)" }}>
-          <button type="button" className="btn-ghost" onClick={handleClear}>
-            Limpiar Filtros
-          </button>
-          <button type="submit" className="btn-secondary" style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
-            <Icon name="icon-search" size={18} />
-            Buscar Paciente
-          </button>
-        </div>
-      </form>
+    <div style={{ display: "flex", gap: "var(--space-4)", alignItems: "center", width: "100%", flexWrap: "wrap" }}>
+      <div style={{ flex: "1 1 300px" }}>
+        <WcSearchInput
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+          placeholder="Buscar pacientes por cédula, nombres o apellidos..."
+          showClearButton={true}
+          onClear={handleClear}
+          showSubmitButton={true}
+          onSubmit={handleSearchSubmit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSearchSubmit();
+          }}
+        />
+      </div>
+      <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+        {hasAnyFilterOrSearch && (
+          <WcButton
+            variant="terciary"
+            onClick={handleClear}
+            style={{ 
+              display: "flex", 
+              alignItems: "center", 
+              gap: "var(--space-1)",
+              fontSize: "var(--font-size-sm)",
+              padding: "var(--space-2) var(--space-3)"
+            }}
+            title="Limpia la búsqueda actual y reinicia todos los filtros"
+          >
+            <Icon name="icon-x" size={14} />
+            Restablecer
+          </WcButton>
+        )}
+        <PatientQuickFilterPopover
+          isOpen={isFilterPopoverOpen}
+          activeFiltersCount={activeFiltersCount}
+          filters={localFilters}
+          onToggle={() => setIsFilterPopoverOpen((prev) => !prev)}
+          onChange={setLocalFilters}
+          onClear={handleClearFilters}
+          onApply={handleApplyFilters}
+        />
+      </div>
     </div>
   );
 }

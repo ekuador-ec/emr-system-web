@@ -32,6 +32,7 @@ type WcFilterPopoverProps<TValues extends WcFilterValues> = {
   clearLabel?: string;
   applyLabel?: string;
   closeOnClear?: boolean;
+  align?: "left" | "right";
 };
 
 export function WcFilterPopover<TValues extends WcFilterValues>(
@@ -51,6 +52,7 @@ export function WcFilterPopover<TValues extends WcFilterValues>(
     clearLabel,
     applyLabel,
     closeOnClear,
+    align = "left",
   } = props;
   const anchorRef = useRef<HTMLDivElement>(null);
   const resolvedTriggerLabel = triggerLabel ?? "Filter";
@@ -122,7 +124,7 @@ export function WcFilterPopover<TValues extends WcFilterValues>(
       </WcButton>
 
       {isOpen ? (
-        <div className="wc-filter-popover card">
+        <div className={`wc-filter-popover card wc-filter-popover--align-${align}`}>
           <div className="wc-filter-popover__grid">
             {fields.map((field) => (
               <div key={field.id} className="wc-filter-popover__field">

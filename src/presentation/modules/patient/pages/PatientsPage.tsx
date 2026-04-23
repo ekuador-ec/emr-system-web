@@ -4,6 +4,7 @@ import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Ico
 import { PatientsList } from "@/presentation/modules/patient/components/Patients/PatientsList";
 import { PatientSearchFilters } from "@/presentation/modules/patient/components/Patients/PatientSearchFilters";
 import { PatientDetailsDrawer } from "@/presentation/modules/patient/components/Patients/PatientDetailsDrawer";
+import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 
 export function PatientsPage() {
   const {
@@ -35,15 +36,14 @@ export function PatientsPage() {
             Busca, consulta y gestiona las historias clínicas de los pacientes.
           </p>
         </div>
-        <button
-          type="button"
-          className="btn-primary"
+        <WcButton
+          variant="primary"
           onClick={() => setCreateModalOpen(true)}
           style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}
         >
           <Icon name="icon-user-plus" size={20} />
           Nuevo Paciente
-        </button>
+        </WcButton>
       </div>
 
       <PatientSearchFilters />
@@ -61,6 +61,8 @@ export function PatientsPage() {
               textAlign: "center",
               color: "var(--color-text-secondary)",
               gap: "var(--space-4)",
+              border: "1px dashed var(--color-border)",
+              boxShadow: "none",
             }}
           >
             <div
@@ -72,21 +74,26 @@ export function PatientsPage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                color: "var(--color-text-tertiary)",
               }}
             >
-              <Icon name="icon-search" size={28} />
+              <Icon name="icon-search" size={24} />
             </div>
-            <p style={{ margin: 0 }}>
-              Utiliza los filtros de arriba para buscar un paciente por cédula, nombre o apellidos.
-            </p>
+            <div style={{ maxWidth: "340px" }}>
+              <h3 style={{ marginBottom: "var(--space-2)", color: "var(--color-text-primary)", fontWeight: "var(--font-weight-medium)" }}>Comienza una búsqueda</h3>
+              <p style={{ margin: 0, lineHeight: "1.5" }}>
+                Utiliza la barra superior para encontrar un paciente por su número de cédula, nombres o apellidos.
+              </p>
+            </div>
           </div>
         ) : isLoading ? (
-          <div className="card" style={{ padding: "var(--space-8)", textAlign: "center" }}>
-            Cargando pacientes...
+          <div className="card" style={{ padding: "var(--space-16) var(--space-8)", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-4)" }}>
+             <div className="spinner" style={{ width: "32px", height: "32px", border: "3px solid var(--color-border)", borderTopColor: "var(--color-primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+             <p style={{ color: "var(--color-text-secondary)" }}>Buscando pacientes...</p>
           </div>
         ) : isError ? (
           <div className="card" style={{ padding: "var(--space-8)", textAlign: "center", color: "var(--color-danger)" }}>
-            Error al cargar pacientes: {error.message}
+            Error al consultar los pacientes: {error.message}
           </div>
         ) : (
           <PatientsList patientsResult={patientsResult} />

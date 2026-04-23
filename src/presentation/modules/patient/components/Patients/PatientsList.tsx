@@ -181,23 +181,28 @@ export function PatientsList({ patientsResult }: PatientsListProps) {
           <span style={{ fontSize: "var(--font-size-sm)", color: "var(--color-text-secondary)" }}>
             Mostrando {(page - 1) * limit + 1} a {Math.min(page * limit, total)} de {total} resultados
           </span>
-          <div style={{ display: "flex", gap: "var(--space-1)" }}>
+          <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
             <WcButton
-              variant="terciary"
+              variant="secondary"
               disabled={page === 1}
               onClick={() => setPatientFilters({ page: page - 1 })}
-              style={{ padding: "var(--space-1) var(--space-2)" }}
+              style={{ fontSize: "var(--font-size-sm)", padding: "var(--space-2) var(--space-4)" }}
             >
               Anterior
             </WcButton>
-            <span style={{ padding: "var(--space-1) var(--space-3)", fontSize: "var(--font-size-sm)", fontWeight: "var(--font-weight-medium)" }}>
+            <span style={{ 
+              padding: "0 var(--space-2)", 
+              fontSize: "var(--font-size-sm)", 
+              fontWeight: "var(--font-weight-medium)",
+              color: "var(--color-text-primary)"
+            }}>
               Página {page} de {totalPages}
             </span>
             <WcButton
-              variant="terciary"
+              variant="secondary"
               disabled={page === totalPages}
               onClick={() => setPatientFilters({ page: page + 1 })}
-              style={{ padding: "var(--space-1) var(--space-2)" }}
+              style={{ fontSize: "var(--font-size-sm)", padding: "var(--space-2) var(--space-4)" }}
             >
               Siguiente
             </WcButton>
