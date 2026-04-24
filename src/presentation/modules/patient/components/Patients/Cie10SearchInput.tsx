@@ -6,14 +6,24 @@ interface Cie10SearchInputProps {
   value: string | null | undefined;
   onChange: (id: string | null) => void;
   onDescriptionSelect?: (description: string) => void;
+  initialLabel?: string;
+  error?: string;
 }
 
-export function Cie10SearchInput({ value, onChange, onDescriptionSelect }: Cie10SearchInputProps) {
-  const [query, setQuery] = useState("");
+export function Cie10SearchInput({ value, onChange, onDescriptionSelect, initialLabel, error }: Cie10SearchInputProps) {
+  const [query, setQuery] = useState(initialLabel || "");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { data: results, isLoading } = useSearchCie10Pathologies(query);
+  const { data: results, isLoading } = useSearchCie10Pathologies(debouncedQuery);
+
+  useEffect(() => {
+    if (initialLabel && !query && query !== initialLabel) {
+      setQuery(initialLabel);
+    }
+  }, [initialLabel]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -22,12 +32,16 @@ export function Cie10SearchInput({ value, onChange, onDescriptionSelect }: Cie10
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
   }, []);
 
   const handleSelect = (id: string, description: string) => {
     onChange(id);
     setQuery(description);
+    setDebouncedQuery(""); // Clear debounced query so it doesn't search again when selecting
     setIsOpen(false);
     if (onDescriptionSelect) {
       onDescriptionSelect(description);
@@ -39,13 +53,20 @@ export function Cie10SearchInput({ value, onChange, onDescriptionSelect }: Cie10
       <div style={{ position: "relative" }}>
         <input
           type="text"
-          className={`input-field ${value ? "has-value" : ""}`}
+          className={`input-field ${error ? "error" : ""} ${value ? "has-value" : ""}`}
           placeholder="Buscar patología CIE-10..."
           value={query}
           onChange={(e) => {
-            setQuery(e.target.value);
+            const newValue = e.target.value;
+            setQuery(newValue);
             setIsOpen(true);
-            if (!e.target.value) {
+            
+            if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+            debounceTimerRef.current = setTimeout(() => {
+              setDebouncedQuery(newValue);
+            }, 300);
+
+            if (!newValue) {
               onChange(null);
             }
           }}
@@ -75,13 +96,14 @@ export function Cie10SearchInput({ value, onChange, onDescriptionSelect }: Cie10
             left: 0,
             right: 0,
             marginTop: "4px",
-            backgroundColor: "var(--color-surface)",
+            backgroundColor: "var(--color-surface, #ffffff)",
             border: "1px solid var(--color-border)",
             borderRadius: "var(--radius-md)",
             boxShadow: "var(--shadow-md)",
             zIndex: 50,
             maxHeight: "200px",
             overflowY: "auto",
+            opacity: 1,
           }}
         >
           {results.map((item) => (
@@ -93,6 +115,8 @@ export function Cie10SearchInput({ value, onChange, onDescriptionSelect }: Cie10
                 cursor: "pointer",
                 borderBottom: "1px solid var(--color-border)",
                 fontSize: "var(--font-size-sm)",
+                backgroundColor: "transparent",
+                color: "var(--color-text-primary)",
               }}
               onMouseEnter={(e) => {
                 (e.target as HTMLDivElement).style.backgroundColor = "var(--color-bg)";

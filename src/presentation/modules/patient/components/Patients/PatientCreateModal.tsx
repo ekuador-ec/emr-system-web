@@ -920,6 +920,13 @@ export function PatientCreateModal({ patientId, onClose }: PatientCreateModalPro
                             <label className="form-label">Patología (CIE-10)</label>
                             <Cie10SearchInput
                               value={watch(`clinicalAntecedents.${index}.pathologyId`)}
+                              initialLabel={
+                                patientData?.clinicalAntecedents?.find(
+                                  (a) => a.id === watch(`clinicalAntecedents.${index}.id`)
+                                )?.pathology
+                                  ? `${patientData.clinicalAntecedents.find((a) => a.id === watch(`clinicalAntecedents.${index}.id`))?.pathology?.code} - ${patientData.clinicalAntecedents.find((a) => a.id === watch(`clinicalAntecedents.${index}.id`))?.pathology?.description}`
+                                  : ""
+                              }
                               onChange={(id) => {
                                 setValue(
                                   `clinicalAntecedents.${index}.pathologyId`,
@@ -927,7 +934,13 @@ export function PatientCreateModal({ patientId, onClose }: PatientCreateModalPro
                                   { shouldValidate: true },
                                 );
                               }}
+                              error={errors.clinicalAntecedents?.[index]?.pathologyId?.message}
                             />
+                            {errors.clinicalAntecedents?.[index]?.pathologyId && (
+                              <span className="form-error">
+                                {errors.clinicalAntecedents[index]?.pathologyId?.message}
+                              </span>
+                            )}
                           </div>
                           <div style={{ gridColumn: "1 / -1" }}>
                             <label className="form-label">Descripción</label>

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { SupabaseCatalogRepository } from '@/infrastructure/modules/catalog/repositories/SupabaseCatalogRepository';
 import {
   ListCatalogsUseCase,
@@ -37,11 +37,15 @@ export const useCatalogItems = (catalogId: string) => {
   });
 };
 
+
 export const useSearchCie10Pathologies = (query: string) => {
   return useQuery({
     queryKey: catalogKeys.cie10(query),
     queryFn: () => searchCie10PathologiesUseCase.execute(query),
     enabled: query.length >= 2,
+    staleTime: 1000 * 60 * 10, // 10 minutes (static data)
+    gcTime: 1000 * 60 * 30, // 30 minutes
+    placeholderData: keepPreviousData,
   });
 };
 

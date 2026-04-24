@@ -72,7 +72,10 @@ export const clinicalAntecedentSchema = z.object({
     ],
     { message: "El tipo es requerido" },
   ),
-  pathologyId: z.string().uuid().nullable().optional(),
+  pathologyId: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.string().uuid("Seleccione una patología válida").nullable().optional(),
+  ),
   description: z.string().nullable().optional(),
   diagnosisDate: z.string().nullable().optional(),
   treatment: z.string().nullable().optional(),
