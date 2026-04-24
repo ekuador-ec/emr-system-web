@@ -1,8 +1,23 @@
-import type { PatientRepository, PatientFilters } from '@/domain/modules/patient/repositories/PatientRepository';
-import type { Patient, PatientListItem, PaginatedResult, CreatePatientDTO, UpdatePatientDTO } from '@/domain/modules/patient/models/Patient';
-import { supabase } from '@/infrastructure/core/supabaseClient';
-import { mapPatientRow, mapPatientListItemRow } from '@/infrastructure/modules/patient/mappers/patientMapper';
-import type { PatientRow, PatientListItemRow } from '@/infrastructure/modules/patient/mappers/patientMapper';
+import type {
+  PatientRepository,
+  PatientFilters,
+} from "@/domain/modules/patient/repositories/PatientRepository";
+import type {
+  Patient,
+  PatientListItem,
+  PaginatedResult,
+  CreatePatientDTO,
+  UpdatePatientDTO,
+} from "@/domain/modules/patient/models/Patient";
+import { supabase } from "@/infrastructure/core/supabaseClient";
+import {
+  mapPatientRow,
+  mapPatientListItemRow,
+} from "@/infrastructure/modules/patient/mappers/patientMapper";
+import type {
+  PatientRow,
+  PatientListItemRow,
+} from "@/infrastructure/modules/patient/mappers/patientMapper";
 
 export class SupabasePatientRepository implements PatientRepository {
   async getPatients(filters?: PatientFilters): Promise<PaginatedResult<PatientListItem>> {
@@ -12,34 +27,41 @@ export class SupabasePatientRepository implements PatientRepository {
     const to = from + limit - 1;
 
     let query = supabase
-      .from('patients')
-      .select('id, id_number, first_name, last_name, second_last_name, email, phone, blood_type, is_active', { count: 'exact' })
-      .order('updated_at', { ascending: false })
+      .from("patients")
+      .select(
+        "id, id_number, first_name, last_name, second_last_name, email, phone, blood_type, is_active",
+        { count: "exact" },
+      )
+      .order("updated_at", { ascending: false })
       .range(from, to);
 
     if (filters?.isActive !== undefined) {
-      query = query.eq('is_active', filters.isActive);
+      query = query.eq("is_active", filters.isActive);
     }
 
     if (filters?.idNumber) {
-      query = query.ilike('id_number', `%${filters.idNumber}%`);
+      query = query.ilike("id_number", `%${filters.idNumber}%`);
     }
 
     if (filters?.gender) {
-      query = query.eq('gender', filters.gender);
+      query = query.eq("gender", filters.gender);
     }
 
     if (filters?.firstName) {
-      query = query.ilike('first_name', `${filters.firstName}%`);
+      query = query.ilike("first_name", `${filters.firstName}%`);
     }
 
     if (filters?.lastName) {
       // Check in both last_name and second_last_name matching starts with initial
-      query = query.or(`last_name.ilike.${filters.lastName}%,second_last_name.ilike.${filters.lastName}%`);
+      query = query.or(
+        `last_name.ilike.${filters.lastName}%,second_last_name.ilike.${filters.lastName}%`,
+      );
     }
 
     if (filters?.search) {
-      query = query.or(`id_number.ilike.${filters.search}%,first_name.ilike.${filters.search}%,last_name.ilike.${filters.search}%`);
+      query = query.or(
+        `id_number.ilike.${filters.search}%,first_name.ilike.${filters.search}%,last_name.ilike.${filters.search}%`,
+      );
     }
 
     const { data, count, error } = await query;
@@ -58,7 +80,7 @@ export class SupabasePatientRepository implements PatientRepository {
 
   async getPatientById(id: string): Promise<Patient | null> {
     const { data, error } = await supabase
-      .from('patients')
+      .from("patients")
       .select(`
         *,
         occupation:catalog_items(*),
@@ -66,34 +88,36 @@ export class SupabasePatientRepository implements PatientRepository {
         patient_emergency_contacts(*),
         patient_clinical_antecedents(*, pathology:cie10_pathologies(*))
       `)
-      .eq('id', id)
-      .single();
+      .eq("id", id)
+      .limit(1);
 
     if (error) {
-      if (error.code === 'PGRST116') return null; // Not found
       throw new Error(error.message);
     }
 
-    return mapPatientRow(data as unknown as PatientRow);
+    if (!data || data.length === 0) return null;
+
+    return mapPatientRow(data[0] as unknown as PatientRow);
   }
 
   async getPatientByIdNumber(idNumber: string): Promise<Patient | null> {
     const { data, error } = await supabase
-      .from('patients')
+      .from("patients")
       .select(`
         *,
         occupation:catalog_items(*),
         geographic_location:geographic_locations(*)
       `)
-      .eq('id_number', idNumber)
-      .single();
+      .eq("id_number", idNumber)
+      .limit(1);
 
     if (error) {
-      if (error.code === 'PGRST116') return null; // Not found
       throw new Error(error.message);
     }
 
-    return mapPatientRow(data as unknown as PatientRow);
+    if (!data || data.length === 0) return null;
+
+    return mapPatientRow(data[0] as unknown as PatientRow);
   }
 
   async createPatient(patient: CreatePatientDTO): Promise<Patient> {
@@ -134,11 +158,7 @@ export class SupabasePatientRepository implements PatientRepository {
       info_source_observations: patientData.infoSourceObservations,
     };
 
-    const { data, error } = await supabase
-      .from('patients')
-      .insert(payload)
-      .select('*')
-      .single();
+    const { data, error } = await supabase.from("patients").insert(payload).select("*").single();
 
     if (error) {
       throw new Error(error.message);
@@ -156,7 +176,7 @@ export class SupabasePatientRepository implements PatientRepository {
         address: contact.address || null,
       }));
       const { error: contactsError } = await supabase
-        .from('patient_emergency_contacts')
+        .from("patient_emergency_contacts")
         .insert(contactsPayload);
       if (contactsError) throw new Error(`Error saving contacts: ${contactsError.message}`);
     }
@@ -171,9 +191,10 @@ export class SupabasePatientRepository implements PatientRepository {
         treatment: ant.treatment || null,
       }));
       const { error: antecedentsError } = await supabase
-        .from('patient_clinical_antecedents')
+        .from("patient_clinical_antecedents")
         .insert(antecedentsPayload);
-      if (antecedentsError) throw new Error(`Error saving antecedents: ${antecedentsError.message}`);
+      if (antecedentsError)
+        throw new Error(`Error saving antecedents: ${antecedentsError.message}`);
     }
 
     return this.getPatientById(createdPatientId) as Promise<Patient>;
@@ -181,7 +202,7 @@ export class SupabasePatientRepository implements PatientRepository {
 
   async updatePatient(id: string, patient: UpdatePatientDTO): Promise<Patient> {
     const payload: Record<string, any> = {};
-    
+
     // Manual mapping to snake_case for updates
     if (patient.firstName !== undefined) payload.first_name = patient.firstName;
     if (patient.middleName !== undefined) payload.middle_name = patient.middleName;
@@ -195,7 +216,8 @@ export class SupabasePatientRepository implements PatientRepository {
     if (patient.gender !== undefined) payload.gender = patient.gender;
     if (patient.nationality !== undefined) payload.nationality = patient.nationality;
     if (patient.culturalGroup !== undefined) payload.cultural_group = patient.culturalGroup;
-    if (patient.culturalGroupOther !== undefined) payload.cultural_group_other = patient.culturalGroupOther;
+    if (patient.culturalGroupOther !== undefined)
+      payload.cultural_group_other = patient.culturalGroupOther;
     if (patient.maritalStatus !== undefined) payload.marital_status = patient.maritalStatus;
     if (patient.educationLevel !== undefined) payload.education_level = patient.educationLevel;
     if (patient.occupationId !== undefined) payload.occupation_id = patient.occupationId;
@@ -207,19 +229,18 @@ export class SupabasePatientRepository implements PatientRepository {
     if (patient.companyAddress !== undefined) payload.company_address = patient.companyAddress;
     if (patient.homeAddress !== undefined) payload.home_address = patient.homeAddress;
     if (patient.neighborhood !== undefined) payload.neighborhood = patient.neighborhood;
-    if (patient.geographicLocationId !== undefined) payload.geographic_location_id = patient.geographicLocationId;
+    if (patient.geographicLocationId !== undefined)
+      payload.geographic_location_id = patient.geographicLocationId;
     if (patient.infoSourceType !== undefined) payload.info_source_type = patient.infoSourceType;
     if (patient.infoSourceOther !== undefined) payload.info_source_other = patient.infoSourceOther;
     if (patient.infoSourceName !== undefined) payload.info_source_name = patient.infoSourceName;
     if (patient.infoSourcePhone !== undefined) payload.info_source_phone = patient.infoSourcePhone;
-    if (patient.infoSourceObservations !== undefined) payload.info_source_observations = patient.infoSourceObservations;
+    if (patient.infoSourceObservations !== undefined)
+      payload.info_source_observations = patient.infoSourceObservations;
     if (patient.isActive !== undefined) payload.is_active = patient.isActive;
 
     if (Object.keys(payload).length > 0) {
-      const { error } = await supabase
-        .from('patients')
-        .update(payload)
-        .eq('id', id);
+      const { error } = await supabase.from("patients").update(payload).eq("id", id);
 
       if (error) {
         throw new Error(error.message);
@@ -228,9 +249,9 @@ export class SupabasePatientRepository implements PatientRepository {
 
     if (patient.emergencyContacts !== undefined) {
       const { error: deleteContactsError } = await supabase
-        .from('patient_emergency_contacts')
+        .from("patient_emergency_contacts")
         .delete()
-        .eq('patient_id', id);
+        .eq("patient_id", id);
 
       if (deleteContactsError) {
         throw new Error(`Error deleting old contacts: ${deleteContactsError.message}`);
@@ -246,7 +267,7 @@ export class SupabasePatientRepository implements PatientRepository {
           address: contact.address || null,
         }));
         const { error: contactsError } = await supabase
-          .from('patient_emergency_contacts')
+          .from("patient_emergency_contacts")
           .insert(contactsPayload);
         if (contactsError) throw new Error(`Error saving contacts: ${contactsError.message}`);
       }
@@ -255,25 +276,25 @@ export class SupabasePatientRepository implements PatientRepository {
     if (patient.clinicalAntecedents !== undefined) {
       // 1. Fetch current active antecedents
       const { data: existingAntecedents, error: fetchError } = await supabase
-        .from('patient_clinical_antecedents')
-        .select('id')
-        .eq('patient_id', id)
-        .eq('is_active', true);
+        .from("patient_clinical_antecedents")
+        .select("id")
+        .eq("patient_id", id)
+        .eq("is_active", true);
 
       if (fetchError) {
         throw new Error(`Error fetching existing antecedents: ${fetchError.message}`);
       }
 
-      const incomingIds = patient.clinicalAntecedents.map(a => a.id).filter(Boolean) as string[];
+      const incomingIds = patient.clinicalAntecedents.map((a) => a.id).filter(Boolean) as string[];
       const existingIds = (existingAntecedents || []).map((a: any) => a.id as string);
-      const idsToDeactivate = existingIds.filter(exId => !incomingIds.includes(exId));
+      const idsToDeactivate = existingIds.filter((exId) => !incomingIds.includes(exId));
 
       // 2. Soft-delete missing ones (RLS prevents physical delete)
       if (idsToDeactivate.length > 0) {
         const { error: deactivateError } = await supabase
-          .from('patient_clinical_antecedents')
+          .from("patient_clinical_antecedents")
           .update({ is_active: false })
-          .in('id', idsToDeactivate);
+          .in("id", idsToDeactivate);
 
         if (deactivateError) {
           throw new Error(`Error deactivating antecedents: ${deactivateError.message}`);
@@ -292,20 +313,22 @@ export class SupabasePatientRepository implements PatientRepository {
           is_active: true, // ensure it remains active
         };
 
-        if (ant.id) {
+        const isValidExistingId = ant.id && ant.id.trim() !== "";
+
+        if (isValidExistingId) {
           // Update existing
           const { error: updateError } = await supabase
-            .from('patient_clinical_antecedents')
+            .from("patient_clinical_antecedents")
             .update(antPayload)
-            .eq('id', ant.id);
-            
+            .eq("id", ant.id);
+
           if (updateError) throw new Error(`Error updating antecedent: ${updateError.message}`);
         } else {
           // Insert new
           const { error: insertError } = await supabase
-            .from('patient_clinical_antecedents')
+            .from("patient_clinical_antecedents")
             .insert(antPayload);
-            
+
           if (insertError) throw new Error(`Error saving antecedents: ${insertError.message}`);
         }
       }
@@ -315,10 +338,7 @@ export class SupabasePatientRepository implements PatientRepository {
   }
 
   async togglePatientStatus(id: string, isActive: boolean): Promise<void> {
-    const { error } = await supabase
-      .from('patients')
-      .update({ is_active: isActive })
-      .eq('id', id);
+    const { error } = await supabase.from("patients").update({ is_active: isActive }).eq("id", id);
 
     if (error) {
       throw new Error(error.message);
