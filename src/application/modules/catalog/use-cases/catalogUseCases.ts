@@ -1,5 +1,5 @@
 import type { CatalogRepository } from '@/domain/modules/catalog/repositories/CatalogRepository';
-import type { Catalog, CatalogItem, Cie10Pathology, GeographicLocation } from '@/domain/modules/catalog/models/Catalog';
+import type { Catalog, CatalogItem, Cie10SearchResult, GeographicLocation } from '@/domain/modules/catalog/models/Catalog';
 
 export class ListCatalogsUseCase {
   catalogRepository: CatalogRepository;
@@ -32,7 +32,7 @@ export class SearchCie10PathologiesUseCase {
     this.catalogRepository = catalogRepository;
   }
 
-  async execute(query: string): Promise<Cie10Pathology[]> {
+  async execute(query: string): Promise<Cie10SearchResult[]> {
     if (!query || query.length < 2) return [];
     return this.catalogRepository.searchCie10Pathologies(query);
   }

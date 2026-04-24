@@ -2,6 +2,7 @@ import type {
   Catalog,
   CatalogItem,
   Cie10Pathology,
+  Cie10SearchResult,
   GeographicLocation,
 } from '@/domain/modules/catalog/models/Catalog';
 
@@ -30,9 +31,15 @@ export interface Cie10PathologyRow {
   id: string;
   code: string;
   description: string;
+  chapter_code?: string;
+  chapter_name?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface Cie10SearchResultRow extends Cie10PathologyRow {
+  rank: number;
 }
 
 export interface GeographicLocationRow {
@@ -69,9 +76,16 @@ export const mapCie10PathologyRow = (row: Cie10PathologyRow): Cie10Pathology => 
   id: row.id,
   code: row.code,
   description: row.description,
+  chapterCode: row.chapter_code,
+  chapterName: row.chapter_name,
   isActive: row.is_active,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
+});
+
+export const mapCie10SearchResultRow = (row: Cie10SearchResultRow): Cie10SearchResult => ({
+  ...mapCie10PathologyRow(row),
+  rank: row.rank,
 });
 
 export const mapGeographicLocationRow = (row: GeographicLocationRow): GeographicLocation => ({

@@ -2,20 +2,20 @@ import type { CatalogRepository } from '@/domain/modules/catalog/repositories/Ca
 import type {
   Catalog,
   CatalogItem,
-  Cie10Pathology,
+  Cie10SearchResult,
   GeographicLocation,
 } from '@/domain/modules/catalog/models/Catalog';
 import { supabase } from '@/infrastructure/core/supabaseClient';
 import {
   mapCatalogRow,
   mapCatalogItemRow,
-  mapCie10PathologyRow,
   mapGeographicLocationRow,
+  mapCie10SearchResultRow,
 } from '@/infrastructure/modules/catalog/mappers/catalogMapper';
 import type {
   CatalogRow,
   CatalogItemRow,
-  Cie10PathologyRow,
+  Cie10SearchResultRow,
   GeographicLocationRow,
 } from '@/infrastructure/modules/catalog/mappers/catalogMapper';
 
@@ -64,19 +64,17 @@ export class SupabaseCatalogRepository implements CatalogRepository {
     return this.getCatalogItems(catalog.id);
   }
 
-  async searchCie10Pathologies(query: string): Promise<Cie10Pathology[]> {
-    const { data, error } = await supabase
-      .from('cie10_pathologies')
-      .select('*')
-      .eq('is_active', true)
-      .or(`code.ilike.%${query}%,description.ilike.%${query}%`)
-      .limit(50);
+  async searchCie10Pathologies(query: string, limit: number = 20): Promise<Cie10SearchResult[]> {
+    const { data, error } = await supabase.rpc('search_cie10', {
+      query: query,
+      result_limit: limit,
+    });
 
     if (error) {
       throw new Error(error.message);
     }
 
-    return (data as Cie10PathologyRow[]).map(mapCie10PathologyRow);
+    return (data as Cie10SearchResultRow[]).map(mapCie10SearchResultRow);
   }
 
   async searchGeographicLocations(query: string): Promise<GeographicLocation[]> {

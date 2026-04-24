@@ -33,9 +33,15 @@ export interface Cie10Pathology {
   id: string;
   code: string;
   description: string;
+  chapterCode?: string;
+  chapterName?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Cie10SearchResult extends Cie10Pathology {
+  rank: number;
 }
 
 export interface GeographicLocation {
