@@ -39,7 +39,7 @@ export function Cie10SearchInput({ value, onChange, onDescriptionSelect }: Cie10
       <div style={{ position: "relative" }}>
         <input
           type="text"
-          className={`input-field ${value ? 'has-value' : ''}`}
+          className={`input-field ${value ? "has-value" : ""}`}
           placeholder="Buscar patología CIE-10..."
           value={query}
           onChange={(e) => {
@@ -54,7 +54,14 @@ export function Cie10SearchInput({ value, onChange, onDescriptionSelect }: Cie10
           }}
         />
         {isLoading && (
-          <div style={{ position: "absolute", right: "10px", top: "10px", color: "var(--color-text-secondary)" }}>
+          <div
+            style={{
+              position: "absolute",
+              right: "10px",
+              top: "10px",
+              color: "var(--color-text-secondary)",
+            }}
+          >
             <Icon name="icon-loader" size={16} className="spin" />
           </div>
         )}
@@ -68,11 +75,11 @@ export function Cie10SearchInput({ value, onChange, onDescriptionSelect }: Cie10
             left: 0,
             right: 0,
             marginTop: "4px",
-            backgroundColor: "var(--color-bg-primary)",
+            backgroundColor: "var(--color-surface)",
             border: "1px solid var(--color-border)",
             borderRadius: "var(--radius-md)",
             boxShadow: "var(--shadow-md)",
-            zIndex: 10,
+            zIndex: 50,
             maxHeight: "200px",
             overflowY: "auto",
           }}
@@ -88,7 +95,7 @@ export function Cie10SearchInput({ value, onChange, onDescriptionSelect }: Cie10
                 fontSize: "var(--font-size-sm)",
               }}
               onMouseEnter={(e) => {
-                (e.target as HTMLDivElement).style.backgroundColor = "var(--color-bg-secondary)";
+                (e.target as HTMLDivElement).style.backgroundColor = "var(--color-bg)";
               }}
               onMouseLeave={(e) => {
                 (e.target as HTMLDivElement).style.backgroundColor = "transparent";
