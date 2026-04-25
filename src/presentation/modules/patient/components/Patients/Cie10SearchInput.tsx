@@ -96,7 +96,7 @@ export function Cie10SearchInput({ value, onChange, onDescriptionSelect, initial
             left: 0,
             right: 0,
             marginTop: "4px",
-            backgroundColor: "var(--color-surface, #ffffff)",
+            backgroundColor: "var(--color-surface)",
             border: "1px solid var(--color-border)",
             borderRadius: "var(--radius-md)",
             boxShadow: "var(--shadow-md)",
@@ -116,7 +116,7 @@ export function Cie10SearchInput({ value, onChange, onDescriptionSelect, initial
                 borderBottom: "1px solid var(--color-border)",
                 fontSize: "var(--font-size-sm)",
                 backgroundColor: "transparent",
-                color: "var(--color-text-primary)",
+                color: "var(--color-text)",
               }}
               onMouseEnter={(e) => {
                 (e.target as HTMLDivElement).style.backgroundColor = "var(--color-bg)";

@@ -126,7 +126,7 @@ export function GeographicLocationSearchInput({
                   cursor: "pointer",
                   borderBottom: "1px solid var(--color-border)",
                   fontSize: "var(--font-size-sm)",
-                  color: "var(--color-text-primary)",
+                  color: "var(--color-text)",
                   backgroundColor: "transparent",
                   transition: "background-color 0.2s ease",
                 }}
