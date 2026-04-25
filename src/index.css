@@ -294,6 +294,50 @@ select:focus {
   box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
+/* ----- Form Validation Errors ----- */
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-field.error,
+input.error,
+textarea.error,
+select.error {
+  border-color: var(--color-danger);
+  padding-right: 32px;
+}
+
+.input-field.error:focus,
+input.error:focus,
+textarea.error:focus,
+select.error:focus {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 20%, transparent);
+}
+
+.input-error-icon {
+  position: absolute;
+  right: 10px;
+  color: var(--color-danger);
+  display: inline-flex;
+  pointer-events: none;
+}
+
+/* Fix for selects to have icon positioned properly */
+.input-wrapper select.error {
+  padding-right: 40px; /* Selects already have a dropdown arrow, need more space */
+}
+
+.form-error {
+  display: block;
+  color: var(--color-danger);
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-1);
+  font-weight: var(--font-weight-medium);
+}
+
 /* ----- Card Utility ----- */
 .card {
   background-color: var(--color-surface);
