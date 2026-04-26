@@ -86,8 +86,9 @@ export class SupabasePatientRepository implements PatientRepository {
         occupation:catalog_items(*),
         geographic_location:geographic_locations(*),
         patient_emergency_contacts(*),
-        patient_clinical_antecedents(*, pathology:cie10_pathologies(*))
+        patient_clinical_antecedents!patient_clinical_antecedents_patient_id_fkey(*, pathology:cie10_pathologies(*))
       `)
+      .eq("patient_clinical_antecedents.is_active", true)
       .eq("id", id)
       .limit(1);
 
