@@ -17,6 +17,7 @@ import { GeographicLocationSearchInput } from "./GeographicLocationSearchInput";
 import { WcModal } from "@/presentation/modules/shared/components/ui/webcomponents/Modals/WcModal";
 import { WcTabsFolder } from "@/presentation/modules/shared/components/ui/webcomponents/Tabs/wcTabsFolder";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
+import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
 
 interface PatientCreateModalProps {
   patientId?: string | null;
@@ -59,7 +60,7 @@ export function PatientCreateModal({
     control,
     setValue,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema) as any,
     defaultValues: {
@@ -83,7 +84,7 @@ export function PatientCreateModal({
 
   const {
     fields: contactFields,
-    insert: insertContact,
+    append: appendContact,
     remove: removeContact,
   } = useFieldArray({
     control,
@@ -92,12 +93,26 @@ export function PatientCreateModal({
 
   const {
     fields: antecedentFields,
-    insert: insertAntecedent,
+    append: appendAntecedent,
     remove: removeAntecedent,
   } = useFieldArray({
     control,
     name: "clinicalAntecedents",
   });
+
+  const watchContacts = watch("emergencyContacts");
+  const hasEmptyContact = (watchContacts || []).some(
+    (c) => !c.name?.trim() && !c.phone?.trim(),
+  );
+
+  const watchAntecedents = watch("clinicalAntecedents");
+  const hasEmptyAntecedent = (watchAntecedents || []).some(
+    (ant) =>
+      !ant.pathologyId &&
+      !ant.description?.trim() &&
+      !ant.diagnosisDate &&
+      !ant.treatment?.trim(),
+  );
 
   const watchCulturalGroup = watch("culturalGroup");
   const watchInfoSourceType = watch("infoSourceType");
@@ -556,17 +571,6 @@ export function PatientCreateModal({
         gap: "var(--space-4)",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <WcButton
-          variant="primary"
-          onClick={() =>
-            insertContact(0, { name: "", kinship: "OTRO", phone: "" })
-          }
-        >
-          <Icon name="icon-add" size={14} /> Añadir Contacto
-        </WcButton>
-      </div>
-
       {contactFields.length === 0 ? (
         <div
           style={{
@@ -587,14 +591,15 @@ export function PatientCreateModal({
             gap: "var(--space-4)",
           }}
         >
-          {[...contactFields].reverse().map((field, reversedIdx) => {
-            const actualIndex = contactFields.length - 1 - reversedIdx;
+          {contactFields.map((field, index) => {
+            const isEven = index % 2 === 0;
             return (
               <div
                 key={field.id}
                 style={{
                   border: "1px solid var(--color-border)",
                   borderRadius: "var(--radius-md)",
+                  borderLeft: `3px solid ${isEven ? "var(--color-warning)" : "var(--color-secondary)"}`,
                   overflow: "hidden",
                 }}
               >
@@ -604,7 +609,7 @@ export function PatientCreateModal({
                     justifyContent: "space-between",
                     alignItems: "center",
                     padding: "var(--space-2) var(--space-4)",
-                    backgroundColor: "var(--color-surface)",
+                    backgroundColor: isEven ? "var(--color-warning-light)" : "var(--color-primary-light)",
                     borderBottom: "1px solid var(--color-border)",
                   }}
                 >
@@ -612,16 +617,16 @@ export function PatientCreateModal({
                     style={{
                       fontSize: "var(--font-size-xs)",
                       fontWeight: "var(--font-weight-semibold)",
-                      color: "var(--color-primary)",
+                      color: isEven ? "var(--color-warning)" : "var(--color-secondary)",
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
                     }}
                   >
-                    Contacto {contactFields.length - reversedIdx}
+                    Contacto {index + 1}
                   </span>
                   <button
                     type="button"
-                    onClick={() => removeContact(actualIndex)}
+                    onClick={() => removeContact(index)}
                     style={{
                       background: "none",
                       border: "none",
@@ -648,7 +653,7 @@ export function PatientCreateModal({
                   <input
                     type="hidden"
                     {...register(
-                      `emergencyContacts.${actualIndex}.id` as const,
+                      `emergencyContacts.${index}.id` as const,
                     )}
                   />
                   <div>
@@ -656,16 +661,16 @@ export function PatientCreateModal({
                     <div className="input-wrapper">
                       <input
                         {...register(
-                          `emergencyContacts.${actualIndex}.name` as const,
+                          `emergencyContacts.${index}.name` as const,
                         )}
-                        className={`input-field ${errors.emergencyContacts?.[actualIndex]?.name ? "error" : ""}`}
+                        className={`input-field ${errors.emergencyContacts?.[index]?.name ? "error" : ""}`}
                       />
-                      {errors.emergencyContacts?.[actualIndex]?.name && (
+                      {errors.emergencyContacts?.[index]?.name && (
                         <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
                       )}
                     </div>
-                    {errors.emergencyContacts?.[actualIndex]?.name && (
-                      <span className="form-error">{errors.emergencyContacts[actualIndex]?.name?.message}</span>
+                    {errors.emergencyContacts?.[index]?.name && (
+                      <span className="form-error">{errors.emergencyContacts[index]?.name?.message}</span>
                     )}
                   </div>
                   <div>
@@ -673,9 +678,9 @@ export function PatientCreateModal({
                     <div className="input-wrapper">
                       <select
                         {...register(
-                          `emergencyContacts.${actualIndex}.kinship` as const,
+                          `emergencyContacts.${index}.kinship` as const,
                         )}
-                        className={`input-field ${errors.emergencyContacts?.[actualIndex]?.kinship ? "error" : ""}`}
+                        className={`input-field ${errors.emergencyContacts?.[index]?.kinship ? "error" : ""}`}
                       >
                         <option value="PADRE">Padre</option>
                         <option value="MADRE">Madre</option>
@@ -696,12 +701,12 @@ export function PatientCreateModal({
                         <option value="VECINO">Vecino/a</option>
                         <option value="OTRO">Otro</option>
                       </select>
-                      {errors.emergencyContacts?.[actualIndex]?.kinship && (
+                      {errors.emergencyContacts?.[index]?.kinship && (
                         <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
                       )}
                     </div>
-                    {errors.emergencyContacts?.[actualIndex]?.kinship && (
-                      <span className="form-error">{errors.emergencyContacts[actualIndex]?.kinship?.message}</span>
+                    {errors.emergencyContacts?.[index]?.kinship && (
+                      <span className="form-error">{errors.emergencyContacts[index]?.kinship?.message}</span>
                     )}
                   </div>
                   <div>
@@ -709,34 +714,34 @@ export function PatientCreateModal({
                     <div className="input-wrapper">
                       <input
                         {...register(
-                          `emergencyContacts.${actualIndex}.phone` as const,
+                          `emergencyContacts.${index}.phone` as const,
                         )}
-                        className={`input-field ${errors.emergencyContacts?.[actualIndex]?.phone ? "error" : ""}`}
+                        className={`input-field ${errors.emergencyContacts?.[index]?.phone ? "error" : ""}`}
                       />
-                      {errors.emergencyContacts?.[actualIndex]?.phone && (
+                      {errors.emergencyContacts?.[index]?.phone && (
                         <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
                       )}
                     </div>
-                    {errors.emergencyContacts?.[actualIndex]?.phone && (
-                      <span className="form-error">{errors.emergencyContacts[actualIndex]?.phone?.message}</span>
+                    {errors.emergencyContacts?.[index]?.phone && (
+                      <span className="form-error">{errors.emergencyContacts[index]?.phone?.message}</span>
                     )}
                   </div>
-                  {watch(`emergencyContacts.${actualIndex}.kinship`) === "OTRO" && (
+                  {watch(`emergencyContacts.${index}.kinship`) === "OTRO" && (
                     <div style={{ gridColumn: "1 / -1" }}>
                       <label className="form-label">Especificar Parentesco *</label>
                       <div className="input-wrapper">
                         <input
                           {...register(
-                            `emergencyContacts.${actualIndex}.kinshipOther` as const,
+                            `emergencyContacts.${index}.kinshipOther` as const,
                           )}
-                          className={`input-field ${errors.emergencyContacts?.[actualIndex]?.kinshipOther ? "error" : ""}`}
+                          className={`input-field ${errors.emergencyContacts?.[index]?.kinshipOther ? "error" : ""}`}
                         />
-                        {errors.emergencyContacts?.[actualIndex]?.kinshipOther && (
+                        {errors.emergencyContacts?.[index]?.kinshipOther && (
                           <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
                         )}
                       </div>
-                      {errors.emergencyContacts?.[actualIndex]?.kinshipOther && (
-                        <span className="form-error">{errors.emergencyContacts[actualIndex]?.kinshipOther?.message}</span>
+                      {errors.emergencyContacts?.[index]?.kinshipOther && (
+                        <span className="form-error">{errors.emergencyContacts[index]?.kinshipOther?.message}</span>
                       )}
                     </div>
                   )}
@@ -746,6 +751,18 @@ export function PatientCreateModal({
           })}
         </div>
       )}
+
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <WcButton
+          variant="primary"
+          disabled={hasEmptyContact}
+          onClick={() =>
+            appendContact({ id: "", name: "", kinship: "OTRO", phone: "", kinshipOther: "", address: "" })
+          }
+        >
+          <Icon name="icon-add" size={14} /> Añadir Contacto
+        </WcButton>
+      </div>
     </div>
   );
 
@@ -757,15 +774,6 @@ export function PatientCreateModal({
         gap: "var(--space-4)",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <WcButton
-          variant="secondary"
-          onClick={() => insertAntecedent(0, { antecedentType: "CLINICO" })}
-        >
-          <Icon name="icon-add" size={14} /> Añadir Antecedente
-        </WcButton>
-      </div>
-
       {antecedentFields.length === 0 ? (
         <div
           style={{
@@ -786,14 +794,15 @@ export function PatientCreateModal({
             gap: "var(--space-4)",
           }}
         >
-          {[...antecedentFields].reverse().map((field, reversedIdx) => {
-            const actualIndex = antecedentFields.length - 1 - reversedIdx;
+          {antecedentFields.map((field, index) => {
+            const isEven = index % 2 === 0;
             return (
               <div
                 key={field.id}
                 style={{
                   border: "1px solid var(--color-border)",
                   borderRadius: "var(--radius-md)",
+                  borderLeft: `3px solid ${isEven ? "var(--color-success)" : "var(--color-primary-hover)"}`,
                   overflow: "hidden",
                 }}
               >
@@ -803,7 +812,7 @@ export function PatientCreateModal({
                     justifyContent: "space-between",
                     alignItems: "center",
                     padding: "var(--space-2) var(--space-4)",
-                    backgroundColor: "var(--color-surface)",
+                    backgroundColor: isEven ? "var(--color-success-light)" : "var(--color-primary-light)",
                     borderBottom: "1px solid var(--color-border)",
                   }}
                 >
@@ -811,16 +820,16 @@ export function PatientCreateModal({
                     style={{
                       fontSize: "var(--font-size-xs)",
                       fontWeight: "var(--font-weight-semibold)",
-                      color: "var(--color-primary)",
+                      color: isEven ? "var(--color-success)" : "var(--color-primary-hover)",
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
                     }}
                   >
-                    Antecedente {antecedentFields.length - reversedIdx}
+                    Antecedente {index + 1}
                   </span>
                   <button
                     type="button"
-                    onClick={() => removeAntecedent(actualIndex)}
+                    onClick={() => removeAntecedent(index)}
                     style={{
                       background: "none",
                       border: "none",
@@ -847,7 +856,7 @@ export function PatientCreateModal({
                   <input
                     type="hidden"
                     {...register(
-                      `clinicalAntecedents.${actualIndex}.id` as const,
+                      `clinicalAntecedents.${index}.id` as const,
                     )}
                   />
                   <div>
@@ -855,9 +864,9 @@ export function PatientCreateModal({
                     <div className="input-wrapper">
                       <select
                         {...register(
-                          `clinicalAntecedents.${actualIndex}.antecedentType` as const,
+                          `clinicalAntecedents.${index}.antecedentType` as const,
                         )}
-                        className={`input-field ${errors.clinicalAntecedents?.[actualIndex]?.antecedentType ? "error" : ""}`}
+                        className={`input-field ${errors.clinicalAntecedents?.[index]?.antecedentType ? "error" : ""}`}
                       >
                         <option value="ALERGICO">Alérgico</option>
                         <option value="CLINICO">Clínico</option>
@@ -875,12 +884,12 @@ export function PatientCreateModal({
                         <option value="NEONATAL">Neonatal</option>
                         <option value="OTRO">Otro</option>
                       </select>
-                      {errors.clinicalAntecedents?.[actualIndex]?.antecedentType && (
+                      {errors.clinicalAntecedents?.[index]?.antecedentType && (
                         <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
                       )}
                     </div>
-                    {errors.clinicalAntecedents?.[actualIndex]?.antecedentType && (
-                      <span className="form-error">{errors.clinicalAntecedents[actualIndex]?.antecedentType?.message}</span>
+                    {errors.clinicalAntecedents?.[index]?.antecedentType && (
+                      <span className="form-error">{errors.clinicalAntecedents[index]?.antecedentType?.message}</span>
                     )}
                   </div>
                   <div>
@@ -888,7 +897,7 @@ export function PatientCreateModal({
                     <input
                       type="date"
                       {...register(
-                        `clinicalAntecedents.${actualIndex}.diagnosisDate` as const,
+                        `clinicalAntecedents.${index}.diagnosisDate` as const,
                       )}
                       className="input-field"
                     />
@@ -897,38 +906,38 @@ export function PatientCreateModal({
                     <label className="form-label">Patología (CIE-10)</label>
                     <div className="input-wrapper">
                       <Cie10SearchInput
-                        value={watch(`clinicalAntecedents.${actualIndex}.pathologyId`)}
+                        value={watch(`clinicalAntecedents.${index}.pathologyId`)}
                         initialLabel={
                           patientData?.clinicalAntecedents?.find(
-                            (a) => a.id === watch(`clinicalAntecedents.${actualIndex}.id`),
+                            (a) => a.id === watch(`clinicalAntecedents.${index}.id`),
                           )?.pathology
-                            ? `${patientData.clinicalAntecedents.find((a) => a.id === watch(`clinicalAntecedents.${actualIndex}.id`))?.pathology?.code} - ${patientData.clinicalAntecedents.find((a) => a.id === watch(`clinicalAntecedents.${actualIndex}.id`))?.pathology?.description}`
+                            ? `${patientData.clinicalAntecedents.find((a) => a.id === watch(`clinicalAntecedents.${index}.id`))?.pathology?.code} - ${patientData.clinicalAntecedents.find((a) => a.id === watch(`clinicalAntecedents.${index}.id`))?.pathology?.description}`
                             : ""
                         }
                         onChange={(id) => {
                           setValue(
-                            `clinicalAntecedents.${actualIndex}.pathologyId`,
+                            `clinicalAntecedents.${index}.pathologyId`,
                             id || undefined,
                             { shouldValidate: true },
                           );
                         }}
                         error={
-                          errors.clinicalAntecedents?.[actualIndex]?.pathologyId?.message
+                          errors.clinicalAntecedents?.[index]?.pathologyId?.message
                         }
                       />
-                      {errors.clinicalAntecedents?.[actualIndex]?.pathologyId && (
+                      {errors.clinicalAntecedents?.[index]?.pathologyId && (
                         <span className="input-error-icon" style={{ right: 30 }}><Icon name="icon-alert-circle" size={16} /></span>
                       )}
                     </div>
-                    {errors.clinicalAntecedents?.[actualIndex]?.pathologyId && (
-                      <span className="form-error">{errors.clinicalAntecedents[actualIndex]?.pathologyId?.message}</span>
+                    {errors.clinicalAntecedents?.[index]?.pathologyId && (
+                      <span className="form-error">{errors.clinicalAntecedents[index]?.pathologyId?.message}</span>
                     )}
                   </div>
                   <div style={{ gridColumn: "1 / -1" }}>
                     <label className="form-label">Descripción</label>
                     <textarea
                       {...register(
-                        `clinicalAntecedents.${actualIndex}.description` as const,
+                        `clinicalAntecedents.${index}.description` as const,
                       )}
                       className="input-field"
                       rows={2}
@@ -938,7 +947,7 @@ export function PatientCreateModal({
                     <label className="form-label">Tratamiento</label>
                     <input
                       {...register(
-                        `clinicalAntecedents.${actualIndex}.treatment` as const,
+                        `clinicalAntecedents.${index}.treatment` as const,
                       )}
                       className="input-field"
                     />
@@ -949,6 +958,16 @@ export function PatientCreateModal({
           })}
         </div>
       )}
+
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <WcButton
+          variant="primary"
+          disabled={hasEmptyAntecedent}
+          onClick={() => appendAntecedent({ id: "", antecedentType: "CLINICO", pathologyId: "", description: "", diagnosisDate: "", treatment: "" })}
+        >
+          <Icon name="icon-add" size={14} /> Añadir Antecedente
+        </WcButton>
+      </div>
     </div>
   );
 
@@ -1056,14 +1075,12 @@ export function PatientCreateModal({
         padding: "var(--space-2) 0",
       }}
     >
-      <WcButton
-        variant=""
+      <WcButtonIcon
+        icon={"icon-chevron-left"}
         onClick={() => setCurrentTab((prev) => Math.max(0, prev - 1))}
         disabled={currentTab === 0 || isPending}
-      >
-        <Icon name="icon-chevron-left" size={16} />
-        <span className="wc-tabs-folder-nav__label">Anterior</span>
-      </WcButton>
+        aria-label="Anterior"
+      />
       <span
         style={{
           fontSize: "var(--font-size-xs)",
@@ -1077,16 +1094,14 @@ export function PatientCreateModal({
       >
         {currentTab + 1}/{TABS.length}
       </span>
-      <WcButton
-        variant=""
+      <WcButtonIcon
+        icon={"icon-chevron-right"}
         onClick={() =>
           setCurrentTab((prev) => Math.min(TABS.length - 1, prev + 1))
         }
         disabled={currentTab === TABS.length - 1 || isPending}
-      >
-        <span className="wc-tabs-folder-nav__label">Siguiente</span>
-        <Icon name="icon-chevron-right" size={16} />
-      </WcButton>
+        aria-label="Siguiente"
+      />
     </div>
   );
 
@@ -1130,12 +1145,12 @@ export function PatientCreateModal({
         gap: "var(--space-3)",
       }}
     >
-      <WcButton variant="terciary" onClick={onClose} disabled={isPending}>
+      <WcButton variant="danger" onClick={onClose} disabled={isPending}>
         Cancelar
       </WcButton>
       <WcButton
         variant="primary"
-        disabled={isPending}
+        disabled={isPending || (isEditMode && !isDirty)}
         onClick={handleSubmit(onSubmit, onError)}
       >
         {isPending && <Icon name="icon-loader" size={16} className="spin" />}
