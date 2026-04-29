@@ -24,7 +24,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const { setInviteModalOpen, isInviteModalOpen } = useUserStore();
-  // Safe to use here because it's a hook wrapping react-query; calling loadUsers will fetch data 
+  // Safe to use here because it's a hook wrapping react-query; calling loadUsers will fetch data
   // and populate cache, making the management page automatically activate upon navigation.
   const { loadUsers, inviteUser, isInviting, isActivated: isUsersLoaded } = useAdminUsers();
 
@@ -35,6 +35,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     setEditingPatientId,
     isQuickSearchModalOpen,
     setQuickSearchModalOpen,
+    onCreateSuccess,
+    setCreateSuccessHandler,
   } = usePatientStore();
 
   usePresenceTracker(user?.id);
@@ -153,17 +155,21 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           }}
           title="Acciones Rápidas"
         >
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-2)",
-            color: "var(--color-text-secondary)",
-            fontSize: "var(--font-size-sm)",
-            fontWeight: "var(--font-weight-medium)",
-            whiteSpace: "nowrap",
-            marginRight: "var(--space-4)"
-          }}>
-            <span style={{ display: "inline-block" }} className="quick-actions-title">Acciones Rápidas:</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-2)",
+              color: "var(--color-text-secondary)",
+              fontSize: "var(--font-size-sm)",
+              fontWeight: "var(--font-weight-medium)",
+              whiteSpace: "nowrap",
+              marginRight: "var(--space-4)",
+            }}
+          >
+            <span style={{ display: "inline-block" }} className="quick-actions-title">
+              Acciones Rápidas:
+            </span>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
@@ -171,30 +177,41 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               module="Pacientes"
               icon="icon-patient"
               actions={[
-                { label: 'Buscar Paciente', icon: 'icon-search', onClick: () => setQuickSearchModalOpen(true) },
-                { label: 'Registrar Nuevo', icon: 'icon-user-plus', onClick: () => setCreateModalOpen(true) }
+                {
+                  label: "Buscar Paciente",
+                  icon: "icon-search",
+                  onClick: () => setQuickSearchModalOpen(true),
+                },
+                {
+                  label: "Registrar Nuevo",
+                  icon: "icon-user-plus",
+                  onClick: () => {
+                    setCreateSuccessHandler(null);
+                    setCreateModalOpen(true);
+                  },
+                },
               ]}
             />
-            
+
             <QuickActionBar
               module="Usuarios"
               icon="icon-users"
               actions={[
-                { 
-                  label: 'Cargar usuarios', 
-                  icon: 'icon-users', 
+                {
+                  label: "Cargar usuarios",
+                  icon: "icon-users",
                   onClick: () => {
                     loadUsers();
                     navigate("/admin/users");
-                  } 
+                  },
                 },
-                { 
-                  label: 'Invitar Usuario', 
-                  icon: 'icon-user-plus', 
+                {
+                  label: "Invitar Usuario",
+                  icon: "icon-user-plus",
                   onClick: () => {
                     setInviteModalOpen(true);
-                  } 
-                }
+                  },
+                },
               ]}
             />
 
@@ -230,11 +247,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           onClose={() => {
             setCreateModalOpen(false);
             setEditingPatientId(null);
+            setCreateSuccessHandler(null);
           }}
+          onCreated={onCreateSuccess ?? undefined}
         />
       )}
-      
-      <PatientQuickSearchModal 
+
+      <PatientQuickSearchModal
         isOpen={isQuickSearchModalOpen}
         onClose={() => setQuickSearchModalOpen(false)}
       />

@@ -183,7 +183,7 @@ export function WcTables({
                 <th
                   key={column.key}
                   className="wc-tables__header-cell"
-                  style={{ textAlign: "center", width: column.width }}
+                  style={{ textAlign: column.align ?? "center", width: column.width }}
                 >
                   <span className="wc-tables__header-label">{column.name}</span>
                   {column.sortable ? <span className="wc-tables__sort-indicator">▼</span> : null}

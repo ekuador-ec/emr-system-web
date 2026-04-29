@@ -1,11 +1,25 @@
 import { useNavigate } from "react-router-dom";
-import type { PaginatedResult, MedicalRecordListItem } from "@/domain/modules/medical-record/models/MedicalRecord";
-import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
+import type {
+  PaginatedResult,
+  MedicalRecordListItem,
+} from "@/domain/modules/medical-record/models/MedicalRecord";
 import { useMedicalRecordStore } from "@/presentation/modules/medical-record/stores/useMedicalRecordStore";
 import { useUpdateMedicalRecordStatus } from "@/presentation/modules/medical-record/hooks/useMedicalRecord";
 import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import { canChangeMedicalRecordStatus } from "@/presentation/core/security/medicalRecordPermissions";
 import { useAuth } from "@/presentation/modules/auth/hooks/useAuth";
+import {
+  WcTables,
+  TableAvatarCell,
+  TableActionCell,
+  TableStatusBadge,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Tables/wcTables";
+import type {
+  WcTableColumn,
+  WcTableRow,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Tables/wcTables";
+import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
+import { useConfirmDialog } from "@/presentation/modules/shared/components/ui/useConfirmDialog";
 
 interface MedicalRecordsListProps {
   result?: PaginatedResult<MedicalRecordListItem>;
@@ -16,9 +30,10 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
   const navigate = useNavigate();
   const { setFilters } = useMedicalRecordStore();
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateMedicalRecordStatus();
+  const { confirm, DialogComponent } = useConfirmDialog();
   const { addToast } = useToastStore();
   const { user } = useAuth();
-  
+
   const canAdmin = canChangeMedicalRecordStatus(user?.role);
 
   if (!result) return null;
@@ -30,7 +45,19 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
     setFilters({ page: newPage });
   };
 
-  const handleToggleStatus = (id: string, currentStatus: boolean) => {
+  const handleToggleStatus = async (record: MedicalRecordListItem) => {
+    const id = String(record.id ?? "");
+    const currentStatus = record.isActive === true;
+
+    const isConfirmed = await confirm({
+      title: currentStatus ? "Archivar Historia Clínica" : "Activar Historia Clínica",
+      message: `¿Desea ${currentStatus ? "archivar" : "activar"} la historia clínica de ${record.patientName ?? "este paciente"}?`,
+      confirmText: currentStatus ? "Archivar" : "Activar",
+      type: currentStatus ? "danger" : "primary",
+    });
+
+    if (!isConfirmed) return;
+
     updateStatus(
       { id, isActive: !currentStatus },
       {
@@ -45,104 +72,126 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
             type: "error",
             message: `Error al cambiar estado: ${err.message}`,
           });
-        }
-      }
+        },
+      },
     );
   };
 
-  return (
-    <div className="card" style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "var(--font-size-sm)" }}>
-        <thead>
-          <tr style={{ borderBottom: "2px solid var(--color-border)", textAlign: "left" }}>
-            <th style={thStyle}>Paciente</th>
-            <th style={thStyle}>ID/Cédula</th>
-            <th style={thStyle}>Evoluciones</th>
-            <th style={thStyle}>Actualizado</th>
-            <th style={thStyle}>Estado</th>
-            <th style={thStyle}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {records.map((record) => (
-            <tr key={record.id} style={{ borderBottom: "1px solid var(--color-border)" }}>
-              <td style={tdStyle}>
-                <div style={{ fontWeight: "var(--font-weight-medium)" }}>
-                  {record.patientName}
-                </div>
-              </td>
-              <td style={tdStyle}>{record.patientIdNumber}</td>
-              <td style={tdStyle}>
-                 <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-semibold">
-                   {record.evolutionCount}
-                 </span>
-              </td>
-              <td style={tdStyle}>
-                {new Date(record.updatedAt).toLocaleDateString()}
-              </td>
-              <td style={tdStyle}>
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    padding: "var(--space-1) var(--space-2)",
-                    borderRadius: "var(--radius-full)",
-                    fontSize: "var(--font-size-xs)",
-                    fontWeight: "var(--font-weight-semibold)",
-                    backgroundColor: record.isActive ? "var(--color-success-light)" : "var(--color-warning-light)",
-                    color: record.isActive ? "var(--color-success)" : "var(--color-warning)",
-                  }}
-                >
-                  {record.isActive ? "Activo" : "Inactivo"}
-                </span>
-              </td>
-              <td style={tdStyle}>
-                <div style={{ display: "flex", gap: "var(--space-2)" }}>
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    onClick={() => onSelectRecord(record)}
-                    style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--font-size-xs)" }}
-                    title="Ver Detalles"
-                  >
-                    <Icon name="icon-see-details" size={16} />
-                    Detalles
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    onClick={() => navigate(`/pacientes/${record.patientId}/historia`)}
-                    style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--font-size-xs)" }}
-                    title="Ver Historia Clínica"
-                  >
-                    <Icon name="icon-medical-record" size={16} />
-                    Historia
-                  </button>
-                  {canAdmin && (
-                    <button
-                      type="button"
-                      className={record.isActive ? "btn-danger" : "btn-secondary"}
-                      onClick={() => handleToggleStatus(record.id, record.isActive)}
-                      disabled={isUpdating}
-                      style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--font-size-xs)" }}
-                    >
-                      {record.isActive ? "Desactivar" : "Activar"}
-                    </button>
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))}
-          {records.length === 0 && (
-            <tr>
-              <td colSpan={6} style={{ ...tdStyle, textAlign: "center", color: "var(--color-text-secondary)", padding: "var(--space-8)" }}>
-                No se encontraron historias clínicas.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+  const columns: WcTableColumn[] = [
+    {
+      key: "status",
+      name: "Estado",
+      align: "center",
+      render: (row) => {
+        const isActive = row.isActive === true;
 
+        return (
+          <TableStatusBadge
+            status={isActive ? "success" : "warning"}
+            label={isActive ? "Activo" : "Inactivo"}
+            color={isActive ? "success" : "warning"}
+          />
+        );
+      },
+    },
+    {
+      key: "patient",
+      name: "Paciente",
+      align: "center",
+      render: (row) => (
+        <TableAvatarCell
+          title={String(row.patientName ?? "")}
+          subtitle={`ID: ${String(row.patientIdNumber ?? "")}`}
+        />
+      ),
+    },
+    { key: "patientIdNumber", name: "ID/Cédula", align: "center" },
+    {
+      key: "updatedByName",
+      name: "Última edición por",
+      align: "center",
+      render: (row) => String(row.updatedByName ?? "No disponible"),
+    },
+    { key: "updatedAt", name: "Fecha de edición", align: "center" },
+    {
+      key: "evolutionCount",
+      name: "Evoluciones",
+      align: "center",
+      render: (row) => (
+        <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-semibold">
+          {String(row.evolutionCount ?? 0)}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      name: "Acciones",
+      align: "left",
+      render: (row) => {
+        const id = String(row.id ?? "");
+        const isActive = row.isActive === true;
+        const patientId = String(row.patientId ?? "");
+        const selectedRecord = records.find((record) => record.id === id);
+
+        return (
+          <TableActionCell>
+            <WcButtonIcon
+              variant="terciary"
+              icon="icon-see-details"
+              size="sm"
+              title="Ver Detalles"
+              onClick={() => {
+                if (selectedRecord) {
+                  onSelectRecord(selectedRecord);
+                }
+              }}
+            />
+            <WcButtonIcon
+              variant="terciary"
+              icon="icon-open-folder"
+              size="sm"
+              title="Ver Historia Clínica"
+              onClick={() => navigate(`/pacientes/${patientId}/historia`)}
+            />
+            {canAdmin && (
+              <WcButtonIcon
+                icon={isActive ? "icon-archive" : "icon-unarchive"}
+                title={isActive ? "Archivar HC" : "Activar HC"}
+                variant={isActive ? "danger" : "secondary"}
+                size="sm"
+                disabled={isUpdating}
+                onClick={() => selectedRecord && handleToggleStatus(selectedRecord)}
+              />
+            )}
+          </TableActionCell>
+        );
+      },
+    },
+  ];
+
+  const rows: WcTableRow[] = records.map((record) => ({
+    id: record.id,
+    patientName: record.patientName,
+    patientIdNumber: record.patientIdNumber,
+    updatedByName: record.updatedByName,
+    evolutionCount: record.evolutionCount,
+    updatedAt: new Date(record.updatedAt).toLocaleDateString(),
+    patientId: record.patientId,
+    isActive: record.isActive,
+  }));
+
+  return (
+    <div
+      className="card"
+      style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}
+    >
+      <WcTables
+        columns={columns}
+        rows={rows}
+        emptyMessage="No se encontraron historias clínicas"
+        showPagination={false}
+      />
+      {DialogComponent}
       {totalPages > 1 && (
         <div
           style={{
@@ -154,9 +203,10 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
           }}
         >
           <span style={{ fontSize: "var(--font-size-sm)", color: "var(--color-text-secondary)" }}>
-            Mostrando {(page - 1) * limit + 1} a {Math.min(page * limit, total)} de {total} resultados
+            Mostrando {(page - 1) * limit + 1} a {Math.min(page * limit, total)} de {total}{" "}
+            resultados
           </span>
-          <div style={{ display: "flex", gap: "var(--space-1)" }}>
+          <div style={{ display: "flex", gap: "var(--space-1)", alignItems: "center" }}>
             <button
               type="button"
               className="btn-ghost"
@@ -166,7 +216,13 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
             >
               Anterior
             </button>
-            <span style={{ padding: "var(--space-1) var(--space-3)", fontSize: "var(--font-size-sm)", fontWeight: "var(--font-weight-medium)" }}>
+            <span
+              style={{
+                padding: "var(--space-1) var(--space-3)",
+                fontSize: "var(--font-size-sm)",
+                fontWeight: "var(--font-weight-medium)",
+              }}
+            >
               Página {page} de {totalPages}
             </span>
             <button
@@ -184,17 +240,3 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
     </div>
   );
 }
-
-const thStyle: React.CSSProperties = {
-  padding: "var(--space-3) var(--space-2)",
-  fontWeight: "var(--font-weight-semibold)",
-  fontSize: "var(--font-size-xs)",
-  color: "var(--color-text-secondary)",
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: "var(--space-3) var(--space-2)",
-  verticalAlign: "middle",
-};
