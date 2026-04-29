@@ -9,12 +9,18 @@ import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/
 export function PatientsPage() {
   const {
     setCreateModalOpen,
+    setCreateSuccessHandler,
     patientFilters,
     hasSearched,
     selectedPatientId,
   } = usePatientStore();
 
-  const { data: patientsResult, isLoading, isError, error } = usePatients(patientFilters, {
+  const {
+    data: patientsResult,
+    isLoading,
+    isError,
+    error,
+  } = usePatients(patientFilters, {
     enabled: hasSearched,
   });
 
@@ -38,7 +44,10 @@ export function PatientsPage() {
         </div>
         <WcButton
           variant="primary"
-          onClick={() => setCreateModalOpen(true)}
+          onClick={() => {
+            setCreateSuccessHandler(null);
+            setCreateModalOpen(true);
+          }}
           style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}
         >
           <Icon name="icon-user-plus" size={20} />
@@ -80,19 +89,51 @@ export function PatientsPage() {
               <Icon name="icon-search" size={24} />
             </div>
             <div style={{ maxWidth: "340px" }}>
-              <h3 style={{ marginBottom: "var(--space-2)", color: "var(--color-text-primary)", fontWeight: "var(--font-weight-medium)" }}>Comienza una búsqueda</h3>
+              <h3
+                style={{
+                  marginBottom: "var(--space-2)",
+                  color: "var(--color-text-primary)",
+                  fontWeight: "var(--font-weight-medium)",
+                }}
+              >
+                Comienza una búsqueda
+              </h3>
               <p style={{ margin: 0, lineHeight: "1.5" }}>
-                Utiliza la barra superior para encontrar un paciente por su número de cédula, nombres o apellidos.
+                Utiliza la barra superior para encontrar un paciente por su número de cédula,
+                nombres o apellidos.
               </p>
             </div>
           </div>
         ) : isLoading ? (
-          <div className="card" style={{ padding: "var(--space-16) var(--space-8)", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-4)" }}>
-             <div className="spinner" style={{ width: "32px", height: "32px", border: "3px solid var(--color-border)", borderTopColor: "var(--color-primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-             <p style={{ color: "var(--color-text-secondary)" }}>Buscando pacientes...</p>
+          <div
+            className="card"
+            style={{
+              padding: "var(--space-16) var(--space-8)",
+              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "var(--space-4)",
+            }}
+          >
+            <div
+              className="spinner"
+              style={{
+                width: "32px",
+                height: "32px",
+                border: "3px solid var(--color-border)",
+                borderTopColor: "var(--color-primary)",
+                borderRadius: "50%",
+                animation: "spin 1s linear infinite",
+              }}
+            />
+            <p style={{ color: "var(--color-text-secondary)" }}>Buscando pacientes...</p>
           </div>
         ) : isError ? (
-          <div className="card" style={{ padding: "var(--space-8)", textAlign: "center", color: "var(--color-danger)" }}>
+          <div
+            className="card"
+            style={{ padding: "var(--space-8)", textAlign: "center", color: "var(--color-danger)" }}
+          >
             Error al consultar los pacientes: {error.message}
           </div>
         ) : (
@@ -100,9 +141,7 @@ export function PatientsPage() {
         )}
       </div>
 
-      {selectedPatientId && (
-        <PatientDetailsDrawer />
-      )}
+      {selectedPatientId && <PatientDetailsDrawer />}
     </div>
   );
 }

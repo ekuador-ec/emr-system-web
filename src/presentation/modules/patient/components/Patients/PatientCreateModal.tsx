@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
+import type { Patient } from "@/domain/modules/patient/models/Patient";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import {
@@ -22,6 +23,7 @@ import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcompone
 interface PatientCreateModalProps {
   patientId?: string | null;
   onClose: () => void;
+  onCreated?: (patient: Patient) => void;
 }
 
 const TABS = [
@@ -34,10 +36,7 @@ const TABS = [
   { id: 6, title: "Fuente Info", icon: "icon-user-voice" },
 ];
 
-export function PatientCreateModal({
-  patientId,
-  onClose,
-}: PatientCreateModalProps) {
+export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCreateModalProps) {
   const [currentTab, setCurrentTab] = useState(0);
 
   const { addToast } = useToastStore();
@@ -46,12 +45,9 @@ export function PatientCreateModal({
   const isPending = isCreating || isUpdating;
 
   const isEditMode = !!patientId;
-  const { data: patientData, isLoading: isLoadingPatient } = usePatient(
-    patientId || "",
-    {
-      enabled: isEditMode,
-    },
-  );
+  const { data: patientData, isLoading: isLoadingPatient } = usePatient(patientId || "", {
+    enabled: isEditMode,
+  });
 
   const {
     register,
@@ -101,17 +97,12 @@ export function PatientCreateModal({
   });
 
   const watchContacts = watch("emergencyContacts");
-  const hasEmptyContact = (watchContacts || []).some(
-    (c) => !c.name?.trim() && !c.phone?.trim(),
-  );
+  const hasEmptyContact = (watchContacts || []).some((c) => !c.name?.trim() && !c.phone?.trim());
 
   const watchAntecedents = watch("clinicalAntecedents");
   const hasEmptyAntecedent = (watchAntecedents || []).some(
     (ant) =>
-      !ant.pathologyId &&
-      !ant.description?.trim() &&
-      !ant.diagnosisDate &&
-      !ant.treatment?.trim(),
+      !ant.pathologyId && !ant.description?.trim() && !ant.diagnosisDate && !ant.treatment?.trim(),
   );
 
   const watchCulturalGroup = watch("culturalGroup");
@@ -180,11 +171,12 @@ export function PatientCreateModal({
       );
     } else {
       createPatient(data as any, {
-        onSuccess: () => {
+        onSuccess: (patient) => {
           addToast({
             type: "success",
             message: "Paciente creado exitosamente",
           });
+          onCreated?.(patient);
           onClose();
         },
         onError: (error) => {
@@ -221,12 +213,12 @@ export function PatientCreateModal({
               placeholder="Ej. 1712345678"
             />
             {errors.idNumber && (
-              <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+              <span className="input-error-icon">
+                <Icon name="icon-alert-circle" size={16} />
+              </span>
             )}
           </div>
-          {errors.idNumber && (
-            <span className="form-error">{errors.idNumber.message}</span>
-          )}
+          {errors.idNumber && <span className="form-error">{errors.idNumber.message}</span>}
         </div>
         <div>
           <label className="form-label">Primer Nombre *</label>
@@ -236,12 +228,12 @@ export function PatientCreateModal({
               className={`input-field ${errors.firstName ? "error" : ""}`}
             />
             {errors.firstName && (
-              <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+              <span className="input-error-icon">
+                <Icon name="icon-alert-circle" size={16} />
+              </span>
             )}
           </div>
-          {errors.firstName && (
-            <span className="form-error">{errors.firstName.message}</span>
-          )}
+          {errors.firstName && <span className="form-error">{errors.firstName.message}</span>}
         </div>
         <div>
           <label className="form-label">Segundo Nombre</label>
@@ -255,12 +247,12 @@ export function PatientCreateModal({
               className={`input-field ${errors.lastName ? "error" : ""}`}
             />
             {errors.lastName && (
-              <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+              <span className="input-error-icon">
+                <Icon name="icon-alert-circle" size={16} />
+              </span>
             )}
           </div>
-          {errors.lastName && (
-            <span className="form-error">{errors.lastName.message}</span>
-          )}
+          {errors.lastName && <span className="form-error">{errors.lastName.message}</span>}
         </div>
         <div>
           <label className="form-label">Apellido Materno</label>
@@ -275,12 +267,12 @@ export function PatientCreateModal({
               className={`input-field ${errors.birthDate ? "error" : ""}`}
             />
             {errors.birthDate && (
-              <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+              <span className="input-error-icon">
+                <Icon name="icon-alert-circle" size={16} />
+              </span>
             )}
           </div>
-          {errors.birthDate && (
-            <span className="form-error">{errors.birthDate.message}</span>
-          )}
+          {errors.birthDate && <span className="form-error">{errors.birthDate.message}</span>}
         </div>
         <div>
           <label className="form-label">Género *</label>
@@ -294,12 +286,12 @@ export function PatientCreateModal({
               <option value="FEMENINO">Femenino</option>
             </select>
             {errors.gender && (
-              <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+              <span className="input-error-icon">
+                <Icon name="icon-alert-circle" size={16} />
+              </span>
             )}
           </div>
-          {errors.gender && (
-            <span className="form-error">{errors.gender.message}</span>
-          )}
+          {errors.gender && <span className="form-error">{errors.gender.message}</span>}
         </div>
         <div>
           <label className="form-label">Grupo Sanguíneo</label>
@@ -324,12 +316,12 @@ export function PatientCreateModal({
               className={`input-field ${errors.email ? "error" : ""}`}
             />
             {errors.email && (
-              <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+              <span className="input-error-icon">
+                <Icon name="icon-alert-circle" size={16} />
+              </span>
             )}
           </div>
-          {errors.email && (
-            <span className="form-error">{errors.email.message}</span>
-          )}
+          {errors.email && <span className="form-error">{errors.email.message}</span>}
         </div>
         <div>
           <label className="form-label">Teléfono</label>
@@ -339,12 +331,12 @@ export function PatientCreateModal({
               className={`input-field ${errors.phone ? "error" : ""}`}
             />
             {errors.phone && (
-              <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+              <span className="input-error-icon">
+                <Icon name="icon-alert-circle" size={16} />
+              </span>
             )}
           </div>
-          {errors.phone && (
-            <span className="form-error">{errors.phone.message}</span>
-          )}
+          {errors.phone && <span className="form-error">{errors.phone.message}</span>}
         </div>
       </div>
     </div>
@@ -427,7 +419,9 @@ export function PatientCreateModal({
                 className={`input-field ${errors.culturalGroupOther ? "error" : ""}`}
               />
               {errors.culturalGroupOther && (
-                <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+                <span className="input-error-icon">
+                  <Icon name="icon-alert-circle" size={16} />
+                </span>
               )}
             </div>
             {errors.culturalGroupOther && (
@@ -455,15 +449,11 @@ export function PatientCreateModal({
         }}
       >
         <div style={{ gridColumn: "1 / -1" }}>
-          <label className="form-label">
-            Ubicación Geográfica (Provincia, Cantón, Parroquia)
-          </label>
+          <label className="form-label">Ubicación Geográfica (Provincia, Cantón, Parroquia)</label>
           <div className="input-wrapper">
             <GeographicLocationSearchInput
               value={watch("geographicLocationId")}
-              onChange={(id) =>
-                setValue("geographicLocationId", id, { shouldValidate: true })
-              }
+              onChange={(id) => setValue("geographicLocationId", id, { shouldValidate: true })}
               error={errors.geographicLocationId?.message}
               initialLabel={
                 patientData?.geographicLocation
@@ -472,7 +462,9 @@ export function PatientCreateModal({
               }
             />
             {errors.geographicLocationId && (
-              <span className="input-error-icon" style={{ right: 30 }}><Icon name="icon-alert-circle" size={16} /></span>
+              <span className="input-error-icon" style={{ right: 30 }}>
+                <Icon name="icon-alert-circle" size={16} />
+              </span>
             )}
           </div>
           {errors.geographicLocationId && (
@@ -488,12 +480,12 @@ export function PatientCreateModal({
               placeholder="Calle principal, secundaria y numeración"
             />
             {errors.homeAddress && (
-              <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+              <span className="input-error-icon">
+                <Icon name="icon-alert-circle" size={16} />
+              </span>
             )}
           </div>
-          {errors.homeAddress && (
-            <span className="form-error">{errors.homeAddress.message}</span>
-          )}
+          {errors.homeAddress && <span className="form-error">{errors.homeAddress.message}</span>}
         </div>
         <div>
           <label className="form-label">Barrio / Sector</label>
@@ -525,9 +517,7 @@ export function PatientCreateModal({
             {...register("currentlyWorks")}
             style={{ width: "16px", height: "16px" }}
           />
-          <span style={{ fontSize: "var(--font-size-sm)" }}>
-            El paciente trabaja actualmente
-          </span>
+          <span style={{ fontSize: "var(--font-size-sm)" }}>El paciente trabaja actualmente</span>
         </label>
       </div>
 
@@ -609,7 +599,9 @@ export function PatientCreateModal({
                     justifyContent: "space-between",
                     alignItems: "center",
                     padding: "var(--space-2) var(--space-4)",
-                    backgroundColor: isEven ? "var(--color-warning-light)" : "var(--color-primary-light)",
+                    backgroundColor: isEven
+                      ? "var(--color-warning-light)"
+                      : "var(--color-primary-light)",
                     borderBottom: "1px solid var(--color-border)",
                   }}
                 >
@@ -650,36 +642,31 @@ export function PatientCreateModal({
                     backgroundColor: "var(--color-surface)",
                   }}
                 >
-                  <input
-                    type="hidden"
-                    {...register(
-                      `emergencyContacts.${index}.id` as const,
-                    )}
-                  />
+                  <input type="hidden" {...register(`emergencyContacts.${index}.id` as const)} />
                   <div>
                     <label className="form-label">Nombre *</label>
                     <div className="input-wrapper">
                       <input
-                        {...register(
-                          `emergencyContacts.${index}.name` as const,
-                        )}
+                        {...register(`emergencyContacts.${index}.name` as const)}
                         className={`input-field ${errors.emergencyContacts?.[index]?.name ? "error" : ""}`}
                       />
                       {errors.emergencyContacts?.[index]?.name && (
-                        <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+                        <span className="input-error-icon">
+                          <Icon name="icon-alert-circle" size={16} />
+                        </span>
                       )}
                     </div>
                     {errors.emergencyContacts?.[index]?.name && (
-                      <span className="form-error">{errors.emergencyContacts[index]?.name?.message}</span>
+                      <span className="form-error">
+                        {errors.emergencyContacts[index]?.name?.message}
+                      </span>
                     )}
                   </div>
                   <div>
                     <label className="form-label">Parentesco *</label>
                     <div className="input-wrapper">
                       <select
-                        {...register(
-                          `emergencyContacts.${index}.kinship` as const,
-                        )}
+                        {...register(`emergencyContacts.${index}.kinship` as const)}
                         className={`input-field ${errors.emergencyContacts?.[index]?.kinship ? "error" : ""}`}
                       >
                         <option value="PADRE">Padre</option>
@@ -702,28 +689,34 @@ export function PatientCreateModal({
                         <option value="OTRO">Otro</option>
                       </select>
                       {errors.emergencyContacts?.[index]?.kinship && (
-                        <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+                        <span className="input-error-icon">
+                          <Icon name="icon-alert-circle" size={16} />
+                        </span>
                       )}
                     </div>
                     {errors.emergencyContacts?.[index]?.kinship && (
-                      <span className="form-error">{errors.emergencyContacts[index]?.kinship?.message}</span>
+                      <span className="form-error">
+                        {errors.emergencyContacts[index]?.kinship?.message}
+                      </span>
                     )}
                   </div>
                   <div>
                     <label className="form-label">Teléfono *</label>
                     <div className="input-wrapper">
                       <input
-                        {...register(
-                          `emergencyContacts.${index}.phone` as const,
-                        )}
+                        {...register(`emergencyContacts.${index}.phone` as const)}
                         className={`input-field ${errors.emergencyContacts?.[index]?.phone ? "error" : ""}`}
                       />
                       {errors.emergencyContacts?.[index]?.phone && (
-                        <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+                        <span className="input-error-icon">
+                          <Icon name="icon-alert-circle" size={16} />
+                        </span>
                       )}
                     </div>
                     {errors.emergencyContacts?.[index]?.phone && (
-                      <span className="form-error">{errors.emergencyContacts[index]?.phone?.message}</span>
+                      <span className="form-error">
+                        {errors.emergencyContacts[index]?.phone?.message}
+                      </span>
                     )}
                   </div>
                   {watch(`emergencyContacts.${index}.kinship`) === "OTRO" && (
@@ -731,17 +724,19 @@ export function PatientCreateModal({
                       <label className="form-label">Especificar Parentesco *</label>
                       <div className="input-wrapper">
                         <input
-                          {...register(
-                            `emergencyContacts.${index}.kinshipOther` as const,
-                          )}
+                          {...register(`emergencyContacts.${index}.kinshipOther` as const)}
                           className={`input-field ${errors.emergencyContacts?.[index]?.kinshipOther ? "error" : ""}`}
                         />
                         {errors.emergencyContacts?.[index]?.kinshipOther && (
-                          <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+                          <span className="input-error-icon">
+                            <Icon name="icon-alert-circle" size={16} />
+                          </span>
                         )}
                       </div>
                       {errors.emergencyContacts?.[index]?.kinshipOther && (
-                        <span className="form-error">{errors.emergencyContacts[index]?.kinshipOther?.message}</span>
+                        <span className="form-error">
+                          {errors.emergencyContacts[index]?.kinshipOther?.message}
+                        </span>
                       )}
                     </div>
                   )}
@@ -757,7 +752,14 @@ export function PatientCreateModal({
           variant="primary"
           disabled={hasEmptyContact}
           onClick={() =>
-            appendContact({ id: "", name: "", kinship: "OTRO", phone: "", kinshipOther: "", address: "" })
+            appendContact({
+              id: "",
+              name: "",
+              kinship: "OTRO",
+              phone: "",
+              kinshipOther: "",
+              address: "",
+            })
           }
         >
           <Icon name="icon-add" size={14} /> Añadir Contacto
@@ -812,7 +814,9 @@ export function PatientCreateModal({
                     justifyContent: "space-between",
                     alignItems: "center",
                     padding: "var(--space-2) var(--space-4)",
-                    backgroundColor: isEven ? "var(--color-success-light)" : "var(--color-primary-light)",
+                    backgroundColor: isEven
+                      ? "var(--color-success-light)"
+                      : "var(--color-primary-light)",
                     borderBottom: "1px solid var(--color-border)",
                   }}
                 >
@@ -853,19 +857,12 @@ export function PatientCreateModal({
                     backgroundColor: "var(--color-surface)",
                   }}
                 >
-                  <input
-                    type="hidden"
-                    {...register(
-                      `clinicalAntecedents.${index}.id` as const,
-                    )}
-                  />
+                  <input type="hidden" {...register(`clinicalAntecedents.${index}.id` as const)} />
                   <div>
                     <label className="form-label">Tipo *</label>
                     <div className="input-wrapper">
                       <select
-                        {...register(
-                          `clinicalAntecedents.${index}.antecedentType` as const,
-                        )}
+                        {...register(`clinicalAntecedents.${index}.antecedentType` as const)}
                         className={`input-field ${errors.clinicalAntecedents?.[index]?.antecedentType ? "error" : ""}`}
                       >
                         <option value="ALERGICO">Alérgico</option>
@@ -885,20 +882,22 @@ export function PatientCreateModal({
                         <option value="OTRO">Otro</option>
                       </select>
                       {errors.clinicalAntecedents?.[index]?.antecedentType && (
-                        <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+                        <span className="input-error-icon">
+                          <Icon name="icon-alert-circle" size={16} />
+                        </span>
                       )}
                     </div>
                     {errors.clinicalAntecedents?.[index]?.antecedentType && (
-                      <span className="form-error">{errors.clinicalAntecedents[index]?.antecedentType?.message}</span>
+                      <span className="form-error">
+                        {errors.clinicalAntecedents[index]?.antecedentType?.message}
+                      </span>
                     )}
                   </div>
                   <div>
                     <label className="form-label">Fecha de Diagnóstico</label>
                     <input
                       type="date"
-                      {...register(
-                        `clinicalAntecedents.${index}.diagnosisDate` as const,
-                      )}
+                      {...register(`clinicalAntecedents.${index}.diagnosisDate` as const)}
                       className="input-field"
                     />
                   </div>
@@ -915,30 +914,28 @@ export function PatientCreateModal({
                             : ""
                         }
                         onChange={(id) => {
-                          setValue(
-                            `clinicalAntecedents.${index}.pathologyId`,
-                            id || undefined,
-                            { shouldValidate: true },
-                          );
+                          setValue(`clinicalAntecedents.${index}.pathologyId`, id || undefined, {
+                            shouldValidate: true,
+                          });
                         }}
-                        error={
-                          errors.clinicalAntecedents?.[index]?.pathologyId?.message
-                        }
+                        error={errors.clinicalAntecedents?.[index]?.pathologyId?.message}
                       />
                       {errors.clinicalAntecedents?.[index]?.pathologyId && (
-                        <span className="input-error-icon" style={{ right: 30 }}><Icon name="icon-alert-circle" size={16} /></span>
+                        <span className="input-error-icon" style={{ right: 30 }}>
+                          <Icon name="icon-alert-circle" size={16} />
+                        </span>
                       )}
                     </div>
                     {errors.clinicalAntecedents?.[index]?.pathologyId && (
-                      <span className="form-error">{errors.clinicalAntecedents[index]?.pathologyId?.message}</span>
+                      <span className="form-error">
+                        {errors.clinicalAntecedents[index]?.pathologyId?.message}
+                      </span>
                     )}
                   </div>
                   <div style={{ gridColumn: "1 / -1" }}>
                     <label className="form-label">Descripción</label>
                     <textarea
-                      {...register(
-                        `clinicalAntecedents.${index}.description` as const,
-                      )}
+                      {...register(`clinicalAntecedents.${index}.description` as const)}
                       className="input-field"
                       rows={2}
                     />
@@ -946,9 +943,7 @@ export function PatientCreateModal({
                   <div style={{ gridColumn: "1 / -1" }}>
                     <label className="form-label">Tratamiento</label>
                     <input
-                      {...register(
-                        `clinicalAntecedents.${index}.treatment` as const,
-                      )}
+                      {...register(`clinicalAntecedents.${index}.treatment` as const)}
                       className="input-field"
                     />
                   </div>
@@ -963,7 +958,16 @@ export function PatientCreateModal({
         <WcButton
           variant="primary"
           disabled={hasEmptyAntecedent}
-          onClick={() => appendAntecedent({ id: "", antecedentType: "CLINICO", pathologyId: "", description: "", diagnosisDate: "", treatment: "" })}
+          onClick={() =>
+            appendAntecedent({
+              id: "",
+              antecedentType: "CLINICO",
+              pathologyId: "",
+              description: "",
+              diagnosisDate: "",
+              treatment: "",
+            })
+          }
         >
           <Icon name="icon-add" size={14} /> Añadir Antecedente
         </WcButton>
@@ -1004,7 +1008,9 @@ export function PatientCreateModal({
               <option value="OTRO">Otro</option>
             </select>
             {errors.infoSourceType && (
-              <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+              <span className="input-error-icon">
+                <Icon name="icon-alert-circle" size={16} />
+              </span>
             )}
           </div>
           {errors.infoSourceType && (
@@ -1021,7 +1027,9 @@ export function PatientCreateModal({
                 className={`input-field ${errors.infoSourceOther ? "error" : ""}`}
               />
               {errors.infoSourceOther && (
-                <span className="input-error-icon"><Icon name="icon-alert-circle" size={16} /></span>
+                <span className="input-error-icon">
+                  <Icon name="icon-alert-circle" size={16} />
+                </span>
               )}
             </div>
             {errors.infoSourceOther && (
@@ -1044,10 +1052,7 @@ export function PatientCreateModal({
               </div>
               <div>
                 <label className="form-label">Teléfono del Informante</label>
-                <input
-                  {...register("infoSourcePhone")}
-                  className="input-field"
-                />
+                <input {...register("infoSourcePhone")} className="input-field" />
               </div>
             </>
           )}
@@ -1096,9 +1101,7 @@ export function PatientCreateModal({
       </span>
       <WcButtonIcon
         icon={"icon-chevron-right"}
-        onClick={() =>
-          setCurrentTab((prev) => Math.min(TABS.length - 1, prev + 1))
-        }
+        onClick={() => setCurrentTab((prev) => Math.min(TABS.length - 1, prev + 1))}
         disabled={currentTab === TABS.length - 1 || isPending}
         aria-label="Siguiente"
       />
@@ -1110,9 +1113,7 @@ export function PatientCreateModal({
     return {
       name: tab.title,
       hasError,
-      icon: (
-        <Icon name={hasError ? "icon-alert-circle" : tab.icon} size={16} />
-      ),
+      icon: <Icon name={hasError ? "icon-alert-circle" : tab.icon} size={16} />,
       content: (() => {
         switch (tab.id) {
           case 0:
@@ -1179,9 +1180,7 @@ export function PatientCreateModal({
           }}
         >
           <Icon name="icon-loader" size={32} className="spin" />
-          <span style={{ marginLeft: "var(--space-3)" }}>
-            Cargando datos...
-          </span>
+          <span style={{ marginLeft: "var(--space-3)" }}>Cargando datos...</span>
         </div>
       ) : (
         <form id="patient-form" onSubmit={handleSubmit(onSubmit, onError)}>
