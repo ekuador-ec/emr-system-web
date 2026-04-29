@@ -1,4 +1,4 @@
-import type { Patient } from '@/domain/modules/patient/models/Patient';
+import type { Patient } from "@/domain/modules/patient/models/Patient";
 
 export interface MedicalRecord {
   id: string;
@@ -43,6 +43,8 @@ export interface PaginatedResult<T> {
 export interface MedicalRecordFilters {
   search?: string; // Search by patient name or ID
   isActive?: boolean;
+  startDate?: string; // ISO Date (YYYY-MM-DD)
+  endDate?: string; // ISO Date (YYYY-MM-DD)
   page?: number;
   limit?: number;
 }
