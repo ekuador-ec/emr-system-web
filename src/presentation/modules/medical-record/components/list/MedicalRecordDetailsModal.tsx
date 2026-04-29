@@ -7,6 +7,9 @@ import { useAuth } from "@/presentation/modules/auth/hooks/useAuth";
 import { canEditMedicalRecord } from "@/presentation/core/security/medicalRecordPermissions";
 import type { MedicalRecordListItem } from "@/domain/modules/medical-record/models/MedicalRecord";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
+import { useCreateEvolution } from "@/presentation/modules/evolution/hooks/useEvolutions";
+import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
+import { useConfirmDialog } from "@/presentation/modules/shared/components/ui/useConfirmDialog";
 
 interface MedicalRecordDetailsModalProps {
   record: MedicalRecordListItem | null;
@@ -14,12 +17,19 @@ interface MedicalRecordDetailsModalProps {
   onClose: () => void;
 }
 
-export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRecordDetailsModalProps) {
+export function MedicalRecordDetailsModal({
+  record,
+  isOpen,
+  onClose,
+}: MedicalRecordDetailsModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const navigate = useNavigate();
   const { data: config } = useOrganizationConfig();
   const { setSelectedPatientId } = usePatientStore();
   const { user } = useAuth();
+  const createEvolution = useCreateEvolution();
+  const { addToast } = useToastStore();
+  const { confirm, DialogComponent } = useConfirmDialog();
 
   const canEdit = canEditMedicalRecord(user?.role);
 
@@ -35,6 +45,46 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
   const handleDialogClick = (e: React.MouseEvent<HTMLDialogElement>) => {
     if (e.target === dialogRef.current) {
       onClose();
+    }
+  };
+
+  const handleNewEvolution = async () => {
+    if (!record) {
+      return;
+    }
+
+    const isConfirmed = await confirm({
+      title: "Nueva Evolución Médica",
+      message:
+        "Se creará un borrador de evolución médica para este paciente y podrás continuar editándolo inmediatamente.",
+      confirmText: "Crear Evolución",
+      cancelText: "Cancelar",
+      type: "primary",
+    });
+
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      const now = new Date();
+      const payload = {
+        medicalRecordId: record.id,
+        notifyPolice: false,
+        requiresPoliceCustody: false,
+        alcoholicBreath: false,
+        deathInEmergency: false,
+        attentionDate: now.toISOString().split("T")[0],
+        attentionTime: now.toTimeString().slice(0, 5),
+      };
+
+      const newEvolution = await createEvolution.mutateAsync(payload);
+      addToast({ type: "success", message: "Borrador de evolución creado exitosamente." });
+      onClose();
+      navigate(`/pacientes/${record.patientId}/historia/evoluciones/${newEvolution.id}`);
+    } catch (error) {
+      console.error("Failed to create new evolution", error);
+      addToast({ type: "error", message: "Ocurrió un error al crear la evolución médica." });
     }
   };
 
@@ -69,19 +119,35 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
               background: "var(--color-bg)",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div
+              style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}
+            >
               <div>
                 <h3 style={{ margin: 0, fontWeight: 700, color: "var(--color-text)" }}>
                   {config?.institutionName || "Institucion de Salud"}
                 </h3>
-                <p style={{ margin: 0, marginTop: "var(--space-1)", fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    marginTop: "var(--space-1)",
+                    fontSize: "0.875rem",
+                    color: "var(--color-text-secondary)",
+                  }}
+                >
                   {config?.operationalUnit}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-secondary)", padding: "var(--space-1)", display: "flex" }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--color-text-secondary)",
+                  padding: "var(--space-1)",
+                  display: "flex",
+                }}
                 aria-label="Cerrar modal"
               >
                 <Icon name="icon-x" size={20} />
@@ -89,18 +155,52 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
             </div>
           </div>
 
-          <div style={{ padding: "var(--space-6)", display: "flex", flexDirection: "column", gap: "var(--space-5)" }}>
+          <div
+            style={{
+              padding: "var(--space-6)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-5)",
+            }}
+          >
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
               <div>
-                <span style={{ display: "block", fontSize: "0.7rem", fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "var(--space-1)" }}>
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: "0.7rem",
+                    fontWeight: 600,
+                    color: "var(--color-text-secondary)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    marginBottom: "var(--space-1)",
+                  }}
+                >
                   Nro. Historia
                 </span>
-                <span style={{ fontFamily: "monospace", fontSize: "1.125rem", fontWeight: 500, color: "var(--color-text)" }}>
+                <span
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: "1.125rem",
+                    fontWeight: 500,
+                    color: "var(--color-text)",
+                  }}
+                >
                   {record.patientIdNumber}
                 </span>
               </div>
               <div>
-                <span style={{ display: "block", fontSize: "0.7rem", fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "var(--space-1)" }}>
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: "0.7rem",
+                    fontWeight: 600,
+                    color: "var(--color-text-secondary)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    marginBottom: "var(--space-1)",
+                  }}
+                >
                   Estado
                 </span>
                 <span
@@ -111,8 +211,12 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
                     borderRadius: "9999px",
                     fontSize: "0.75rem",
                     fontWeight: 500,
-                    backgroundColor: record.isActive ? "var(--color-success-bg, rgba(34,197,94,0.1))" : "var(--color-danger-bg, rgba(239,68,68,0.1))",
-                    color: record.isActive ? "var(--color-success, #16a34a)" : "var(--color-danger, #dc2626)",
+                    backgroundColor: record.isActive
+                      ? "var(--color-success-bg, rgba(34,197,94,0.1))"
+                      : "var(--color-danger-bg, rgba(239,68,68,0.1))",
+                    color: record.isActive
+                      ? "var(--color-success, #16a34a)"
+                      : "var(--color-danger, #dc2626)",
                   }}
                 >
                   {record.isActive ? "Activo" : "Inactivo"}
@@ -121,7 +225,17 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
             </div>
 
             <div>
-              <span style={{ display: "block", fontSize: "0.7rem", fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "var(--space-1)" }}>
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "0.7rem",
+                  fontWeight: 600,
+                  color: "var(--color-text-secondary)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  marginBottom: "var(--space-1)",
+                }}
+              >
                 Paciente
               </span>
               <div
@@ -135,11 +249,10 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
                   border: "1px solid var(--color-border)",
                 }}
               >
-                <span style={{ fontWeight: 500, color: "var(--color-text)" }}>{record.patientName}</span>
-                <WcButton
-                  variant="terciary"
-                  onClick={() => setSelectedPatientId(record.patientId)}
-                >
+                <span style={{ fontWeight: 500, color: "var(--color-text)" }}>
+                  {record.patientName}
+                </span>
+                <WcButton variant="terciary" onClick={() => setSelectedPatientId(record.patientId)}>
                   <Icon name="icon-card-info" size={16} />
                   Ver Detalle
                 </WcButton>
@@ -155,10 +268,19 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
                 border: "1px solid var(--color-border)",
               }}
             >
-              <span style={{ display: "block", fontSize: "1.25rem", fontWeight: 700, color: "var(--color-primary)" }}>
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "1.25rem",
+                  fontWeight: 700,
+                  color: "var(--color-primary)",
+                }}
+              >
                 {record.evolutionCount}
               </span>
-              <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Evoluciones</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
+                Evoluciones
+              </span>
             </div>
 
             <div
@@ -171,7 +293,18 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
               }}
             >
               <div>
-                <span style={{ display: "flex", alignItems: "center", gap: "var(--space-1)", fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px" }}>
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "var(--space-1)",
+                    fontSize: "0.7rem",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    marginBottom: "2px",
+                  }}
+                >
                   <Icon name="icon-calendar-user" size={12} />
                   Creado
                 </span>
@@ -185,7 +318,18 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
                 )}
               </div>
               <div>
-                <span style={{ display: "flex", alignItems: "center", gap: "var(--space-1)", fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px" }}>
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "var(--space-1)",
+                    fontSize: "0.7rem",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    marginBottom: "2px",
+                  }}
+                >
                   <Icon name="icon-calendar-time" size={12} />
                   Ultima edicion
                 </span>
@@ -206,25 +350,27 @@ export function MedicalRecordDetailsModal({ record, isOpen, onClose }: MedicalRe
                 onClick={() => navigate(`/pacientes/${record.patientId}/historia`)}
                 style={{ width: "100%" }}
               >
-                <Icon name="icon-folder" size={18} />
+                <Icon name="icon-open-folder" size={18} />
                 Ver Historia Completa
               </WcButton>
 
               {canEdit && (
                 <WcButton
                   variant="primary"
-                  disabled
-                  title="Proximamente"
-                  style={{ width: "100%", opacity: 0.5 }}
+                  disabled={createEvolution.isPending}
+                  onClick={handleNewEvolution}
+                  style={{ width: "100%" }}
                 >
-                  <Icon name="icon-plus" size={18} />
-                  Nueva Evolucion Medica
+                  <Icon name="icon-add-file" size={18} />
+                  {createEvolution.isPending ? "Creando..." : "Nueva Evolución Médica"}
                 </WcButton>
               )}
             </div>
           </div>
         </>
       )}
+
+      {DialogComponent}
 
       <style>
         {`
