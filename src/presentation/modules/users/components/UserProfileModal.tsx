@@ -10,7 +10,8 @@ import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Ico
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
 import { WcTabsFolder } from "@/presentation/modules/shared/components/ui/webcomponents/Tabs/wcTabsFolder";
-import "@/presentation/modules/shared/components/ui/webcomponents/wcWarning";
+import WcWarning from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
+import type { WcWarningHandle } from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
 import { ImageCropperModal } from "@/presentation/modules/shared/components/ui/ImageCropperModal";
 
 
@@ -21,7 +22,7 @@ interface UserProfileModalProps {
 
 export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const wcWarningRef = useRef<any>(null);
+  const wcWarningRef = useRef<WcWarningHandle | null>(null);
   const { user } = useAuth();
   const { mutateAsync: updateProfile, isPending } = useUpdateProfile();
   const { addToast } = useToastStore();
@@ -113,8 +114,8 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
     
     if (hasChanges) {
       wcWarningRef.current?.open(
+        () => {},
         () => onClose(),
-        () => {} // Do nothing if cancel
       );
     } else {
       onClose();
@@ -153,12 +154,13 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
 
   const handleDialogClick = (e: React.MouseEvent<HTMLDialogElement>) => {
     if (e.target === dialogRef.current) {
+      e.preventDefault();
       const hasChanges = isDirty || selectedFile || removeAvatar || isPasswordDirty;
       
       if (hasChanges) {
         wcWarningRef.current?.open(
+          () => {},
           () => onClose(),
-          () => {}
         );
       } else {
         onClose();
@@ -447,8 +449,11 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
     <>
       <dialog
       ref={dialogRef}
-      onClose={onClose}
       onClick={handleDialogClick}
+      onCancel={(event) => {
+        event.preventDefault();
+        handleCancel();
+      }}
       className="user-profile-modal"
       style={{
         padding: "0",
@@ -487,18 +492,32 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
         style={{ display: "none" }}
       />
 
-      <wc-warning
+      <WcWarning
         ref={wcWarningRef}
+        type="warning"
+        className="is-discard-warning"
+        icon={
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403zm.01 13.33l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm-.01 -7a1 1 0 0 0 -.993 .883l-.007 .117v4l.007 .117a1 1 0 0 0 1.986 0l.007 -.117v-4l-.007 -.117a1 1 0 0 0 -.993 -.883z" />
+          </svg>
+        }
         title="Descartar cambios"
         message="¿Estás seguro de que deseas cancelar? Perderás todos los cambios realizados."
-        confirm-text="Descartar"
-        cancel-text="Seguir editando"
+        confirmText="Seguir editando"
+        cancelText="Cancelar"
       />
 
       <style>
         {`
           .user-profile-modal::backdrop {
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: color-mix(in srgb, var(--color-text) 40%, transparent);
             backdrop-filter: blur(4px);
           }
 

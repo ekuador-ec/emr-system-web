@@ -15,7 +15,8 @@ import { USER_ROLE_LABELS } from "@/domain/modules/users/models/User";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import { WcTabsFolder } from "@/presentation/modules/shared/components/ui/webcomponents/Tabs/wcTabsFolder";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
-import "@/presentation/modules/shared/components/ui/webcomponents/wcWarning";
+import WcWarning from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
+import type { WcWarningHandle } from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
 import "@/presentation/modules/users/components/InviteUserModal.css";
 
 interface InviteUserModalProps {
@@ -23,10 +24,6 @@ interface InviteUserModalProps {
   onClose: () => void;
   onInvite: (payload: InviteUserPayload) => Promise<void>;
   isInviting: boolean;
-}
-
-interface WcWarningElement extends HTMLElement {
-  open: (onConfirm: () => void, onCancel: () => void) => void;
 }
 
 const ROLES: UserRole[] = [
@@ -45,7 +42,7 @@ export function InviteUserModal({
   isInviting,
 }: InviteUserModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const wcWarningRef = useRef<WcWarningElement | null>(null);
+  const wcWarningRef = useRef<WcWarningHandle | null>(null);
   const { addToast } = useToastStore();
 
   const {
@@ -305,12 +302,15 @@ export function InviteUserModal({
         />
       </form>
 
-      <wc-warning
+      <WcWarning
         ref={wcWarningRef}
-        title="Descartar cambios"
-        message="¿Estas seguro de que deseas cancelar? Perderas todos los cambios realizados."
-        confirm-text="Descartar"
-        cancel-text="Seguir editando"
+        type="warning"
+        icon={<Icon name="icon-warning-solid" size={24} />}
+        title="Confirmar descarte"
+        description="Se perderan los cambios no guardados del formulario de invitacion."
+        message="¿Descartar los cambios actuales?"
+        confirmText="Si, Descartar"
+        cancelText="Seguir editando"
       />
     </dialog>
   );
