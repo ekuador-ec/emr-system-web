@@ -31,7 +31,6 @@ type WcFilterPopoverProps<TValues extends WcFilterValues> = {
   triggerIcon?: string;
   clearLabel?: string;
   applyLabel?: string;
-  closeOnClear?: boolean;
   align?: "left" | "right";
 };
 
@@ -51,7 +50,6 @@ export function WcFilterPopover<TValues extends WcFilterValues>(
     triggerIcon,
     clearLabel,
     applyLabel,
-    closeOnClear,
     align = "left",
   } = props;
   const anchorRef = useRef<HTMLDivElement>(null);
@@ -88,9 +86,6 @@ export function WcFilterPopover<TValues extends WcFilterValues>(
 
   const handleClear = () => {
     onClear();
-    if (closeOnClear) {
-      onToggle();
-    }
   };
 
   const handleFieldChange = (key: keyof TValues, value: string) => {
