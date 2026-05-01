@@ -6,7 +6,8 @@ import { useToastStore } from "@/presentation/modules/shared/components/Toaster"
 import { updatePasswordSchema, type UpdatePasswordFormData } from "@/presentation/modules/auth/schemas/auth.schema";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
-import "@/presentation/modules/shared/components/ui/webcomponents/wcWarning";
+import WcWarning from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
+import type { WcWarningHandle } from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
 
 interface UserUpdatePasswordTabProps {
   onClose: () => void;
@@ -17,7 +18,7 @@ interface UserUpdatePasswordTabProps {
 export function UserUpdatePasswordTab({ onClose, isOpen, onDirtyChange }: UserUpdatePasswordTabProps) {
   const { mutateAsync: updatePassword, isPending } = useUpdatePassword();
   const { addToast } = useToastStore();
-  const wcWarningRef = useRef<any>(null);
+  const wcWarningRef = useRef<WcWarningHandle | null>(null);
   
   const [showPassword, setShowPassword] = useState(false);
 
@@ -158,12 +159,14 @@ export function UserUpdatePasswordTab({ onClose, isOpen, onDirtyChange }: UserUp
           </div>
         </form>
 
-        <wc-warning
+        <WcWarning
           ref={wcWarningRef}
+          type="warning"
+          className="is-discard-warning"
           title="Descartar cambios"
           message="¿Estás seguro de que deseas cancelar? Perderás todos los cambios realizados."
-          confirm-text="Descartar"
-          cancel-text="Seguir editando"
+          confirmText="Descartar"
+          cancelText="Seguir editando"
         />
       </div>
   );
