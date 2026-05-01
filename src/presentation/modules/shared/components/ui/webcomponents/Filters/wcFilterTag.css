@@ -1,0 +1,51 @@
+.wc-filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  height: 24px;
+}
+
+.wc-filter-tag__label {
+  opacity: 0.85;
+}
+
+.wc-filter-tag__value {
+  font-weight: 600;
+}
+
+.wc-filter-tag__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0;
+  margin-left: 2px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--color-primary-foreground);
+  border-radius: 3px;
+  cursor: pointer;
+  line-height: 1;
+  transition: all 150ms ease;
+  flex-shrink: 0;
+}
+
+.wc-filter-tag__remove:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.wc-filter-tag__remove:active {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0.95);
+}

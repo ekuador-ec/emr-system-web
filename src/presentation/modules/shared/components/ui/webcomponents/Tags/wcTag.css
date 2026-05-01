@@ -1,0 +1,66 @@
+.wc-tag {
+  --wc-tag-bg: color-mix(in srgb, var(--color-border) 36%, var(--color-surface));
+  --wc-tag-fg: color-mix(in srgb, var(--color-text) 88%, var(--color-text-secondary) 12%);
+  --wc-tag-border: color-mix(in srgb, var(--color-border) 78%, var(--color-text-secondary) 22%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid var(--wc-tag-border);
+  background-color: var(--wc-tag-bg);
+  color: var(--wc-tag-fg);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.wc-tag.is-sm {
+  min-height: 24px;
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+.wc-tag.is-success {
+  --wc-tag-bg: color-mix(in srgb, var(--color-success) 18%, var(--color-surface));
+  --wc-tag-fg: color-mix(in srgb, var(--color-success) 78%, var(--color-text));
+  --wc-tag-border: color-mix(in srgb, var(--color-success) 34%, var(--color-border));
+}
+
+.wc-tag.is-info {
+  --wc-tag-bg: color-mix(in srgb, var(--color-primary-hover) 16%, var(--color-surface));
+  --wc-tag-fg: color-mix(in srgb, var(--color-primary-hover) 74%, var(--color-text));
+  --wc-tag-border: color-mix(in srgb, var(--color-primary-hover) 32%, var(--color-border));
+}
+
+.wc-tag.is-warning {
+  --wc-tag-bg: color-mix(in srgb, var(--color-warning) 18%, var(--color-surface));
+  --wc-tag-fg: color-mix(in srgb, var(--color-warning) 72%, var(--color-text));
+  --wc-tag-border: color-mix(in srgb, var(--color-warning) 36%, var(--color-border));
+}
+
+.wc-tag.is-danger {
+  --wc-tag-bg: color-mix(in srgb, var(--color-danger) 16%, var(--color-surface));
+  --wc-tag-fg: color-mix(in srgb, var(--color-danger) 72%, var(--color-text));
+  --wc-tag-border: color-mix(in srgb, var(--color-danger) 34%, var(--color-border));
+}
+
+.wc-tag.is-accent {
+  --wc-tag-bg: color-mix(in srgb, var(--color-primary-hover) 14%, var(--color-surface));
+  --wc-tag-fg: color-mix(in srgb, var(--color-primary-hover) 72%, var(--color-text));
+  --wc-tag-border: color-mix(in srgb, var(--color-primary-hover) 30%, var(--color-border));
+}
+
+.dark .wc-tag {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-surface) 16%, transparent);
+}
+
+.dark .wc-tag.is-accent {
+  --wc-tag-bg: color-mix(in srgb, var(--color-primary-hover) 24%, var(--color-surface));
+  --wc-tag-fg: color-mix(in srgb, var(--color-primary-hover) 78%, var(--color-text));
+  --wc-tag-border: color-mix(in srgb, var(--color-primary-hover) 40%, var(--color-border));
+}
