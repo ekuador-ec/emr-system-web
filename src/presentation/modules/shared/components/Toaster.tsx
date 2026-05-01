@@ -1,10 +1,13 @@
 import { create } from "zustand";
 
+type ToastPlacement = "top-right" | "bottom-right";
+
 export interface ToastMessage {
   id: string;
   type: "success" | "error" | "info" | "warning";
   message: string;
   duration?: number;
+  placement?: ToastPlacement;
 }
 
 interface ToastStore {
@@ -38,58 +41,80 @@ export function Toaster() {
 
   if (toasts.length === 0) return null;
 
-  return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: "20px",
-        right: "20px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px",
-        zIndex: 9999,
-      }}
-    >
-      {toasts.map((toast) => (
-        <div
-          key={toast.id}
-          onClick={() => removeToast(toast.id)}
-          style={{
-            minWidth: "250px",
-            padding: "12px 16px",
-            borderRadius: "8px",
-            backgroundColor:
-              toast.type === "success"
-                ? "var(--color-success, #10B981)"
-                : toast.type === "error"
-                ? "var(--color-error, #EF4444)"
-                : toast.type === "warning"
-                ? "var(--color-warning, #F59E0B)"
-                : "var(--color-info, #3B82F6)",
-            color: "#fff",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            animation: "slideIn 0.3s ease-out forwards",
-          }}
-        >
-          <span>{toast.message}</span>
-          <button
+  const topToasts = toasts.filter((toast) => toast.placement === "top-right");
+  const bottomToasts = toasts.filter(
+    (toast) => toast.placement !== "top-right",
+  );
+
+  const renderToastStack = (
+    stackToasts: ToastMessage[],
+    position: ToastPlacement,
+  ) => {
+    if (stackToasts.length === 0) {
+      return null;
+    }
+
+    return (
+      <div
+        style={{
+          position: "fixed",
+          right: "20px",
+          top: position === "top-right" ? "20px" : undefined,
+          bottom: position === "bottom-right" ? "20px" : undefined,
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+          zIndex: 9999,
+        }}
+      >
+        {stackToasts.map((toast) => (
+          <div
+            key={toast.id}
+            onClick={() => removeToast(toast.id)}
             style={{
-              background: "transparent",
-              border: "none",
-              color: "white",
+              minWidth: "250px",
+              padding: "12px 16px",
+              borderRadius: "8px",
+              backgroundColor:
+                toast.type === "success"
+                  ? "var(--color-success, #10B981)"
+                  : toast.type === "error"
+                    ? "var(--color-error, #EF4444)"
+                    : toast.type === "warning"
+                      ? "var(--color-warning, #F59E0B)"
+                      : "var(--color-info, #3B82F6)",
+              color: "#fff",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
               cursor: "pointer",
-              marginLeft: "10px",
-              fontWeight: "bold"
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              animation: "slideIn 0.3s ease-out forwards",
             }}
           >
-            ✕
-          </button>
-        </div>
-      ))}
+            <span>{toast.message}</span>
+            <button
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "white",
+                cursor: "pointer",
+                marginLeft: "10px",
+                fontWeight: "bold",
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <>
+      {renderToastStack(topToasts, "top-right")}
+      {renderToastStack(bottomToasts, "bottom-right")}
       <style>
         {`
           @keyframes slideIn {
@@ -98,6 +123,6 @@ export function Toaster() {
           }
         `}
       </style>
-    </div>
+    </>
   );
 }
