@@ -3,7 +3,7 @@ import { usePresenceTracker } from "@/presentation/modules/users/hooks/usePresen
 import { useUserStore } from "@/presentation/modules/users/stores/useUserStore";
 import { useAdminUsers } from "@/presentation/modules/users/hooks/useAdminUsers";
 import { InviteUserModal } from "@/presentation/modules/users/components/InviteUserModal";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/presentation/modules/shared/components/ThemeToggle";
 import { UserProfileModal } from "@/presentation/modules/users/components/UserProfileModal";
@@ -17,11 +17,14 @@ import { usePatientStore } from "@/presentation/modules/patient/stores/usePatien
 import { PatientCreateModal } from "@/presentation/modules/patient/components/Patients/PatientCreateModal";
 import { PatientQuickSearchModal } from "@/presentation/modules/patient/components/Patients/PatientQuickSearchModal";
 import { QuickActionBar } from "@/presentation/modules/shared/components/QuickActionBar";
+import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
+import "@/presentation/modules/shared/components/ui/webcomponents/wcWarning";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, isLoggingOut } = useAuth();
   const navigate = useNavigate();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const warningRef = useRef<any>(null);
 
   const { setInviteModalOpen, isInviteModalOpen } = useUserStore();
   // Safe to use here because it's a hook wrapping react-query; calling loadUsers will fetch data
@@ -46,6 +49,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const handleLogout = async () => {
     await logout();
     navigate("/login");
+  };
+
+  const confirmLogout = () => {
+    warningRef.current?.open(handleLogout);
   };
 
   return (
@@ -130,15 +137,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             )}
             <NotificationBell userId={user?.id} />
             <ThemeToggle />
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={handleLogout}
+            <WcButtonIcon
+              variant="danger"
+              shape="circle"
+              icon="icon-logout"
+              onClick={confirmLogout}
               disabled={isLoggingOut}
-              style={{ fontSize: "var(--font-size-sm)" }}
-            >
-              {isLoggingOut ? "Saliendo..." : "Cerrar sesión"}
-            </button>
+              title={isLoggingOut ? "Saliendo..." : "Cerrar sesión"}
+              aria-label="Cerrar sesión"
+            />
           </div>
         </header>
 
@@ -267,6 +274,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           if (!isUsersLoaded) loadUsers();
         }}
         isInviting={isInviting}
+      />
+
+      <wc-warning
+        ref={warningRef}
+        title="Cerrar sesión"
+        message="¿Estás seguro de que deseas cerrar tu sesión actual?"
+        confirm-text="Cerrar sesión"
+        cancel-text="Cancelar"
+        type="warning"
       />
     </div>
   );

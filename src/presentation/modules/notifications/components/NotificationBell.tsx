@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotificationsList, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/presentation/modules/notifications/hooks/useNotifications';
-import { Icon } from '@/presentation/modules/shared/components/Sidebar/icons/Icon';
+import WcButtonIcon from '@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon';
 import type { Notification } from '@/domain/modules/notifications/models/Notification';
 
 interface NotificationBellProps {
@@ -62,30 +62,21 @@ export function NotificationBell({ userId }: NotificationBellProps) {
 
   return (
     <div style={{ position: 'relative' }} ref={popoverRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="btn-ghost"
-        style={{
-          position: 'relative',
-          padding: '8px',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          border: 'none',
-          background: isOpen ? 'var(--color-surface-hover)' : 'transparent',
-        }}
-      >
-        <span style={{ color: 'var(--color-text-secondary)', display: 'flex' }}>
-          <Icon name="icon-bell" size={20} />
-        </span>
+      <div style={{ position: 'relative', display: 'inline-block' }}>
+        <WcButtonIcon
+          variant="ghost"
+          shape="circle"
+          icon="icon-bell"
+          onClick={() => setIsOpen(!isOpen)}
+          style={{ background: isOpen ? 'var(--color-surface-hover)' : 'transparent' }}
+          aria-label="Notificaciones"
+        />
         {unreadCount > 0 && (
           <span
             style={{
               position: 'absolute',
-              top: '2px',
-              right: '2px',
+              top: '-2px',
+              right: '-2px',
               minWidth: '18px',
               height: '18px',
               borderRadius: '9px',
@@ -99,12 +90,13 @@ export function NotificationBell({ userId }: NotificationBellProps) {
               padding: '0 4px',
               border: '2px solid var(--color-surface)',
               lineHeight: 1,
+              pointerEvents: 'none'
             }}
           >
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
-      </button>
+      </div>
 
       {isOpen && (
         <div className="notification-popover">

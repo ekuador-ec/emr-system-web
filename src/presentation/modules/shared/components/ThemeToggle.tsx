@@ -7,7 +7,7 @@ export function ThemeToggle() {
   
   return (
     <WcButtonIcon
-      variant="primary"
+      variant="ghost"
       shape="circle"
       icon={isDark ? 'icon-sun' : 'icon-moon'}
       title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
