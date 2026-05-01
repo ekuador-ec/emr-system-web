@@ -141,107 +141,12 @@
   flex-wrap: wrap;
 }
 
-.wc-user-card__chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 16px;
+.wc-user-card__tag.wc-tag {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.58rem;
+  min-height: 18px;
   padding: 2px 8px;
-  border-radius: var(--radius-full);
-  border: 1px solid transparent;
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-  font-size: 0.6rem;
-  font-weight: var(--font-weight-medium);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-@media (prefers-color-scheme: light) {
-  .wc-user-card__chip {
-    background: var(--color-primary-light);
-    border-color: var(--color-primary-light);
-  }
-}
-
-.wc-user-card__chip--role {
-  border-color: var(--color-primary-light);
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-}
-
-@media (prefers-color-scheme: light) {
-  .wc-user-card__chip--role {
-    background: var(--color-primary-light);
-    border-color: var(--color-primary-light);
-  }
-}
-
-.wc-user-card__chip--status.wc-user-card__chip--active {
-  background: var(--color-primary-light);
-  border-color: var(--color-primary-light);
-  color: var(--color-primary);
-}
-
-@media (prefers-color-scheme: light) {
-  .wc-user-card__chip--status.wc-user-card__chip--active {
-    background: var(--color-primary-light);
-    border-color: var(--color-primary-light);
-  }
-}
-
-.wc-user-card__chip--status.wc-user-card__chip--inactive {
-  background: var(--color-primary-light);
-  border-color: var(--color-primary-light);
-  color: var(--color-primary);
-}
-
-@media (prefers-color-scheme: light) {
-  .wc-user-card__chip--status.wc-user-card__chip--inactive {
-    background: var(--color-primary-light);
-    border-color: var(--color-primary-light);
-  }
-}
-
-.wc-user-card__chip--status.wc-user-card__chip--suspended {
-  background: var(--color-warning-light);
-  border-color: var(--color-warning-light);
-  color: var(--color-warning);
-}
-
-@media (prefers-color-scheme: light) {
-  .wc-user-card__chip--status.wc-user-card__chip--suspended {
-    background: var(--color-warning-light);
-    border-color: var(--color-warning-light);
-  }
-}
-
-.wc-user-card__chip--status.wc-user-card__chip--deleted {
-  background: var(--color-danger-light);
-  border-color: var(--color-danger-light);
-  color: var(--color-danger);
-}
-
-@media (prefers-color-scheme: light) {
-  .wc-user-card__chip--status.wc-user-card__chip--deleted {
-    background: var(--color-danger-light);
-    border-color: var(--color-danger-light);
-  }
-}
-
-.wc-user-card__chip--status.wc-user-card__chip--neutral {
-  background: var(--color-primary-light);
-  border-color: var(--color-primary-light);
-  color: var(--color-primary);
-}
-
-@media (prefers-color-scheme: light) {
-  .wc-user-card__chip--status.wc-user-card__chip--neutral {
-    background: var(--color-primary-light);
-    border-color: var(--color-primary-light);
-  }
 }
 
 .wc-user-card__info {
@@ -283,6 +188,43 @@
   word-break: break-word;
 }
 
+.wc-user-card__phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wc-user-card__phone-whatsapp-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  min-width: 12px;
+  color: var(--color-text);
+  text-decoration: none;
+  line-height: 0;
+  opacity: 0;
+  transform: translateY(1px);
+  pointer-events: none;
+  transition:
+    opacity var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.wc-user-card__phone:hover .wc-user-card__phone-whatsapp-link,
+.wc-user-card__phone:focus-within .wc-user-card__phone-whatsapp-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.wc-user-card__phone-whatsapp-link:hover,
+.wc-user-card__phone-whatsapp-link:focus-visible {
+  color: var(--color-primary);
+}
+
 .wc-user-card__actions {
   margin-top: 4px;
   padding-top: 6px;
@@ -317,8 +259,8 @@
 }
 
 .wc-user-card__action.wc-button-icon svg {
-  width: 13px;
-  height: 13px;
+  width: 15px;
+  height: 15px;
 }
 
 .wc-user-card__action--status.wc-button-icon {
@@ -329,11 +271,11 @@
   box-shadow: none;
 }
 
-.wc-user-card__action--delete.wc-button-icon {
+.wc-user-card__action--inactivate.wc-button-icon {
   box-shadow: none;
 }
 
-.wc-user-card__action--delete.wc-button-icon:hover:not(:disabled) {
+.wc-user-card__action--inactivate.wc-button-icon:hover:not(:disabled) {
   box-shadow: none;
 }
 
