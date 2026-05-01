@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import type { PatientListItem } from "@/domain/modules/patient/models/Patient";
@@ -12,6 +12,9 @@ import {
 } from "@/presentation/modules/medical-record/hooks/useMedicalRecord";
 import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
+import WcWarning from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
+import type { WcWarningHandle } from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
+import { useConfirmDialog } from "@/presentation/modules/shared/components/ui/useConfirmDialog";
 
 interface CreateMedicalRecordModalProps {
   isOpen: boolean;
@@ -21,7 +24,7 @@ interface CreateMedicalRecordModalProps {
 interface PatientSearchResultRowProps {
   patient: PatientListItem;
   isCreating: boolean;
-  onCreateRecord: (patientId: string) => void;
+  onCreateRecord: (patient: PatientListItem) => Promise<void>;
   onGoToRecord: (patientId: string) => void;
 }
 
@@ -116,7 +119,9 @@ function PatientSearchResultRow({
           variant="primary"
           disabled={isCreating}
           style={{ minWidth: "140px", justifyContent: "center" }}
-          onClick={() => onCreateRecord(patient.id)}
+          onClick={() => {
+            void onCreateRecord(patient);
+          }}
         >
           Crear HC
         </WcButton>
@@ -128,8 +133,10 @@ function PatientSearchResultRow({
 export function CreateMedicalRecordModal({ isOpen, onClose }: CreateMedicalRecordModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [submittedSearch, setSubmittedSearch] = useState("");
+  const existingRecordWarningRef = useRef<WcWarningHandle | null>(null);
   const navigate = useNavigate();
   const { addToast } = useToastStore();
+  const { confirm, DialogComponent } = useConfirmDialog();
   const { setCreateModalOpen, setCreateSuccessHandler } = usePatientStore();
   const searchQuery = submittedSearch.trim();
 
@@ -164,15 +171,28 @@ export function CreateMedicalRecordModal({ isOpen, onClose }: CreateMedicalRecor
     setSubmittedSearch(normalizedSearch);
   };
 
-  const handleCreateRecord = (patientId: string) => {
-    createMedicalRecord(patientId, {
+  const handleCreateRecord = async (patient: PatientListItem) => {
+    const fullName = `${patient.firstName} ${patient.lastName}`.trim();
+    const isConfirmed = await confirm({
+      title: "Crear Historia Clínica",
+      message: `¿Deseas crear una nueva historia clínica para ${fullName}?`,
+      confirmText: "Crear HC",
+      cancelText: "Cancelar",
+      type: "primary",
+    });
+
+    if (!isConfirmed) {
+      return;
+    }
+
+    createMedicalRecord(patient.id, {
       onSuccess: () => {
         addToast({
           type: "success",
           message: "Historia Clínica creada exitosamente",
         });
         onClose();
-        navigate(`/pacientes/${patientId}/historia`);
+        navigate(`/pacientes/${patient.id}/historia`);
       },
       onError: (err) => {
         const errorMessage = err.message.toLowerCase();
@@ -189,8 +209,10 @@ export function CreateMedicalRecordModal({ isOpen, onClose }: CreateMedicalRecor
         });
 
         if (alreadyExists) {
-          onClose();
-          navigate(`/pacientes/${patientId}/historia`);
+          existingRecordWarningRef.current?.open(() => {
+            onClose();
+            navigate(`/pacientes/${patient.id}/historia`);
+          });
         }
       },
     });
@@ -210,7 +232,8 @@ export function CreateMedicalRecordModal({ isOpen, onClose }: CreateMedicalRecor
   };
 
   return (
-    <WcModal isOpen={isOpen} onClose={onClose} title="Crear Historia Clínica" maxWidth="760px">
+    <>
+      <WcModal isOpen={isOpen} onClose={onClose} title="Crear Historia Clínica" maxWidth="760px">
       <div
         style={{
           display: "flex",
@@ -357,6 +380,18 @@ export function CreateMedicalRecordModal({ isOpen, onClose }: CreateMedicalRecor
           </WcButton>
         </section>
       </div>
-    </WcModal>
+      </WcModal>
+
+      <WcWarning
+        ref={existingRecordWarningRef}
+        type="warning"
+        title="Historia Clínica existente"
+        message="Este paciente ya cuenta con una historia clínica. Puedes abrirla directamente desde aquí."
+        confirmText="Ir a HC"
+        cancelText="Cerrar"
+      />
+
+      {DialogComponent}
+    </>
   );
 }

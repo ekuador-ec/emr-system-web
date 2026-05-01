@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { ConfirmDialog } from "./ConfirmDialog";
+import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
+import WcWarning from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
+import type { WcWarningType } from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
 
 export function useConfirmDialog() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +17,13 @@ export function useConfirmDialog() {
     message: "",
     resolve: () => {},
   });
+
+  const warningTypeByConfirmType: Record<"warning" | "danger" | "info" | "primary", WcWarningType> = {
+    warning: "warning",
+    danger: "destructive",
+    info: "info",
+    primary: "info",
+  };
 
   const confirm = (options: {
     title: string;
@@ -40,13 +49,14 @@ export function useConfirmDialog() {
   };
 
   const DialogComponent = (
-    <ConfirmDialog
+    <WcWarning
       isOpen={isOpen}
       title={config.title}
       message={config.message}
       confirmText={config.confirmText}
       cancelText={config.cancelText}
-      type={config.type}
+      type={config.type ? warningTypeByConfirmType[config.type] : "info"}
+      icon={<Icon name="icon-warning-solid" size={24} />}
       onConfirm={handleConfirm}
       onCancel={handleCancel}
     />
