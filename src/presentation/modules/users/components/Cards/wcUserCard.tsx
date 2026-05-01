@@ -1,4 +1,6 @@
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
+import WcTag from "@/presentation/modules/shared/components/ui/webcomponents/Tags/wcTag";
+import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import "@/presentation/modules/users/components/Cards/wcUserCard.css";
 
 export type WcUserCardProps = {
@@ -6,7 +8,9 @@ export type WcUserCardProps = {
   email: string;
   roleLabel: string;
   statusLabel: string;
+  statusTone: WcUserCardStatusTone;
   phone: string;
+  whatsappUrl?: string | null;
   lastSeen: string;
   avatarUrl?: string;
   canManage: boolean;
@@ -20,28 +24,48 @@ export type WcUserCardProps = {
   onRestore?: () => void;
 };
 
-type StatusTone = "active" | "inactive" | "suspended" | "deleted" | "neutral";
+export type WcUserCardStatusTone =
+  | "active"
+  | "inactive"
+  | "suspended"
+  | "deleted"
+  | "neutral";
 
 function getAvatarFallback(fullName: string): string {
   return fullName.trim().charAt(0).toUpperCase() || "U";
 }
 
-function getStatusTone(statusLabel: string): StatusTone {
-  const normalized = statusLabel.trim().toLowerCase();
+function getStatusVariant(
+  statusTone: WcUserCardStatusTone,
+): "success" | "accent" | "warning" | "danger" | "neutral" | "info" {
+  if (statusTone === "active") {
+    return "success";
+  }
 
-  if (normalized === "activo") return "active";
-  if (normalized === "inactivo") return "inactive";
-  if (normalized === "suspendido") return "suspended";
-  if (normalized === "eliminado") return "deleted";
+  if (statusTone === "suspended") {
+    return "warning";
+  }
+
+  if (statusTone === "deleted") {
+    return "danger";
+  }
+
+  if (statusTone === "neutral") {
+    return "info";
+  }
 
   return "neutral";
 }
 
 function WcUserCard(props: WcUserCardProps) {
   const fallback = getAvatarFallback(props.fullName);
-  const statusTone = getStatusTone(props.statusLabel);
+  const statusTone = props.statusTone;
   const phoneValue = props.phone === "--" ? "No registrado" : props.phone;
   const lastSeenValue = props.lastSeen === "--" ? "Sin registro" : props.lastSeen;
+  const hasWhatsAppLink =
+    typeof props.whatsappUrl === "string" &&
+    props.whatsappUrl.length > 0 &&
+    props.phone !== "--";
 
   return (
     <article className={`wc-user-card wc-user-card--${statusTone}`}>
@@ -69,16 +93,40 @@ function WcUserCard(props: WcUserCardProps) {
       </header>
 
       <div className="wc-user-card__chips">
-        <span className="wc-user-card__chip wc-user-card__chip--role">{props.roleLabel}</span>
-        <span className={`wc-user-card__chip wc-user-card__chip--status wc-user-card__chip--${statusTone}`}>
+        <WcTag variant="accent" size="sm" className="wc-user-card__tag">
+          {props.roleLabel}
+        </WcTag>
+        <WcTag
+          variant={getStatusVariant(statusTone)}
+          size="sm"
+          className="wc-user-card__tag"
+        >
           {props.statusLabel}
-        </span>
+        </WcTag>
       </div>
 
       <div className="wc-user-card__info">
         <div className="wc-user-card__info-item">
           <span className="wc-user-card__info-label">Telefono</span>
-          <span className="wc-user-card__info-value">{phoneValue}</span>
+          <span className="wc-user-card__info-value">
+            {hasWhatsAppLink ? (
+              <span className="wc-user-card__phone">
+                <span>{phoneValue}</span>
+                <a
+                  href={props.whatsappUrl ?? undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="wc-user-card__phone-whatsapp-link"
+                  title={`Abrir chat de WhatsApp para ${phoneValue}`}
+                  aria-label={`Abrir chat de WhatsApp para ${phoneValue}`}
+                >
+                  <Icon name="icon-clip" size={10} />
+                </a>
+              </span>
+            ) : (
+              phoneValue
+            )}
+          </span>
         </div>
         <div className="wc-user-card__info-item">
           <span className="wc-user-card__info-label">Ultima conexion</span>
@@ -96,7 +144,7 @@ function WcUserCard(props: WcUserCardProps) {
                 shape="square"
                 size="sm"
                 className="wc-user-card__action wc-user-card__action--status"
-                icon="icon-check"
+                icon="icon-user-plus-solid"
                 title="Restaurar usuario"
                 aria-label="Restaurar usuario"
                 disabled={props.isRestoring}
@@ -119,10 +167,10 @@ function WcUserCard(props: WcUserCardProps) {
                   variant="danger"
                   shape="square"
                   size="sm"
-                  className="wc-user-card__action wc-user-card__action--delete"
+                  className="wc-user-card__action wc-user-card__action--inactivate"
                   icon="icon-trash"
-                  title="Eliminar usuario"
-                  aria-label="Eliminar usuario"
+                  title="Inactivar usuario"
+                  aria-label="Inactivar usuario"
                   onClick={props.onDelete}
                 />
               </>

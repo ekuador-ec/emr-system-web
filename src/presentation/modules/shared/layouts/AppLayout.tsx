@@ -18,13 +18,14 @@ import { PatientCreateModal } from "@/presentation/modules/patient/components/Pa
 import { PatientQuickSearchModal } from "@/presentation/modules/patient/components/Patients/PatientQuickSearchModal";
 import { QuickActionBar } from "@/presentation/modules/shared/components/QuickActionBar";
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
-import "@/presentation/modules/shared/components/ui/webcomponents/wcWarning";
+import WcWarning from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
+import type { WcWarningHandle } from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, isLoggingOut } = useAuth();
   const navigate = useNavigate();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const warningRef = useRef<any>(null);
+  const warningRef = useRef<WcWarningHandle | null>(null);
 
   const { setInviteModalOpen, isInviteModalOpen } = useUserStore();
   // Safe to use here because it's a hook wrapping react-query; calling loadUsers will fetch data
@@ -276,12 +277,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         isInviting={isInviting}
       />
 
-      <wc-warning
+      <WcWarning
         ref={warningRef}
         title="Cerrar sesión"
         message="¿Estás seguro de que deseas cerrar tu sesión actual?"
-        confirm-text="Cerrar sesión"
-        cancel-text="Cancelar"
+        confirmText="Cerrar sesión"
+        cancelText="Cancelar"
         type="warning"
       />
     </div>

@@ -6,7 +6,8 @@ import { useToastStore } from "@/presentation/modules/shared/components/Toaster"
 import { organizationConfigSchema, type OrganizationConfigFormValues } from "@/presentation/modules/medical-record/schemas/organizationConfig.schema";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
-import "@/presentation/modules/shared/components/ui/webcomponents/wcWarning";
+import WcWarning from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
+import type { WcWarningHandle } from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
 
 interface OrganizationConfigModalProps {
   isOpen: boolean;
@@ -15,7 +16,7 @@ interface OrganizationConfigModalProps {
 
 export function OrganizationConfigModal({ isOpen, onClose }: OrganizationConfigModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const wcWarningRef = useRef<any>(null);
+  const wcWarningRef = useRef<WcWarningHandle | null>(null);
   const { data: config } = useOrganizationConfig();
   const { mutate: updateConfig, isPending } = useUpdateOrganizationConfig();
   const { addToast } = useToastStore();
@@ -323,12 +324,14 @@ export function OrganizationConfigModal({ isOpen, onClose }: OrganizationConfigM
         </form>
       </div>
 
-      <wc-warning
+      <WcWarning
         ref={wcWarningRef}
+        type="warning"
+        className="is-discard-warning"
         title="Descartar cambios"
         message="¿Estas seguro de que deseas cancelar? Perderas todos los cambios realizados."
-        confirm-text="Descartar"
-        cancel-text="Seguir editando"
+        confirmText="Descartar"
+        cancelText="Seguir editando"
       />
 
       <style>

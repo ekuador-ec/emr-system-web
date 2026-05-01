@@ -49,8 +49,18 @@ export function TableStatusBadge({
   return <span className={`wc-tables__badge wc-tables__badge--${color ?? status}`}>{label}</span>;
 }
 
-export function TableActionCell({ children }: { children: ReactNode }) {
-  return <div className="wc-tables__action-cell">{children}</div>;
+export function TableActionCell({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={["wc-tables__action-cell", className].filter(Boolean).join(" ")}>
+      {children}
+    </div>
+  );
 }
 
 export function TableIconButton({

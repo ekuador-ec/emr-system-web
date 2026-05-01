@@ -96,7 +96,7 @@ export function ConfirmDialog({
           gap: "var(--space-3)",
           borderTop: "1px solid var(--color-border)",
         }}>
-          <WcButton variant="secondary" onClick={onCancel}>
+          <WcButton variant="terciary" onClick={onCancel}>
             {cancelText}
           </WcButton>
           <WcButton variant={type === "danger" ? "danger" : "primary"} onClick={onConfirm}>

@@ -12,7 +12,6 @@ export type UsersQuickFilterState = {
   role: string[];
   status: string[];
   online: OnlineFilter;
-  includeDeleted: string;
 };
 
 type UsersQuickFilterPopoverProps = {
@@ -25,56 +24,47 @@ type UsersQuickFilterPopoverProps = {
   onApply: () => void;
 };
 
-export function UsersQuickFilterPopover(props: UsersQuickFilterPopoverProps) {
-  const fields: Array<WcFilterField<UsersQuickFilterState>> = [
-    {
-      key: "role",
-      id: "users-filter-role",
-      label: "Rol",
-      multiSelect: true,
-      options: Object.entries(USER_ROLE_LABELS).map(([value, label]) => ({
-        value,
-        label,
-      })),
-    },
-    {
-      key: "status",
-      id: "users-filter-status",
-      label: "Estado de cuenta",
-      multiSelect: true,
-      options: [
-        { value: "active", label: "Activo" },
-        { value: "inactive", label: "Inactivo" },
-        { value: "suspended", label: "Suspendido" },
-      ],
-    },
-    {
-      key: "online",
-      id: "users-filter-online",
-      label: "Conexion",
-      options: [
-        { value: "all", label: "Todos" },
-        { value: "online", label: "En linea" },
-        { value: "offline", label: "Fuera de linea" },
-      ],
-    },
-    {
-      key: "includeDeleted",
-      id: "users-filter-deleted",
-      label: "Usuarios eliminados",
-      options: [
-        { value: "no", label: "Ocultar" },
-        { value: "yes", label: "Incluir (auditoria)" },
-      ],
-    },
-  ];
+export const USERS_QUICK_FILTER_FIELDS: Array<WcFilterField<UsersQuickFilterState>> = [
+  {
+    key: "role",
+    id: "users-filter-role",
+    label: "Rol",
+    multiSelect: true,
+    options: Object.entries(USER_ROLE_LABELS).map(([value, label]) => ({
+      value,
+      label,
+    })),
+  },
+  {
+    key: "status",
+    id: "users-filter-status",
+    label: "Estado de cuenta",
+    multiSelect: true,
+    options: [
+      { value: "active", label: "Activo" },
+      { value: "inactive", label: "Inactivo" },
+      { value: "suspended", label: "Suspendido" },
+    ],
+  },
+  {
+    key: "online",
+    id: "users-filter-online",
+    label: "Conexion",
+    options: [
+      { value: "all", label: "Todos" },
+      { value: "online", label: "En linea" },
+      { value: "offline", label: "Fuera de linea" },
+    ],
+  },
+];
 
+export function UsersQuickFilterPopover(props: UsersQuickFilterPopoverProps) {
   return (
     <WcFilterPopover
       isOpen={props.isOpen}
       activeFiltersCount={props.activeFiltersCount}
       values={props.filters}
-      fields={fields}
+      fields={USERS_QUICK_FILTER_FIELDS}
       onToggle={props.onToggle}
       onChange={props.onChange}
       onClear={props.onClear}

@@ -4,7 +4,7 @@
 
 .wc-filter-popover__trigger.wc-button.is-secondary:hover {
   background-color: var(--color-primary-hover);
-  color: #ffffff;
+  color: var(--color-primary-hover-foreground);
   border-color: var(--color-primary-hover);
 }
 
@@ -23,6 +23,7 @@
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
+  color: var(--color-text);
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
 }
 
@@ -61,8 +62,16 @@
   border: 1px solid var(--color-border);
   background-color: var(--color-surface);
   color: var(--color-text);
+  -webkit-text-fill-color: var(--color-text);
+  caret-color: var(--color-text);
   padding: 0 8px;
   font-size: 12px;
+}
+
+.wc-filter-popover__input option,
+.wc-filter-popover__input optgroup {
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .wc-filter-popover__input:focus,
@@ -107,7 +116,7 @@
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  border-radius: var(--radius-full, 9999px);
+  border-radius: 6px;
   border: 1px solid var(--color-border);
   background-color: var(--color-surface);
   color: var(--color-text-secondary);
@@ -129,12 +138,13 @@
 .wc-filter-popover__chip.is-checked {
   background-color: var(--color-primary);
   border-color: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-primary-foreground);
 }
 
 .wc-filter-popover__chip.is-checked:hover {
   background-color: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
+  color: var(--color-primary-hover-foreground);
 }
 
 .wc-filter-popover__chip-input {
@@ -153,4 +163,3 @@
   line-height: 1;
   white-space: nowrap;
 }
-
