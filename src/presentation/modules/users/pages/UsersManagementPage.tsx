@@ -68,11 +68,19 @@ function areArraysEqual(a: string[], b: string[]): boolean {
   return sortedA.every((v, i) => v === sortedB[i]);
 }
 
-function countAppliedFilters(filters: UsersQuickFilterState): number {
+function countAppliedFilters(
+  filters: UsersQuickFilterState,
+  options?: { includeDefaultStatus?: boolean },
+): number {
+  const includeDefaultStatus = options?.includeDefaultStatus ?? false;
   let count = 0;
 
   if (filters.role.length > 0) count += 1;
-  if (!areArraysEqual(filters.status, DEFAULT_USER_FILTERS.status)) count += 1;
+  if (includeDefaultStatus) {
+    if (filters.status.length > 0) count += 1;
+  } else if (!areArraysEqual(filters.status, DEFAULT_USER_FILTERS.status)) {
+    count += 1;
+  }
   if (filters.online !== DEFAULT_USER_FILTERS.online) count += 1;
 
   return count;
@@ -96,7 +104,7 @@ function getActiveFilterTags(
 ): FilterItem[] {
   const tags: FilterItem[] = [];
 
-  if (!areArraysEqual(filters.status, DEFAULT_USER_FILTERS.status)) {
+  if (filters.status.length > 0) {
     filters.status.forEach((status) => {
       tags.push({
         id: `status-${status}`,
@@ -139,14 +147,17 @@ function buildServerFilters(
   uiFilters: UsersQuickFilterState,
   searchTerm: string,
 ): UserFilters {
+  const normalizedStatuses =
+    uiFilters.status.length > 0 ? uiFilters.status : DEFAULT_USER_FILTERS.status;
+
   return {
     roles:
       uiFilters.role.length > 0
         ? (uiFilters.role as UserFilters["roles"])
         : undefined,
     statuses:
-      uiFilters.status.length > 0
-        ? (uiFilters.status as UserFilters["statuses"])
+      normalizedStatuses.length > 0
+        ? (normalizedStatuses as UserFilters["statuses"])
         : undefined,
     online:
       uiFilters.online === "all"
@@ -154,6 +165,13 @@ function buildServerFilters(
         : (uiFilters.online as "online" | "offline"),
     searchTerm: searchTerm || null,
     includeDeleted: true,
+  };
+}
+
+function normalizeFilterState(filters: UsersQuickFilterState): UsersQuickFilterState {
+  return {
+    ...filters,
+    status: filters.status.length > 0 ? filters.status : [...DEFAULT_USER_FILTERS.status],
   };
 }
 
@@ -725,7 +743,9 @@ export function UsersManagementPage() {
   ];
 
   const applyDraftFilters = () => {
-    setAppliedFilters(draftFilters);
+    const normalizedFilters = normalizeFilterState(draftFilters);
+    setAppliedFilters(normalizedFilters);
+    setDraftFilters(normalizedFilters);
     setIsFilterPopoverOpen(false);
     if (!isActivated) {
       loadUsers();
@@ -771,10 +791,10 @@ export function UsersManagementPage() {
 
     if (filterId.startsWith("status-")) {
       const status = filterId.replace("status-", "");
-      const next = {
+      const next = normalizeFilterState({
         ...appliedFilters,
         status: appliedFilters.status.filter((s) => s !== status),
-      };
+      });
       setAppliedFilters(next);
       setDraftFilters(next);
       return;
@@ -807,7 +827,7 @@ export function UsersManagementPage() {
   };
 
   const appliedFiltersCount = useMemo(
-    () => countAppliedFilters(appliedFilters),
+    () => countAppliedFilters(appliedFilters, { includeDefaultStatus: true }),
     [appliedFilters],
   );
 
@@ -901,7 +921,7 @@ export function UsersManagementPage() {
 
   const renderViewModeControls = () => {
     const shouldShowMobileToggle = isMobileViewport;
-    const shouldShowFilterTags = filterTags.length > 0;
+    const shouldShowFilterTags = isActivated && filterTags.length > 0;
 
     if (!shouldShowMobileToggle && !shouldShowFilterTags) {
       return null;

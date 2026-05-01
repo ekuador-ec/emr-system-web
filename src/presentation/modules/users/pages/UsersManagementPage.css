@@ -50,8 +50,7 @@
 }
 
 .users-search-filters-group__clear-btn.wc-button {
-  min-height: 30px;
-  padding: 0 10px;
+  gap: var(--space-1);
   white-space: nowrap;
 }
 
