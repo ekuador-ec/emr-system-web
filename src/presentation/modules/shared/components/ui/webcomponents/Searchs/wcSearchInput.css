@@ -138,7 +138,8 @@
     flex: 1 1 auto;
   }
 
-  .wc-search-input.wc-search-input--icon-submit-only .wc-button.wc-search-input__submit.is-icon-only {
+  .wc-search-input.wc-search-input--icon-submit-only
+    .wc-button.wc-search-input__submit.is-icon-only {
     width: 30px;
     min-width: 30px;
     min-height: 30px;

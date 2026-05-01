@@ -4,8 +4,10 @@ import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Ico
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import "@/presentation/modules/shared/components/ui/webcomponents/Searchs/wcSearchInput.css";
 
-interface WcSearchInputProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "value"> {
+interface WcSearchInputProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "type" | "value"
+> {
   value: string;
   onValueChange: (value: string) => void;
   wrapperClassName?: string;
@@ -46,8 +48,10 @@ function WcSearchInput(props: WcSearchInputProps) {
   const canRenderClearButton = showClearButton && !disabled && !readOnly;
   const hasSearchText = value.trim().length > 0;
 
-  const containerClassName = `wc-search-input ${submitButtonIconOnly ? "wc-search-input--icon-submit-only" : ""} ${wrapperClassName ?? ""}`.trim();
-  const inputClassName = `wc-search-input__control ${showSearchIcon ? "has-leading-icon" : ""} ${canRenderClearButton ? "has-trailing-action" : ""} ${className ?? ""}`.trim();
+  const containerClassName = `wc-search-input ${wrapperClassName ?? ""}`.trim();
+  const hasTrailingAction = showSubmitButton || canRenderClearButton;
+  const inputClassName =
+    `wc-search-input__control ${showSearchIcon ? "has-leading-icon" : ""} ${hasTrailingAction ? "has-trailing-action" : ""} ${className ?? ""}`.trim();
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     onValueChange(event.target.value);
@@ -95,10 +99,10 @@ function WcSearchInput(props: WcSearchInputProps) {
           readOnly={readOnly}
           className={inputClassName}
         />
-        {canRenderClearButton ? (
+        {canRenderClearButton && hasSearchText ? (
           <button
             type="button"
-            className={`wc-search-input__clear ${hasSearchText ? "" : "is-hidden"}`.trim()}
+            className="wc-search-input__clear"
             title="Limpiar busqueda"
             aria-label="Limpiar busqueda"
             onMouseDown={(event) => {
@@ -120,8 +124,10 @@ function WcSearchInput(props: WcSearchInputProps) {
           aria-label={submitButtonIconOnly ? submitButtonLabel : undefined}
           title={submitButtonIconOnly ? submitButtonLabel : undefined}
         >
-          {showSubmitIcon ? <Icon name="icon-search" size={13} /> : null}
-          {submitButtonIconOnly ? null : submitButtonLabel}
+          {showSubmitIcon && submitButtonIconOnly ? (
+            <Icon name="icon-search" size={13} />
+          ) : null}
+          {!submitButtonIconOnly ? submitButtonLabel : null}
         </WcButton>
       ) : null}
     </div>
