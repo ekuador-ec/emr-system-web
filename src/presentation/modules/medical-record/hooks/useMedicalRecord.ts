@@ -17,11 +17,11 @@ const createMedicalRecordUseCase = new CreateMedicalRecordUseCase(repository);
 const updateMedicalRecordStatusUseCase = new UpdateMedicalRecordStatusUseCase(repository);
 const listMedicalRecordsUseCase = new ListMedicalRecordsUseCase(repository);
 
-export const useMedicalRecordByPatient = (patientId: string) => {
+export const useMedicalRecordByPatient = (patientId: string, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: ["medical-record", "patient", patientId],
     queryFn: () => getMedicalRecordByPatientUseCase.execute(patientId),
-    enabled: !!patientId,
+    enabled: !!patientId && options?.enabled !== false,
   });
 };
 
