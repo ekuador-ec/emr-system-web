@@ -1,0 +1,95 @@
+@keyframes evolutionTableLoadingBar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.evolutions-advanced__initial-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+}
+
+.evolutions-advanced__initial-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(6, 182, 212, 0.10);
+  color: var(--color-primary);
+}
+
+.evolutions-advanced__initial-title {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.evolutions-advanced__initial-description {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  max-width: 44ch;
+  line-height: 1.5;
+}
+
+.evolutions-advanced__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
+}
+
+.evolutions-advanced__presets-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-right: var(--space-1);
+}
+
+.evolutions-advanced__loading-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgba(6, 182, 212, 0.08);
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  animation: evolutionLoadingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes evolutionLoadingPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.evolutions-advanced__spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(6, 182, 212, 0.3);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: evolutionSpinnerRotate 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes evolutionSpinnerRotate {
+  to { transform: rotate(360deg); }
+}
