@@ -1,14 +1,77 @@
-export type EvolutionStatus = 'ABIERTA' | 'EN_PROCESO' | 'CERRADA';
-export type ClinicalCause = 'TRAUMA' | 'CAUSA_CLINICA' | 'CAUSA_GINECOLOGICA_OBSTETRICA' | 'CAUSA_QUIRURGICA' | 'OTRO';
-export type AccidentType = 'TRANSITO' | 'CAIDA' | 'QUEMADURA' | 'MORDEDURA' | 'AHOGAMIENTO' | 'CUERPO_EXTRANO' | 'APLASTAMIENTO' | 'OTRO';
-export type ViolenceType = 'ARMA_FUEGO' | 'RINA' | 'VIOLENCIA_FAMILIAR' | 'ABUSO_FISICO' | 'ABUSO_PSICOLOGICO' | 'ABUSO_SEXUAL' | 'OTRO';
-export type IntoxicationType = 'ALCOHOLICA' | 'ALIMENTARIA' | 'DROGAS' | 'GASES' | 'ENVENENAMIENTO' | 'PICADURA' | 'ANAFILAXIA' | 'OTRO';
-export type DiagnosisType = 'INGRESO' | 'ALTA';
-export type DiagnosisCertainty = 'PRESUNTIVO' | 'DEFINITIVO';
-export type SystemReviewCondition = 'VIA_AEREA_LIBRE' | 'VIA_AEREA_OBSTRUIDA' | 'CONDICION_ESTABLE' | 'CONDICION_INESTABLE';
-export type PhysicalExamRegion = 'CABEZA' | 'CUELLO' | 'TORAX' | 'ABDOMEN' | 'COLUMNA' | 'PELVIS' | 'EXTREMIDADES' | 'OTRO';
-export type InjuryType = 'HERIDA_PENETRANTE' | 'HERIDA_CORTANTE' | 'FRACTURA_CERRADA' | 'CUERPO_EXTRANO' | 'HEMORRAGIA' | 'MORDEDURA' | 'PICADURA' | 'EXCORIACION' | 'DEFORMIDAD_MASA' | 'HEMATOMA' | 'ERITEMA_INFLAMACION' | 'LUXACION_ESGUINCE' | 'QUEMADURA' | 'OTRO';
-export type DischargeType = 'DOMICILIO' | 'CONSULTA_EXTERNA' | 'OBSERVACION' | 'INTERNACION' | 'REFERENCIA' | 'EGRESA_VIVO' | 'CONDICION_ESTABLE' | 'CONDICION_INESTABLE' | 'DIAS_INCAPACIDAD';
+export type EvolutionStatus = "ABIERTA" | "EN_PROCESO" | "CERRADA";
+export type ClinicalCause =
+  | "TRAUMA"
+  | "CAUSA_CLINICA"
+  | "CAUSA_GINECOLOGICA_OBSTETRICA"
+  | "CAUSA_QUIRURGICA"
+  | "OTRO";
+export type AccidentType =
+  | "TRANSITO"
+  | "CAIDA"
+  | "QUEMADURA"
+  | "MORDEDURA"
+  | "AHOGAMIENTO"
+  | "CUERPO_EXTRANO"
+  | "APLASTAMIENTO"
+  | "OTRO";
+export type ViolenceType =
+  | "ARMA_FUEGO"
+  | "RINA"
+  | "VIOLENCIA_FAMILIAR"
+  | "ABUSO_FISICO"
+  | "ABUSO_PSICOLOGICO"
+  | "ABUSO_SEXUAL"
+  | "OTRO";
+export type IntoxicationType =
+  | "ALCOHOLICA"
+  | "ALIMENTARIA"
+  | "DROGAS"
+  | "GASES"
+  | "ENVENENAMIENTO"
+  | "PICADURA"
+  | "ANAFILAXIA"
+  | "OTRO";
+export type DiagnosisType = "INGRESO" | "ALTA";
+export type DiagnosisCertainty = "PRESUNTIVO" | "DEFINITIVO";
+export type SystemReviewCondition =
+  | "VIA_AEREA_LIBRE"
+  | "VIA_AEREA_OBSTRUIDA"
+  | "CONDICION_ESTABLE"
+  | "CONDICION_INESTABLE";
+export type PhysicalExamRegion =
+  | "CABEZA"
+  | "CUELLO"
+  | "TORAX"
+  | "ABDOMEN"
+  | "COLUMNA"
+  | "PELVIS"
+  | "EXTREMIDADES"
+  | "OTRO";
+export type InjuryType =
+  | "HERIDA_PENETRANTE"
+  | "HERIDA_CORTANTE"
+  | "FRACTURA_CERRADA"
+  | "CUERPO_EXTRANO"
+  | "HEMORRAGIA"
+  | "MORDEDURA"
+  | "PICADURA"
+  | "EXCORIACION"
+  | "DEFORMIDAD_MASA"
+  | "HEMATOMA"
+  | "ERITEMA_INFLAMACION"
+  | "LUXACION_ESGUINCE"
+  | "QUEMADURA"
+  | "OTRO";
+export type DischargeType =
+  | "DOMICILIO"
+  | "CONSULTA_EXTERNA"
+  | "OBSERVACION"
+  | "INTERNACION"
+  | "REFERENCIA"
+  | "EGRESA_VIVO"
+  | "CONDICION_ESTABLE"
+  | "CONDICION_INESTABLE"
+  | "DIAS_INCAPACIDAD";
 
 export interface EvolutionSystemReview {
   id?: string;
@@ -127,5 +190,63 @@ export interface MedicalEvolution {
   discharges?: EvolutionDischarge[];
 }
 
-export type CreateEvolutionPayload = Partial<Omit<MedicalEvolution, 'id' | 'status' | 'openedBy' | 'closedBy' | 'closedAt' | 'createdAt' | 'updatedAt' | 'openedByName' | 'closedByName'>> & { medicalRecordId: string };
-export type UpdateEvolutionPayload = Partial<Omit<MedicalEvolution, 'id' | 'openedBy' | 'closedBy' | 'closedAt' | 'createdAt' | 'updatedAt' | 'openedByName' | 'closedByName'>>;
+export interface MedicalEvolutionListItem {
+  id: string;
+  medicalRecordId: string;
+  patientId: string;
+  patientName: string;
+  patientIdNumber: string;
+  status: EvolutionStatus;
+  attentionDate: string | null;
+  attentionTime: string | null;
+  openedByName: string | null;
+  closedByName: string | null;
+  closedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  clinicalCause: ClinicalCause | null;
+  eventObservations: string | null;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface EvolutionFilters {
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
+
+export type CreateEvolutionPayload = Partial<
+  Omit<
+    MedicalEvolution,
+    | "id"
+    | "status"
+    | "openedBy"
+    | "closedBy"
+    | "closedAt"
+    | "createdAt"
+    | "updatedAt"
+    | "openedByName"
+    | "closedByName"
+  >
+> & { medicalRecordId: string };
+export type UpdateEvolutionPayload = Partial<
+  Omit<
+    MedicalEvolution,
+    | "id"
+    | "openedBy"
+    | "closedBy"
+    | "closedAt"
+    | "createdAt"
+    | "updatedAt"
+    | "openedByName"
+    | "closedByName"
+  >
+>;
