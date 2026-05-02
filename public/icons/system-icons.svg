@@ -334,6 +334,29 @@
     </g>
   </symbol>
 
+  <symbol id="icon-file-search" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+      <path d="M12 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v4.5" />
+      <circle cx="16.5" cy="17.5" r="2.5" />
+      <path d="M18.5 19.5l2.5 2.5" />
+    </g>
+  </symbol>
+
+  <symbol id="icon-file-time" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M16 4h2a2 2 0 0 1 2 2v6" />
+      <path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6" />
+      <rect x="8" y="2" width="8" height="4" rx="1" />
+      <path d="M8 10h8" />
+      <path d="M8 14h4" />
+      <circle cx="17.5" cy="17.5" r="4.5" />
+      <path d="M17.5 15v2.5l1.5 1.5" />
+    </g>
+  </symbol>
+
   <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="8" />
     <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -425,7 +448,6 @@
       <path d="M20.2 20.2l1.8 1.8" />
     </g>
   </symbol>
-
 
   <symbol id="icon-calendar-user" viewBox="0 0 24 24">
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
@@ -528,4 +550,21 @@
     <path fill="currentColor"
       d="M72.281 36.157C69.605 23.382 58.297 14.038 45 14.038c-13.296 0-24.604 9.345-27.281 22.119C7.764 37.276 0 45.747 0 55.997c0 11.009 8.957 19.966 19.966 19.966h50.068C81.043 75.963 90 67.006 90 55.997C90 45.747 82.236 37.276 72.281 36.157zM57.334 59.101c1.172 1.171 1.172 3.071 0 4.242c-.586.586-1.354.879-2.121.879s-1.535-.293-2.121-.879L45 55.251l-8.092 8.092c-.585.586-1.354.879-2.121.879s-1.536-.293-2.121-.879c-1.172-1.171-1.172-3.071 0-4.242l8.092-8.092l-8.092-8.092c-1.172-1.171-1.172-3.071 0-4.242c1.171-1.172 3.071-1.172 4.242 0L45 46.767l8.092-8.092c1.172-1.172 3.07-1.172 4.242 0c1.172 1.171 1.172 3.071 0 4.242l-8.092 8.092L57.334 59.101z" />
   </symbol>
+
+  <symbol id="icon-restore" viewBox="0 0 512 512">
+    <path fill="currentColor" fill-rule="evenodd"
+      d="M256 448c-97.974 0-178.808-73.383-190.537-168.183l42.341-5.293c9.123 73.734 71.994 130.809 148.196 130.809c82.475 0 149.333-66.858 149.333-149.333S338.475 106.667 256 106.667c-50.747 0-95.581 25.312-122.567 64h79.9v42.666H64V64h42.667v71.31C141.866 91.812 195.685 64 256 64c106.039 0 192 85.961 192 192s-85.961 192-192 192"
+      clip-rule="evenodd" />
+  </symbol>
+
+<symbol id="icon-generate-pdf" viewBox="0 0 24 24">
+	<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+		<path d="M14 3v4a1 1 0 0 0 1 1h4" />
+		<path d="M5 12V5a2 2 0 0 1 2-2h7l5 5v4" />
+		<path d="M5 18h1.5a1.5 1.5 0 0 0 0-3H5v6" />
+		<path d="M11 15v6h1a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-1z" />
+		<path d="M17 18h2" />
+		<path d="M20 15h-3v6" />
+	</g>
+</symbol>
 </svg>
