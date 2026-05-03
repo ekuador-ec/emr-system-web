@@ -105,7 +105,7 @@ export function EvolutionsPage() {
     () =>
       buildFilters({
         startDate: defaultRange.startDate,
-        endDate: defaultRange.endDate,
+        endDate: undefined,
         page: recentPage,
         limit: 8,
       }),
