@@ -139,6 +139,7 @@ export class SupabaseEvolutionRepository implements EvolutionRepository {
     const updateData = Object.fromEntries(
       Object.entries(evolutionData).filter(([, value]) => value !== undefined),
     );
+    updateData.updated_at = new Date().toISOString();
 
     if (Object.keys(updateData).length > 0) {
       const { error } = await supabase.from("medical_evolutions").update(updateData).eq("id", id);
@@ -222,6 +223,7 @@ export class SupabaseEvolutionRepository implements EvolutionRepository {
         status: "CERRADA",
         closed_by: userId,
         closed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .eq("id", id);
 
