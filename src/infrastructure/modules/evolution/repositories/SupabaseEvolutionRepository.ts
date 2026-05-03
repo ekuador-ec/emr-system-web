@@ -340,11 +340,11 @@ export class SupabaseEvolutionRepository implements EvolutionRepository {
     }
 
     if (filters?.startDate) {
-      query = query.gte("updated_at", `${filters.startDate}T00:00:00Z`);
+      query = query.gte("updated_at", `${filters.startDate}T00:00:00-05:00`);
     }
 
     if (filters?.endDate) {
-      query = query.lte("updated_at", `${filters.endDate}T23:59:59Z`);
+      query = query.lte("updated_at", `${filters.endDate}T23:59:59-05:00`);
     }
 
     const { data, count, error } = await query;

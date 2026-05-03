@@ -42,15 +42,7 @@ function getStatusBadge(status: MedicalEvolutionListItem["status"]) {
   return { label: "Abierta", color: "warning" as const };
 }
 
-function getDisplayedStatus(status: MedicalEvolutionListItem["status"]) {
-  const statusMap: Record<MedicalEvolutionListItem["status"], string> = {
-    ABIERTA: "Abierta",
-    EN_PROCESO: "En proceso",
-    CERRADA: "Cerrada",
-  };
 
-  return statusMap[status];
-}
 
 export function EvolutionResultsTable({
   result,
@@ -169,7 +161,7 @@ export function EvolutionResultsTable({
 
   const rows: WcTableRow[] = evolutions.map((evolution) => ({
     id: evolution.id,
-    status: getDisplayedStatus(evolution.status),
+    status: evolution.status,
     patientName: evolution.patientName,
     patientIdNumber: evolution.patientIdNumber,
     attentionDate: evolution.attentionDate ?? evolution.updatedAt,
