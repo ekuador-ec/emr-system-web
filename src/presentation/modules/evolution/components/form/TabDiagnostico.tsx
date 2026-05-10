@@ -16,23 +16,23 @@ export function TabDiagnostico() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
       
       {/* S11 / S12: Diagnósticos */}
-      <section>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '8px' }}>
+      <section style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--space-6)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '12px', marginBottom: 'var(--space-4)' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.25rem' }}>11 / 12. Diagnósticos</h2>
-            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Ingreso y Alta</p>
+            <h2 style={{ margin: 0, fontSize: '1.125rem' }}>11 / 12. Diagnósticos</h2>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>Ingreso y Alta</p>
           </div>
-          <WcButton variant="secondary" onClick={() => appendDiag({ type: 'INGRESO', certainty: 'PRESUNTIVO', cie10Id: '', description: '' })}>
-            <Icon name="icon-plus" size={16} /> Agregar
+          <WcButton variant="terciary" onClick={() => appendDiag({ type: 'INGRESO', certainty: 'PRESUNTIVO', cie10Id: '', description: '' })}>
+            <Icon name="icon-add" size={16} /> Agregar
           </WcButton>
         </div>
 
         {diagFields.length === 0 ? (
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginTop: '16px', textAlign: 'center', padding: '32px' }}>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', textAlign: 'center', padding: '32px' }}>
             No hay diagnósticos registrados. Haz clic en "Agregar".
           </p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {diagFields.map((field, index) => (
               <div key={field.id} style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', backgroundColor: 'var(--color-bg)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -42,7 +42,7 @@ export function TabDiagnostico() {
                   </button>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>Momento</label>
                     <select {...register(`diagnoses.${index}.type` as const)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
@@ -58,7 +58,7 @@ export function TabDiagnostico() {
                     </select>
                   </div>
                   
-                  <div>
+                  <div style={{ gridColumn: '1 / -1' }}>
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>Diagnóstico (CIE-10)</label>
                     <Controller
                       control={control}
