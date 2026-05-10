@@ -1,4 +1,5 @@
 export type EvolutionStatus = "ABIERTA" | "EN_PROCESO" | "CERRADA";
+export type ArrivalMethod = "AMBULATORIO" | "AMBULANCIA" | "OTRO";
 export type ClinicalCause =
   | "TRAUMA"
   | "CAUSA_CLINICA"
@@ -117,6 +118,13 @@ export interface MedicalEvolution {
   closedAt: string | null;
   createdAt: string;
   updatedAt: string;
+
+  // S0: Admisión
+  arrivalMethod: ArrivalMethod | null;
+  arrivalMethodObservations: string | null;
+  informationSource: string | null;
+  referringPerson: string | null;
+  contactNumber: string | null;
 
   // S1
   attentionDate: string | null;
