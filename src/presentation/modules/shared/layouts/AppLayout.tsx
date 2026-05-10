@@ -69,6 +69,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            height: "60px",
             padding: "var(--space-3) var(--space-6)",
             backgroundColor: "var(--color-surface)",
             borderBottom: "1px solid var(--color-border)",
