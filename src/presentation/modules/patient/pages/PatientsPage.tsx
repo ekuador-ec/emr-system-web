@@ -4,6 +4,7 @@ import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Ico
 import { PatientsList } from "@/presentation/modules/patient/components/Patients/PatientsList";
 import { PatientSearchFilters } from "@/presentation/modules/patient/components/Patients/PatientSearchFilters";
 import { PatientDetailsDrawer } from "@/presentation/modules/patient/components/Patients/PatientDetailsDrawer";
+import { WcModuleHeader } from "@/presentation/modules/shared/components/ui/webcomponents/Headers/WcModuleHeader";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 
 export function PatientsPage() {
@@ -26,22 +27,12 @@ export function PatientsPage() {
 
   return (
     <div style={{ padding: "var(--space-8)", maxWidth: "1200px", margin: "0 auto" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "var(--space-6)",
-          flexWrap: "wrap",
-          gap: "var(--space-3)",
-        }}
+      <WcModuleHeader
+        moduleName="Pacientes"
+        moduleIcon="icon-patient"
+        title="Directorio de Pacientes"
+        description="Busca, consulta y gestiona las historias clínicas de los pacientes."
       >
-        <div>
-          <h1 style={{ marginBottom: "var(--space-1)" }}>Directorio de Pacientes</h1>
-          <p style={{ fontSize: "var(--font-size-sm)", color: "var(--color-text-secondary)" }}>
-            Busca, consulta y gestiona las historias clínicas de los pacientes.
-          </p>
-        </div>
         <WcButton
           variant="primary"
           onClick={() => {
@@ -53,7 +44,7 @@ export function PatientsPage() {
           <Icon name="icon-user-plus" size={20} />
           Nuevo Paciente
         </WcButton>
-      </div>
+      </WcModuleHeader>
 
       <PatientSearchFilters />
 

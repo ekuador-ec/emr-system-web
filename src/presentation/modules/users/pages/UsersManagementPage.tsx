@@ -11,6 +11,7 @@ import {
 } from "@/domain/modules/users/models/User";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import { useUserStore } from "@/presentation/modules/users/stores/useUserStore";
+import { WcModuleHeader } from "@/presentation/modules/shared/components/ui/webcomponents/Headers/WcModuleHeader";
 import { WcTabsFolder } from "@/presentation/modules/shared/components/ui/webcomponents/Tabs/wcTabsFolder";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
@@ -999,18 +1000,12 @@ export function UsersManagementPage() {
         margin: "0 auto",
       }}
     >
-      <div
-        className="users-page-header"
+      <WcModuleHeader
+        moduleName="Administración"
+        moduleIcon="icon-users-solid"
+        title="Gestión de Usuarios"
+        description="Administre de forma segura el acceso y los perfiles de su organización."
       >
-        <div className="users-page-header__heading">
-          <h1 className="users-page-header__title">
-            Gestion de Usuarios
-          </h1>
-          <p className="users-page-header__description">
-            Administre de forma segura el acceso y los perfiles de su
-            organizacion
-          </p>
-        </div>
         <WcButton
           variant="primary"
           className="users-page-header__add-btn"
@@ -1019,7 +1014,7 @@ export function UsersManagementPage() {
           <Icon name="icon-user-plus" size={14} />
           Agregar usuario
         </WcButton>
-      </div>
+      </WcModuleHeader>
 
       {isMobileViewport ? (
         <div className="users-mobile-top-controls">

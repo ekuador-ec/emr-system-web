@@ -11,6 +11,7 @@ import { useAuth } from "@/presentation/modules/auth/hooks/useAuth";
 import { canChangeMedicalRecordStatus } from "@/presentation/core/security/medicalRecordPermissions";
 import type { MedicalRecordListItem } from "@/domain/modules/medical-record/models/MedicalRecord";
 import { PatientDetailsDrawer } from "@/presentation/modules/patient/components/Patients/PatientDetailsDrawer";
+import { WcModuleHeader } from "@/presentation/modules/shared/components/ui/webcomponents/Headers/WcModuleHeader";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import {
@@ -65,35 +66,23 @@ export function MedicalRecordsPage() {
 
   return (
     <div style={{ padding: "var(--space-8)", maxWidth: "1200px", margin: "0 auto" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "var(--space-6)",
-          flexWrap: "wrap",
-          gap: "var(--space-3)",
-        }}
+      <WcModuleHeader
+        moduleName="Módulo clínico"
+        moduleIcon="icon-clinical-history"
+        title="Historias Clínicas"
+        description="Consulta y administra las historias clínicas del sistema."
       >
-        <div>
-          <h1 style={{ marginBottom: "var(--space-1)" }}>Historias Clínicas</h1>
-          <p style={{ fontSize: "var(--font-size-sm)", color: "var(--color-text-secondary)" }}>
-            Consulta y administra las historias clínicas del sistema.
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: "var(--space-2)" }}>
-          <WcButton variant="primary" onClick={() => setIsCreateOpen(true)}>
-            <Icon name="icon-add-folder" size={20} />
-            Crear Historia Clínica
+        <WcButton variant="primary" onClick={() => setIsCreateOpen(true)}>
+          <Icon name="icon-add-folder" size={20} />
+          Crear Historia Clínica
+        </WcButton>
+        {canAdmin && (
+          <WcButton variant="terciary" onClick={() => setIsConfigOpen(true)}>
+            <Icon name="icon-settings" size={20} />
+            Configurar Encabezado
           </WcButton>
-          {canAdmin && (
-            <WcButton variant="terciary" onClick={() => setIsConfigOpen(true)}>
-              <Icon name="icon-settings" size={20} />
-              Configurar Encabezado
-            </WcButton>
-          )}
-        </div>
-      </div>
+        )}
+      </WcModuleHeader>
 
       <MedicalRecordsSearchFilters />
 

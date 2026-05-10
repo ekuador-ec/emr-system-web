@@ -5,6 +5,7 @@ import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Ico
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import WcSearchInput from "@/presentation/modules/shared/components/ui/webcomponents/Searchs/wcSearchInput";
 import { WcTabsFolder } from "@/presentation/modules/shared/components/ui/webcomponents/Tabs/wcTabsFolder";
+import { WcModuleHeader } from "@/presentation/modules/shared/components/ui/webcomponents/Headers/WcModuleHeader";
 import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import { useEvolutions } from "@/presentation/modules/evolution/hooks/useEvolutions";
 import { CreateEvolutionModal } from "@/presentation/modules/evolution/components/list/CreateEvolutionModal";
@@ -436,75 +437,21 @@ export function EvolutionsPage() {
 
   return (
     <div style={{ padding: "var(--space-8)", maxWidth: "1300px", margin: "0 auto" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: "var(--space-4)",
-          flexWrap: "wrap",
-          marginBottom: "var(--space-6)",
-          padding: "var(--space-6)",
-          borderRadius: "var(--radius-xl)",
-          border: "1px solid var(--color-border)",
-          background: "linear-gradient(135deg, rgba(15, 23, 42, 0.03), rgba(6, 182, 212, 0.08))",
-        }}
+      <WcModuleHeader
+        moduleName="Módulo clínico"
+        moduleIcon="icon-medical-evolution"
+        title="Evoluciones Médicas"
+        description="Supervisa las evoluciones creadas o modificadas recientemente, filtra por paciente o historia clínica y abre nuevas evoluciones sin salir del flujo operativo."
       >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--space-2)",
-            maxWidth: "720px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--space-2)",
-              flexWrap: "wrap",
-            }}
-          >
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "var(--space-2)",
-                padding: "var(--space-1) var(--space-3)",
-                borderRadius: "999px",
-                backgroundColor: "rgba(6, 182, 212, 0.12)",
-                color: "var(--color-primary)",
-                fontSize: "var(--font-size-xs)",
-                fontWeight: "var(--font-weight-semibold)",
-              }}
-            >
-              <Icon name="icon-medical-evolution" size={14} />
-              Módulo clínico
-            </span>
-          </div>
-          <h1 style={{ margin: 0, fontSize: "clamp(2rem, 3vw, 3rem)", lineHeight: 1.05 }}>
-            Evoluciones Médicas
-          </h1>
-          <p style={{ margin: 0, color: "var(--color-text-secondary)", maxWidth: "64ch" }}>
-            Supervisa las evoluciones creadas o modificadas recientemente, filtra por paciente o
-            historia clínica y abre nuevas evoluciones sin salir del flujo operativo.
-          </p>
-        </div>
-
-        <div
-          style={{ display: "flex", gap: "var(--space-3)", alignItems: "center", flexWrap: "wrap" }}
-        >
-          <WcButton variant="secondary" onClick={() => navigate("/historias-clinicas")}>
-            <Icon name="icon-clinical-history" size={16} />
-            Historias Clínicas
-          </WcButton>
-          <WcButton variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-            <Icon name="icon-add-file" size={16} />
-            Nueva Evolución
-          </WcButton>
-        </div>
-      </div>
+        <WcButton variant="secondary" onClick={() => navigate("/historias-clinicas")}>
+          <Icon name="icon-clinical-history" size={16} />
+          Historias Clínicas
+        </WcButton>
+        <WcButton variant="primary" onClick={() => setIsCreateModalOpen(true)}>
+          <Icon name="icon-add-file" size={16} />
+          Nueva Evolución
+        </WcButton>
+      </WcModuleHeader>
 
       <WcTabsFolder tabs={tabs} activeIndex={activeTab} onChange={setActiveTab} />
 
