@@ -11,7 +11,7 @@ interface GeographicLocationSearchInputProps {
 }
 
 export function GeographicLocationSearchInput({
-  value,
+  value: _value,
   onChange,
   initialLabel,
   error,
@@ -82,7 +82,7 @@ export function GeographicLocationSearchInput({
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
-                strokeLinelinejoin="round"
+                strokeLinejoin="round"
               >
                 <line x1="12" y1="2" x2="12" y2="6"></line>
                 <line x1="12" y1="18" x2="12" y2="22"></line>
