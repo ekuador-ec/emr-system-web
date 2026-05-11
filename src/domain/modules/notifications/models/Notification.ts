@@ -8,6 +8,17 @@ export type KnownNotificationType =
 
 export type NotificationType = KnownNotificationType | (string & {});
 
+export interface NotificationMetadata {
+  actorName?: string | null;
+  subjectName?: string | null;
+  subjectEmail?: string | null;
+  subjectRole?: string | null;
+  patientName?: string | null;
+  patientIdNumber?: string | null;
+  evolutionStatus?: string | null;
+  [key: string]: unknown;
+}
+
 export interface Notification {
   id: string;
   recipientId: string;
@@ -15,6 +26,7 @@ export interface Notification {
   actorName: string | null;
   type: NotificationType;
   entityId: string | null;
+  metadata: NotificationMetadata;
   isRead: boolean;
   createdAt: Date;
 }
