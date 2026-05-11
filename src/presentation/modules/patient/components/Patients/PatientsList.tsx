@@ -69,8 +69,27 @@ export function PatientsList({ patientsResult }: PatientsListProps) {
     },
     {
       key: "idNumber",
-      name: "Cédula",
+      name: "Cedula / ID",
       align: "center",
+      render: (row) =>
+        row.idNumberType === 'temporal' ? (
+          <span
+            style={{
+              fontSize: "var(--font-size-xs)",
+              fontWeight: "var(--font-weight-semibold)",
+              color: "var(--color-warning)",
+              backgroundColor: "var(--color-warning-light)",
+              border: "1px solid var(--color-warning)",
+              borderRadius: "var(--radius-sm)",
+              padding: "2px 8px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            ID Pendiente
+          </span>
+        ) : (
+          <span>{row.idNumber as string}</span>
+        ),
     },
     {
       key: "patient",
@@ -147,6 +166,7 @@ export function PatientsList({ patientsResult }: PatientsListProps) {
   const rows: WcTableRow[] = patients.map((patient) => ({
     id: patient.id,
     idNumber: patient.idNumber,
+    idNumberType: patient.idNumberType,
     fullName: `${patient.firstName} ${patient.lastName} ${patient.secondLastName || ""}`.trim(),
     bloodType: patient.bloodType,
     phone: patient.phone,

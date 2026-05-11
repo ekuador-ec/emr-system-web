@@ -53,11 +53,32 @@ export function PatientDetailsDrawer() {
                     {patient.firstName.charAt(0)}{patient.lastName.charAt(0)}
                   </div>
                   <div>
-                    <h3 className="drawer-patient-name">
-                      {patient.firstName} {patient.middleName || ""} {patient.lastName} {patient.secondLastName || ""}
-                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap', marginBottom: 'var(--space-1)' }}>
+                      <h3 className="drawer-patient-name" style={{ margin: 0 }}>
+                        {patient.firstName} {patient.middleName || ""} {patient.lastName} {patient.secondLastName || ""}
+                      </h3>
+                      {patient.idNumberType === 'temporal' && (
+                        <span
+                          style={{
+                            fontSize: "var(--font-size-xs)",
+                            fontWeight: "var(--font-weight-semibold)",
+                            color: "var(--color-warning)",
+                            backgroundColor: "var(--color-warning-light)",
+                            border: "1px solid var(--color-warning)",
+                            borderRadius: "var(--radius-sm)",
+                            padding: "2px 8px",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          ID Pendiente
+                        </span>
+                      )}
+                    </div>
                     <div className="drawer-patient-meta">
-                      Cedula/ID: {patient.idNumber} | {patient.gender} | Grupo Sanguineo: {patient.bloodType || "No registrado"}
+                      {patient.idNumberType === 'temporal'
+                        ? 'Sin cedula registrada'
+                        : `Cedula/ID: ${patient.idNumber}`
+                      } | {patient.gender} | Grupo Sanguineo: {patient.bloodType || "No registrado"}
                     </div>
                   </div>
                 </div>
