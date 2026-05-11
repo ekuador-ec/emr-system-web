@@ -9,8 +9,9 @@ import type {
 import type { GenderEnum } from '@/domain/modules/catalog/models/Catalog';
 
 export interface PatientFilters {
-  search?: string; // Generic legacy fallback search
+  search?: string;
   idNumber?: string;
+  idNumberType?: 'cedula' | 'temporal';
   firstName?: string;
   lastName?: string;
   gender?: GenderEnum;

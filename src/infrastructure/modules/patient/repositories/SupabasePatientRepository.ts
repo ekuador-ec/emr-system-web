@@ -29,7 +29,7 @@ export class SupabasePatientRepository implements PatientRepository {
     let query = supabase
       .from("patients")
       .select(
-        "id, id_number, first_name, last_name, second_last_name, email, phone, blood_type, is_active",
+        "id, id_number, id_number_type, first_name, last_name, second_last_name, email, phone, blood_type, is_active",
         { count: "exact" },
       )
       .order("updated_at", { ascending: false })
@@ -39,8 +39,14 @@ export class SupabasePatientRepository implements PatientRepository {
       query = query.eq("is_active", filters.isActive);
     }
 
+    if (filters?.idNumberType) {
+      query = query.eq("id_number_type", filters.idNumberType);
+    }
+
     if (filters?.idNumber) {
-      query = query.ilike("id_number", `%${filters.idNumber}%`);
+      query = query
+        .eq("id_number_type", "cedula")
+        .ilike("id_number", `%${filters.idNumber}%`);
     }
 
     if (filters?.gender) {
@@ -52,7 +58,6 @@ export class SupabasePatientRepository implements PatientRepository {
     }
 
     if (filters?.lastName) {
-      // Check in both last_name and second_last_name matching starts with initial
       query = query.or(
         `last_name.ilike.${filters.lastName}%,second_last_name.ilike.${filters.lastName}%`,
       );
@@ -60,7 +65,7 @@ export class SupabasePatientRepository implements PatientRepository {
 
     if (filters?.search) {
       query = query.or(
-        `id_number.ilike.${filters.search}%,first_name.ilike.${filters.search}%,last_name.ilike.${filters.search}%`,
+        `first_name.ilike.${filters.search}%,last_name.ilike.${filters.search}%`,
       );
     }
 
@@ -126,7 +131,8 @@ export class SupabasePatientRepository implements PatientRepository {
 
     // Supabase auto-handles snake_case mapping for inserts if configured, but here we construct snake_case
     const payload = {
-      id_number: patientData.idNumber,
+      id_number: patientData.idNumber ?? undefined,
+      id_number_type: patientData.idNumberType,
       first_name: patientData.firstName,
       middle_name: patientData.middleName,
       last_name: patientData.lastName,
@@ -204,7 +210,8 @@ export class SupabasePatientRepository implements PatientRepository {
   async updatePatient(id: string, patient: UpdatePatientDTO): Promise<Patient> {
     const payload: Record<string, any> = {};
 
-    // Manual mapping to snake_case for updates
+    if (patient.idNumber !== undefined) payload.id_number = patient.idNumber;
+    if (patient.idNumberType !== undefined) payload.id_number_type = patient.idNumberType;
     if (patient.firstName !== undefined) payload.first_name = patient.firstName;
     if (patient.middleName !== undefined) payload.middle_name = patient.middleName;
     if (patient.lastName !== undefined) payload.last_name = patient.lastName;

@@ -27,6 +27,7 @@ export interface PatientRow {
   is_active: boolean;
 
   id_number: string;
+  id_number_type: 'cedula' | 'temporal';
   first_name: string;
   middle_name: string | null;
   last_name: string;
@@ -35,7 +36,7 @@ export interface PatientRow {
   phone: string | null;
   blood_type: BloodTypeEnum | null;
 
-  birth_date: string;
+  birth_date: string | null;
   birth_place: string | null;
   gender: GenderEnum;
   nationality: string | null;
@@ -44,7 +45,7 @@ export interface PatientRow {
   marital_status: MaritalStatusEnum | null;
   education_level: EducationLevelEnum | null;
   occupation_id: string | null;
-  occupation?: CatalogItemRow; // from join
+  occupation?: CatalogItemRow;
   currently_works: boolean;
   health_insurance: HealthInsuranceTypeEnum | null;
 
@@ -53,12 +54,12 @@ export interface PatientRow {
   company_phone: string | null;
   company_address: string | null;
 
-  home_address: string;
+  home_address: string | null;
   neighborhood: string | null;
   geographic_location_id: string | null;
-  geographic_location?: GeographicLocationRow; // from join
+  geographic_location?: GeographicLocationRow;
 
-  info_source_type: InformationSourceEnum;
+  info_source_type: InformationSourceEnum | null;
   info_source_other: string | null;
   info_source_name: string | null;
   info_source_phone: string | null;
@@ -97,6 +98,7 @@ export interface PatientClinicalAntecedentRow {
 export interface PatientListItemRow {
   id: string;
   id_number: string;
+  id_number_type: 'cedula' | 'temporal';
   first_name: string;
   last_name: string;
   second_last_name: string | null;
@@ -115,6 +117,7 @@ export const mapPatientRow = (row: PatientRow): Patient => ({
   isActive: row.is_active,
 
   idNumber: row.id_number,
+  idNumberType: row.id_number_type,
   firstName: row.first_name,
   middleName: row.middle_name,
   lastName: row.last_name,
@@ -159,6 +162,7 @@ export const mapPatientRow = (row: PatientRow): Patient => ({
 export const mapPatientListItemRow = (row: PatientListItemRow): PatientListItem => ({
   id: row.id,
   idNumber: row.id_number,
+  idNumberType: row.id_number_type,
   firstName: row.first_name,
   lastName: row.last_name,
   secondLastName: row.second_last_name,
