@@ -221,9 +221,9 @@ Atenciones / notas evolutivas asociadas a una historia clínica. Incluye flujo e
 ### 7. Notifications (`notifications`)
 Centro de notificaciones in-app con conteo de no leídas, marcar como leída individual o masivamente, y actualización en tiempo real.
 
-- Domain: `Notification`, `KnownNotificationType` (`NEW_USER` | `NEW_PATIENT` | `NEW_MEDICAL_RECORD` | `NEW_EVOLUTION` | `TASK_ASSIGNED` | `SYSTEM_ALERT`), `NotificationType` (unión abierta).
+- Domain: `Notification` (incluye `metadata: NotificationMetadata`), `KnownNotificationType` (`NEW_USER` | `NEW_PATIENT` | `NEW_MEDICAL_RECORD` | `NEW_EVOLUTION` | `TASK_ASSIGNED` | `SYSTEM_ALERT`), `NotificationType` (unión abierta).
 - Application: `NotificationService` (servicio agrupado: `getNotifications`, `markAsRead`, `markAllAsRead`).
-- Infrastructure: `SupabaseNotificationRepository` con resolución batch de `actor_id` (anti N+1). Singleton instanciado en `infrastructure/modules/notifications/config.ts`.
+- Infrastructure: `SupabaseNotificationRepository` lee `metadata` desde la fila y deriva `actorName` desde `metadata.actorName`. Ya **no** consulta `profiles` (lo cual fallaba con RLS para no-admins).
 - Backend (`supabase/migrations/`, repo separado):
   - `10_notifications_schema.sql`: tabla `notifications`, RLS y helper legacy `notify_user`.
   - `11_notify_new_user_trigger.sql`: trigger `on_new_user_notify_admins` → `NEW_USER` solo a admins activos.
@@ -231,15 +231,20 @@ Centro de notificaciones in-app con conteo de no leídas, marcar como leída ind
   - `26_notifications_realtime_and_helpers.sql`: añade `notifications` a la publication `supabase_realtime` y crea el helper genérico `public.notify_users(actor, type, entity_id, roles?, exclude_self?)` que filtra automáticamente por `account_status='active'` y `deleted_at IS NULL`. Refactoriza `NEW_USER` y `NEW_MEDICAL_RECORD` para consumirlo.
   - `27_notify_new_patient_trigger.sql`: trigger `on_patient_created_notify` → `NEW_PATIENT`.
   - `28_notify_new_evolution_trigger.sql`: trigger `on_evolution_created_notify` → `NEW_EVOLUTION` (actor = `opened_by`).
+  - `29_notifications_metadata.sql`: agrega la columna `notifications.metadata JSONB`, extiende `public.notify_users(... , p_metadata JSONB)` y refactoriza todos los triggers para escribir un payload denormalizado (`actorName`, `subjectName/Email/Role`, `patientName`, `patientIdNumber`, `evolutionStatus`). Esto elimina el JOIN a `profiles` desde el cliente y evita problemas con RLS para no-admins. Incluye el helper `public.get_profile_full_name(uuid)`.
 - Presentation:
   - Components: `NotificationBell` (popover en `AppLayout`).
   - Hooks: `useNotificationsList`, `useMarkNotificationRead(userId)`, `useMarkAllNotificationsRead(userId)`, `useNotificationSubscription` (realtime).
   - Registry: `registry/notificationRegistry.ts` — fuente única de verdad para icono, variante de toast, mensaje y ruta por tipo de notificación.
 
 #### Receta: Agregar una notificación para un módulo nuevo
-1. **Backend**: crear migración `XX_notify_new_<entity>_trigger.sql` con una función `SECURITY DEFINER` que llame a `public.notify_users(NEW.<actor_column>, '<TIPO>', NEW.id, <roles?>, TRUE)` y un trigger `AFTER INSERT` sobre la tabla destino. Reutilizar siempre el helper, nunca duplicar el loop por perfiles.
-2. **Domain**: añadir el literal al union `KnownNotificationType` en `domain/modules/notifications/models/Notification.ts`.
-3. **Registry**: agregar una entrada en `NOTIFICATION_REGISTRY` (en `presentation/modules/notifications/registry/notificationRegistry.ts`) con `icon` (id válido en `system-icons.svg`), `toastVariant`, `toastTitle`, `getMessage(notification, currentUserId)` y `getRoute(notification)` opcional.
+1. **Backend**: crear migración `XX_notify_new_<entity>_trigger.sql` con una función `SECURITY DEFINER` que:
+   - Construye un `payload JSONB` con todos los datos que la UI necesitará para renderizar (mínimo `actorName` vía `public.get_profile_full_name(...)`, más los campos propios de la entidad). Esto es **obligatorio**: el cliente NO puede leer otras tablas para enriquecer notificaciones debido a RLS.
+   - Llama `public.notify_users(NEW.<actor_column>, '<TIPO>', NEW.id, <roles?>, TRUE, payload)`.
+   - Atrapa excepciones con `RAISE WARNING` para no romper el INSERT primario.
+   - Adjunta un `AFTER INSERT` trigger sobre la tabla destino. **Reutilizar siempre** el helper `notify_users`, nunca duplicar el loop por perfiles.
+2. **Domain**: añadir el literal al union `KnownNotificationType` en `domain/modules/notifications/models/Notification.ts`. Si introduces campos nuevos en metadata, extender `NotificationMetadata`.
+3. **Registry**: agregar una entrada en `NOTIFICATION_REGISTRY` (en `presentation/modules/notifications/registry/notificationRegistry.ts`) con `icon` (id válido en `system-icons.svg`), `toastVariant`, `toastTitle`, `getMessage(notification, currentUserId)` consumiendo `notification.metadata.*`, y `getRoute(notification)` opcional.
 4. **NO** modificar `NotificationBell.tsx` ni `useNotificationSubscription.ts`: ambos consumen el registry y soportan tipos nuevos automáticamente.
 
 ### 8. Users (`users`)
