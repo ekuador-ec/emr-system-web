@@ -20,48 +20,98 @@ const fallbackDescriptor: NotificationDescriptor = {
 const isSelfActor = (notification: Notification, currentUserId?: string | null) =>
   Boolean(currentUserId) && notification.actorId === currentUserId;
 
-const actorLabel = (notification: Notification, fallbackName = 'Otro usuario') =>
-  notification.actorName?.trim() || fallbackName;
+function asString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function actorLabel(notification: Notification, fallbackName = 'Otro usuario'): string {
+  return asString(notification.metadata.actorName) ?? asString(notification.actorName) ?? fallbackName;
+}
+
+function patientLabel(notification: Notification): string | null {
+  const name = asString(notification.metadata.patientName);
+  const idNumber = asString(notification.metadata.patientIdNumber);
+  if (name && idNumber) return `${name} (${idNumber})`;
+  return name ?? idNumber;
+}
 
 const NOTIFICATION_REGISTRY: Record<string, NotificationDescriptor> = {
   NEW_USER: {
     icon: 'icon-user-plus',
     toastVariant: 'info',
     toastTitle: 'Nuevo usuario registrado',
-    getMessage: (n, uid) =>
-      isSelfActor(n, uid)
-        ? 'Has registrado un nuevo usuario en el sistema.'
-        : `${actorLabel(n, 'Un administrador')} registró un nuevo usuario.`,
+    getMessage: (n, uid) => {
+      const subject = asString(n.metadata.subjectName);
+      const role = asString(n.metadata.subjectRole);
+      const roleSuffix = role ? ` con el rol ${role}` : '';
+      if (isSelfActor(n, uid)) {
+        return subject
+          ? `Has registrado a ${subject}${roleSuffix}.`
+          : 'Has registrado un nuevo usuario.';
+      }
+      const actor = actorLabel(n, 'Un administrador');
+      return subject
+        ? `${actor} registró a ${subject}${roleSuffix}.`
+        : `${actor} registró un nuevo usuario.`;
+    },
     getRoute: () => '/admin/users',
   },
   NEW_PATIENT: {
     icon: 'icon-patient',
     toastVariant: 'success',
     toastTitle: 'Nuevo paciente registrado',
-    getMessage: (n, uid) =>
-      isSelfActor(n, uid)
-        ? 'Has registrado un nuevo paciente.'
-        : `${actorLabel(n)} registró un nuevo paciente.`,
+    getMessage: (n, uid) => {
+      const patient = patientLabel(n);
+      if (isSelfActor(n, uid)) {
+        return patient
+          ? `Has registrado al paciente ${patient}.`
+          : 'Has registrado un nuevo paciente.';
+      }
+      const actor = actorLabel(n);
+      return patient
+        ? `${actor} registró al paciente ${patient}.`
+        : `${actor} registró un nuevo paciente.`;
+    },
     getRoute: () => '/pacientes',
   },
   NEW_MEDICAL_RECORD: {
     icon: 'icon-clinical-history',
     toastVariant: 'success',
     toastTitle: 'Nueva historia clínica',
-    getMessage: (n, uid) =>
-      isSelfActor(n, uid)
-        ? 'Has creado una nueva historia clínica.'
-        : `${actorLabel(n)} creó una nueva historia clínica.`,
+    getMessage: (n, uid) => {
+      const patient = patientLabel(n);
+      if (isSelfActor(n, uid)) {
+        return patient
+          ? `Has creado la historia clínica de ${patient}.`
+          : 'Has creado una nueva historia clínica.';
+      }
+      const actor = actorLabel(n);
+      return patient
+        ? `${actor} creó la historia clínica de ${patient}.`
+        : `${actor} creó una nueva historia clínica.`;
+    },
     getRoute: () => '/historias-clinicas',
   },
   NEW_EVOLUTION: {
     icon: 'icon-medical-evolution',
     toastVariant: 'success',
     toastTitle: 'Nueva evolución médica',
-    getMessage: (n, uid) =>
-      isSelfActor(n, uid)
-        ? 'Has registrado una nueva evolución médica.'
-        : `${actorLabel(n)} registró una nueva evolución médica.`,
+    getMessage: (n, uid) => {
+      const patient = patientLabel(n);
+      const status = asString(n.metadata.evolutionStatus);
+      const statusSuffix = status ? ` (${status})` : '';
+      if (isSelfActor(n, uid)) {
+        return patient
+          ? `Has registrado una evolución para ${patient}${statusSuffix}.`
+          : 'Has registrado una nueva evolución médica.';
+      }
+      const actor = actorLabel(n);
+      return patient
+        ? `${actor} registró una evolución para ${patient}${statusSuffix}.`
+        : `${actor} registró una nueva evolución médica.`;
+    },
     getRoute: () => '/evoluciones',
   },
   TASK_ASSIGNED: {

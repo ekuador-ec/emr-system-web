@@ -25,14 +25,20 @@ export function useNotificationSubscription(userId: string | undefined | null) {
         },
         (payload) => {
           const newNotificationTemp = payload.new;
+          const metadata = (newNotificationTemp.metadata ?? {}) as Notification['metadata'];
+          const metadataActorName =
+            typeof metadata.actorName === 'string' && metadata.actorName.trim().length > 0
+              ? metadata.actorName
+              : null;
 
           const newNotification: Notification = {
             id: newNotificationTemp.id,
             recipientId: newNotificationTemp.recipient_id,
             actorId: newNotificationTemp.actor_id,
-            actorName: null,
+            actorName: metadataActorName,
             type: newNotificationTemp.type,
             entityId: newNotificationTemp.entity_id,
+            metadata,
             isRead: newNotificationTemp.is_read,
             createdAt: new Date(newNotificationTemp.created_at),
           };
@@ -42,7 +48,7 @@ export function useNotificationSubscription(userId: string | undefined | null) {
           const descriptor = describeNotification(newNotification.type);
           addToast({
             type: descriptor.toastVariant,
-            message: descriptor.toastTitle,
+            message: descriptor.getMessage(newNotification, userId),
             duration: 4000,
           });
         }
