@@ -3,16 +3,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/infrastructure/core/supabaseClient';
 import { useToastStore } from '@/presentation/modules/shared/components/Toaster';
 import { NOTIFICATIONS_QUERY_KEY } from './useNotifications';
+import { describeNotification } from '@/presentation/modules/notifications/registry/notificationRegistry';
 import type { Notification } from '@/domain/modules/notifications/models/Notification';
-
-function getToastDetailsForType(notification: Notification): { title: string; type: 'success' | 'info' | 'warning' } {
-  switch (notification.type) {
-    case 'NEW_USER':
-      return { title: 'Nuevo usuario registrado en el sistema.', type: 'info' };
-    default:
-      return { title: 'Nueva notificación.', type: 'info' };
-  }
-}
 
 export function useNotificationSubscription(userId: string | undefined | null) {
   const queryClient = useQueryClient();
@@ -33,7 +25,7 @@ export function useNotificationSubscription(userId: string | undefined | null) {
         },
         (payload) => {
           const newNotificationTemp = payload.new;
-          
+
           const newNotification: Notification = {
             id: newNotificationTemp.id,
             recipientId: newNotificationTemp.recipient_id,
@@ -47,10 +39,10 @@ export function useNotificationSubscription(userId: string | undefined | null) {
 
           queryClient.invalidateQueries({ queryKey: [...NOTIFICATIONS_QUERY_KEY, userId] });
 
-          const toastDetails = getToastDetailsForType(newNotification);
+          const descriptor = describeNotification(newNotification.type);
           addToast({
-            type: toastDetails.type,
-            message: toastDetails.title,
+            type: descriptor.toastVariant,
+            message: descriptor.toastTitle,
             duration: 4000,
           });
         }

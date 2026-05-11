@@ -1,26 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotificationsList, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/presentation/modules/notifications/hooks/useNotifications';
+import { describeNotification } from '@/presentation/modules/notifications/registry/notificationRegistry';
 import WcButtonIcon from '@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon';
+import { Icon } from '@/presentation/modules/shared/components/Sidebar/icons/Icon';
 import type { Notification } from '@/domain/modules/notifications/models/Notification';
 
 interface NotificationBellProps {
   userId: string | undefined;
-}
-
-function getNotificationMessage(notification: Notification, currentUserId: string | undefined): string {
-  const isSelf = currentUserId && notification.actorId === currentUserId;
-
-  switch (notification.type) {
-    case 'NEW_USER':
-      return isSelf
-        ? 'Has registrado un nuevo usuario exitosamente'
-        : `${notification.actorName || 'Un administrador'} ha registrado un nuevo usuario`;
-    default:
-      return isSelf
-        ? 'Has realizado una acci\u00f3n en el sistema'
-        : `${notification.actorName || 'Alguien'} ha realizado una acci\u00f3n`;
-  }
 }
 
 export function NotificationBell({ userId }: NotificationBellProps) {
@@ -29,7 +16,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   const navigate = useNavigate();
 
   const { data: notifications = [], isLoading } = useNotificationsList(userId);
-  const { mutate: markAsRead } = useMarkNotificationRead();
+  const { mutate: markAsRead } = useMarkNotificationRead(userId);
   const { mutate: markAllAsRead, isPending: isMarkingAll } = useMarkAllNotificationsRead(userId);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -49,8 +36,10 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       markAsRead(notification.id);
     }
 
-    if (notification.type === 'NEW_USER') {
-      navigate('/users');
+    const descriptor = describeNotification(notification.type);
+    const route = descriptor.getRoute?.(notification);
+    if (route) {
+      navigate(route);
     }
     setIsOpen(false);
   };
@@ -136,37 +125,60 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                 No tienes notificaciones
               </div>
             ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  onClick={() => handleNotificationClick(notification)}
-                  style={{
-                    padding: '12px 16px',
-                    borderBottom: '1px solid var(--color-border)',
-                    background: notification.isRead ? 'transparent' : 'var(--color-primary-light)',
-                    cursor: 'pointer',
-                    transition: 'background 0.2s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (notification.isRead) e.currentTarget.style.background = 'var(--color-surface-hover)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = notification.isRead ? 'transparent' : 'var(--color-primary-light)';
-                  }}
-                >
-                  <p style={{ 
-                    margin: '0 0 4px 0', 
-                    fontSize: '14px', 
-                    color: 'var(--color-text)',
-                    fontWeight: notification.isRead ? 'normal' : '500' 
-                  }}>
-                    {getNotificationMessage(notification, userId)}
-                  </p>
-                  <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                    {new Date(notification.createdAt).toLocaleDateString()} a las {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              ))
+              notifications.map((notification) => {
+                const descriptor = describeNotification(notification.type);
+                return (
+                  <div
+                    key={notification.id}
+                    onClick={() => handleNotificationClick(notification)}
+                    style={{
+                      padding: '12px 16px',
+                      borderBottom: '1px solid var(--color-border)',
+                      background: notification.isRead ? 'transparent' : 'var(--color-primary-light)',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s ease',
+                      display: 'flex',
+                      gap: '12px',
+                      alignItems: 'flex-start',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (notification.isRead) e.currentTarget.style.background = 'var(--color-surface-hover)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = notification.isRead ? 'transparent' : 'var(--color-primary-light)';
+                    }}
+                  >
+                    <div
+                      style={{
+                        flex: '0 0 auto',
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: 'var(--color-surface-hover)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--color-primary)',
+                      }}
+                    >
+                      <Icon name={descriptor.icon} size={18} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{
+                        margin: '0 0 4px 0',
+                        fontSize: '14px',
+                        color: 'var(--color-text)',
+                        fontWeight: notification.isRead ? 'normal' : '500'
+                      }}>
+                        {descriptor.getMessage(notification, userId)}
+                      </p>
+                      <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                        {new Date(notification.createdAt).toLocaleDateString()} a las {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
