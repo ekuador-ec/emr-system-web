@@ -1,4 +1,12 @@
-export type NotificationType = 'NEW_PATIENT' | 'NEW_EVOLUTION' | 'TASK_ASSIGNED' | 'SYSTEM_ALERT' | string;
+export type KnownNotificationType =
+  | 'NEW_USER'
+  | 'NEW_PATIENT'
+  | 'NEW_MEDICAL_RECORD'
+  | 'NEW_EVOLUTION'
+  | 'TASK_ASSIGNED'
+  | 'SYSTEM_ALERT';
+
+export type NotificationType = KnownNotificationType | (string & {});
 
 export interface Notification {
   id: string;
