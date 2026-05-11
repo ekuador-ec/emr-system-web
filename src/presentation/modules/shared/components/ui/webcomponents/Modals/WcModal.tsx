@@ -6,6 +6,7 @@ import "@/presentation/modules/shared/components/ui/webcomponents/Modals/WcModal
 interface WcModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onCloseAttempt?: () => void;
   title: string;
   children: ReactNode;
   footer?: ReactNode;
@@ -16,16 +17,18 @@ interface WcModalProps {
 export function WcModal({
   isOpen,
   onClose,
+  onCloseAttempt,
   title,
   children,
   footer,
   maxWidth = "600px",
   disableBackdropClick = false,
 }: WcModalProps) {
+  const handleCloseRequest = onCloseAttempt ?? onClose;
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !disableBackdropClick) {
-        onClose();
+        handleCloseRequest();
       }
     };
     if (isOpen) {
@@ -34,13 +37,13 @@ export function WcModal({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, onClose, disableBackdropClick]);
+  }, [isOpen, handleCloseRequest, disableBackdropClick]);
 
   if (!isOpen) return null;
 
   const handleBackdropClick = () => {
     if (!disableBackdropClick) {
-      onClose();
+      handleCloseRequest();
     }
   };
 
@@ -65,7 +68,7 @@ export function WcModal({
             <WcButtonIcon
               variant="ghost"
               icon="icon-x"
-              onClick={onClose}
+              onClick={handleCloseRequest}
               disabled={disableBackdropClick}
               aria-label="Cerrar modal"
             />
