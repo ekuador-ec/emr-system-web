@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import type { Patient } from "@/domain/modules/patient/models/Patient";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +19,8 @@ import { WcModal } from "@/presentation/modules/shared/components/ui/webcomponen
 import { WcTabsFolder } from "@/presentation/modules/shared/components/ui/webcomponents/Tabs/wcTabsFolder";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
+import WcWarning from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
+import type { WcWarningHandle } from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
 
 interface PatientCreateModalProps {
   patientId?: string | null;
@@ -38,6 +40,7 @@ const TABS = [
 
 export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCreateModalProps) {
   const [currentTab, setCurrentTab] = useState(0);
+  const discardWarningRef = useRef<WcWarningHandle>(null);
 
   const { addToast } = useToastStore();
   const { mutate: createPatient, isPending: isCreating } = useCreatePatient();
@@ -60,6 +63,7 @@ export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCre
   } = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema) as any,
     defaultValues: {
+      useTemporaryId: false,
       currentlyWorks: false,
       emergencyContacts: [],
       clinicalAntecedents: [],
@@ -67,16 +71,28 @@ export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCre
     mode: "onChange",
   });
 
+  const watchUseTemporaryId = watch("useTemporaryId");
+
+  useEffect(() => {
+    if (watchUseTemporaryId) {
+      setValue("idNumber", "", { shouldDirty: true, shouldValidate: true });
+    }
+  }, [watchUseTemporaryId, setValue]);
+
   useEffect(() => {
     if (isEditMode && patientData) {
       reset({
         ...patientData,
+        useTemporaryId: patientData.idNumberType === 'temporal',
+        idNumber: patientData.idNumberType === 'temporal' ? '' : patientData.idNumber,
         emergencyContacts: patientData.emergencyContacts || [],
         clinicalAntecedents: patientData.clinicalAntecedents || [],
         currentlyWorks: patientData.currentlyWorks || false,
       } as unknown as PatientFormData);
     }
   }, [isEditMode, patientData, reset]);
+
+  const isPatientTemporal = isEditMode && patientData?.idNumberType === 'temporal';
 
   const {
     fields: contactFields,
@@ -104,6 +120,16 @@ export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCre
     (ant) =>
       !ant.pathologyId && !ant.description?.trim() && !ant.diagnosisDate && !ant.treatment?.trim(),
   );
+
+  const hasUnsavedData = isDirty;
+
+  const handleCloseAttempt = () => {
+    if (hasUnsavedData && !isPending) {
+      discardWarningRef.current?.open(onClose);
+    } else {
+      onClose();
+    }
+  };
 
   const watchCulturalGroup = watch("culturalGroup");
   const watchInfoSourceType = watch("infoSourceType");
@@ -151,13 +177,20 @@ export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCre
 
   const onSubmit = (data: PatientFormData) => {
     if (isEditMode && patientId) {
+      const updatePayload: Record<string, unknown> = { ...data };
+      if (isPatientTemporal && data.idNumber && data.idNumber.trim() !== '') {
+        updatePayload.idNumber = data.idNumber;
+        updatePayload.idNumberType = 'cedula';
+      }
       updatePatient(
-        { id: patientId, data: data as any },
+        { id: patientId, data: updatePayload as any },
         {
           onSuccess: () => {
             addToast({
               type: "success",
-              message: "Paciente actualizado exitosamente",
+              message: isPatientTemporal && data.idNumber?.trim()
+                ? "Paciente actualizado. El numero de historia clinica ha sido actualizado con la cedula registrada."
+                : "Paciente actualizado exitosamente",
             });
             onClose();
           },
@@ -174,7 +207,9 @@ export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCre
         onSuccess: (patient) => {
           addToast({
             type: "success",
-            message: "Paciente creado exitosamente",
+            message: data.useTemporaryId
+              ? "Paciente registrado con ID temporal. Recuerde registrar la cedula cuando este disponible."
+              : "Paciente creado exitosamente",
           });
           onCreated?.(patient);
           onClose();
@@ -197,6 +232,77 @@ export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCre
         gap: "var(--space-4)",
       }}
     >
+      {!isEditMode && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-3)",
+            padding: "var(--space-3) var(--space-4)",
+            borderRadius: "var(--radius-md)",
+            border: `1px solid ${watchUseTemporaryId ? "var(--color-warning)" : "var(--color-border)"}`,
+            backgroundColor: watchUseTemporaryId ? "var(--color-warning-light)" : "var(--color-bg)",
+            transition: "all 0.2s ease",
+          }}
+        >
+          <label
+            htmlFor="toggle-temporary-id"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-2)",
+              cursor: "pointer",
+              flex: 1,
+            }}
+          >
+            <input
+              id="toggle-temporary-id"
+              type="checkbox"
+              {...register("useTemporaryId")}
+              style={{ width: 16, height: 16, cursor: "pointer", accentColor: "var(--color-warning)" }}
+            />
+            <span style={{ fontSize: "var(--font-size-sm)", fontWeight: "var(--font-weight-medium)" }}>
+              Registrar sin cedula (el sistema asignara un ID temporal)
+            </span>
+          </label>
+          {watchUseTemporaryId && (
+            <span
+              style={{
+                fontSize: "var(--font-size-xs)",
+                fontWeight: "var(--font-weight-semibold)",
+                color: "var(--color-warning)",
+                backgroundColor: "var(--color-warning-light)",
+                border: "1px solid var(--color-warning)",
+                borderRadius: "var(--radius-sm)",
+                padding: "2px 8px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              ID Pendiente
+            </span>
+          )}
+        </div>
+      )}
+
+      {isPatientTemporal && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "var(--space-2)",
+            padding: "var(--space-3) var(--space-4)",
+            borderRadius: "var(--radius-md)",
+            border: "1px solid var(--color-warning)",
+            backgroundColor: "var(--color-warning-light)",
+          }}
+        >
+          <Icon name="icon-alert-circle" size={16} style={{ color: "var(--color-warning)", flexShrink: 0, marginTop: 2 }} />
+          <span style={{ fontSize: "var(--font-size-xs)", color: "var(--color-warning)", lineHeight: 1.5 }}>
+            Este paciente tiene un ID temporal. Al registrar su cedula y guardar, el numero de historia
+            clinica se actualizara automaticamente.
+          </span>
+        </div>
+      )}
       <div
         style={{
           display: "grid",
@@ -204,22 +310,62 @@ export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCre
           gap: "var(--space-4)",
         }}
       >
-        <div>
-          <label className="form-label">Cédula / Identificación *</label>
-          <div className="input-wrapper">
-            <input
-              {...register("idNumber")}
-              className={`input-field ${errors.idNumber ? "error" : ""}`}
-              placeholder="Ej. 1712345678"
-            />
-            {errors.idNumber && (
-              <span className="input-error-icon">
-                <Icon name="icon-alert-circle" size={16} />
-              </span>
+        {(!watchUseTemporaryId || isEditMode) && (
+          <div>
+            <label className="form-label">
+              {isPatientTemporal ? "Registrar Cedula / Identificacion" : "Cedula / Identificacion *"}
+            </label>
+            {isEditMode && !isPatientTemporal ? (
+              <div className="input-wrapper">
+                <input
+                  value={patientData?.idNumber || ""}
+                  className="input-field"
+                  readOnly
+                  style={{ opacity: 0.7, cursor: "not-allowed" }}
+                />
+              </div>
+            ) : (
+              <div className="input-wrapper">
+                <input
+                  {...register("idNumber")}
+                  className={`input-field ${errors.idNumber ? "error" : ""}`}
+                  placeholder={isPatientTemporal ? "Ingrese la cedula real del paciente" : "Ej. 1712345678"}
+                  maxLength={10}
+                />
+                {errors.idNumber && (
+                  <span className="input-error-icon">
+                    <Icon name="icon-alert-circle" size={16} />
+                  </span>
+                )}
+              </div>
             )}
+            {errors.idNumber && <span className="form-error">{errors.idNumber.message}</span>}
           </div>
-          {errors.idNumber && <span className="form-error">{errors.idNumber.message}</span>}
-        </div>
+        )}
+        {watchUseTemporaryId && !isEditMode && (
+          <div>
+            <label className="form-label">Cedula / Identificacion</label>
+            <div
+              className="input-wrapper"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                padding: "0 var(--space-3)",
+                height: "var(--input-height, 38px)",
+                borderRadius: "var(--radius-md)",
+                border: "1px dashed var(--color-warning)",
+                backgroundColor: "var(--color-warning-light)",
+                color: "var(--color-warning)",
+                fontSize: "var(--font-size-sm)",
+                gap: "var(--space-2)",
+              }}
+            >
+              <Icon name="icon-loader" size={14} />
+              <span>ID temporal asignado por el sistema al guardar</span>
+            </div>
+          </div>
+        )}
+
         <div>
           <label className="form-label">Primer Nombre *</label>
           <div className="input-wrapper">
@@ -259,7 +405,7 @@ export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCre
           <input {...register("secondLastName")} className="input-field" />
         </div>
         <div>
-          <label className="form-label">Fecha de Nacimiento *</label>
+          <label className="form-label">Fecha de Nacimiento</label>
           <div className="input-wrapper">
             <input
               type="date"
@@ -472,7 +618,7 @@ export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCre
           )}
         </div>
         <div style={{ gridColumn: "1 / -1" }}>
-          <label className="form-label">Dirección Domicilio *</label>
+          <label className="form-label">Dirección Domicilio</label>
           <div className="input-wrapper">
             <input
               {...register("homeAddress")}
@@ -991,7 +1137,7 @@ export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCre
         }}
       >
         <div>
-          <label className="form-label">Fuente de la Información *</label>
+          <label className="form-label">Fuente de la Información</label>
           <div className="input-wrapper">
             <select
               {...register("infoSourceType")}
@@ -1146,7 +1292,7 @@ export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCre
         gap: "var(--space-3)",
       }}
     >
-      <WcButton variant="danger" onClick={onClose} disabled={isPending}>
+      <WcButton variant="danger" onClick={handleCloseAttempt} disabled={isPending}>
         Cancelar
       </WcButton>
       <WcButton
@@ -1164,7 +1310,16 @@ export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCre
     <WcModal
       isOpen={true}
       onClose={onClose}
-      title={isEditMode ? "Editar Paciente" : "Registrar Nuevo Paciente"}
+      onCloseAttempt={handleCloseAttempt}
+      title={
+        isEditMode && isPatientTemporal
+          ? "Editar Paciente — ID Pendiente"
+          : isEditMode
+          ? "Editar Paciente"
+          : watchUseTemporaryId
+          ? "Registrar Paciente — Sin Cedula"
+          : "Registrar Nuevo Paciente"
+      }
       maxWidth="700px"
       disableBackdropClick={isPending}
       footer={formFooter}
@@ -1194,6 +1349,16 @@ export function PatientCreateModal({ patientId, onClose, onCreated }: PatientCre
           </div>
         </form>
       )}
+      <WcWarning
+        ref={discardWarningRef}
+        type="warning"
+        title="Descartar cambios"
+        description="Hay informacion no guardada en el formulario."
+        message="Si cierras ahora, todos los datos ingresados se perderan. ¿Deseas continuar?"
+        confirmText="Descartar cambios"
+        cancelText="Seguir editando"
+        closeOnBackdrop={false}
+      />
     </WcModal>
   );
 }
