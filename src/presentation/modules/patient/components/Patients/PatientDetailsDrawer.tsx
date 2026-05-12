@@ -79,7 +79,7 @@ export function PatientDetailsDrawer() {
               variant="ghost"
               shape="circle"
               size="sm"
-              icon="close"
+              icon="icon-x-solid"
               className="drawer-header__close"
               onClick={() => setSelectedPatientId(null)}
               aria-label="Cerrar detalle del paciente"
@@ -98,7 +98,7 @@ export function PatientDetailsDrawer() {
             </div>
           ) : isError || !patient ? (
             <div className="patient-drawer__error">
-              <Icon name="icon-alert-triangle" size={24} className="patient-drawer__error-icon" />
+              <Icon name="icon-warning-solid" size={24} className="patient-drawer__error-icon" />
               <p className="patient-drawer__error-msg">Error al cargar la información del paciente.</p>
             </div>
           ) : (
@@ -134,21 +134,21 @@ export function PatientDetailsDrawer() {
                 </div>
                 <div className="patient-drawer__card">
                   <div className="patient-drawer__field">
-                    <Icon name="icon-mail" size={14} className="patient-drawer__field-icon" />
+                    <Icon name="icon-email-solid" size={14} className="patient-drawer__field-icon" />
                     <div className="patient-drawer__field-content">
                       <span className="patient-drawer__field-label">Email</span>
                       <span className="patient-drawer__field-value">{patient.email || "N/A"}</span>
                     </div>
                   </div>
                   <div className="patient-drawer__field">
-                    <Icon name="icon-phone" size={14} className="patient-drawer__field-icon" />
+                    <Icon name="icon-phone-solid" size={14} className="patient-drawer__field-icon" />
                     <div className="patient-drawer__field-content">
                       <span className="patient-drawer__field-label">Teléfono</span>
                       <span className="patient-drawer__field-value">{patient.phone || "N/A"}</span>
                     </div>
                   </div>
                   <div className="patient-drawer__field">
-                    <Icon name="icon-map-pin" size={14} className="patient-drawer__field-icon" />
+                    <Icon name="icon-location-solid" size={14} className="patient-drawer__field-icon" />
                     <div className="patient-drawer__field-content">
                       <span className="patient-drawer__field-label">Dirección</span>
                       <span className="patient-drawer__field-value">{patient.homeAddress}</span>
@@ -198,7 +198,7 @@ export function PatientDetailsDrawer() {
                           <span className="patient-drawer__field-label">{contact.kinship}</span>
                         </div>
                         <div className="patient-drawer__field-inline">
-                          <Icon name="icon-phone" size={12} className="patient-drawer__field-icon" />
+                          <Icon name="icon-phone-solid" size={12} className="patient-drawer__field-icon" />
                           <span className="patient-drawer__field-value">{contact.phone}</span>
                         </div>
                       </div>
@@ -244,16 +244,6 @@ export function PatientDetailsDrawer() {
         {patient && (
           <div className="patient-drawer__footer">
             <WcButton
-              variant="danger"
-              className="drawer-footer__btn-edit"
-              onClick={() => {
-                setEditingPatientId(patient.id);
-                setSelectedPatientId(null);
-              }}
-            >
-              Editar
-            </WcButton>
-            <WcButton
               variant="terciary"
               className="drawer-footer__btn-history"
               onClick={() => {
@@ -262,6 +252,17 @@ export function PatientDetailsDrawer() {
               }}
             >
               Ir a Historia
+            </WcButton>
+
+            <WcButton
+              variant="primary"
+              className="drawer-footer__btn-edit"
+              onClick={() => {
+                setEditingPatientId(patient.id);
+                setSelectedPatientId(null);
+              }}
+            >
+              Editar
             </WcButton>
           </div>
         )}

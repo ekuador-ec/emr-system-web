@@ -67,10 +67,10 @@
 
 /* ── Botón cerrar ── */
 .drawer-header__close {
-  color: var(--color-text, #E2E8F0);
+  color: var(--drawer-label-color) !important;
 }
 .drawer-header__close:hover {
-  color: #FFFFFF;
+  color: var(--drawer-name-color) !important;
 }
 
 .patient-drawer__body {
@@ -300,12 +300,12 @@
 
 /* ── Botón Editar ── */
 .drawer-footer__btn-edit {
-  box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb, 99, 102, 241), 0.3);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .drawer-footer__btn-edit:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(229, 62, 62, 0.45);
+  box-shadow: 0 4px 14px rgba(var(--color-primary-rgb, 99, 102, 241), 0.45);
 }
 .drawer-footer__btn-edit:active {
   transform: translateY(0);
