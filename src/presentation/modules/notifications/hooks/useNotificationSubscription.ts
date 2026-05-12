@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/infrastructure/core/supabaseClient';
 import { useToastStore } from '@/presentation/modules/shared/components/Toaster';
 import { NOTIFICATIONS_QUERY_KEY } from './useNotifications';
-import { describeNotification } from '@/presentation/modules/notifications/registry/notificationRegistry';
+import { describeNotification, notificationToastMessage } from '@/presentation/modules/notifications/registry/notificationRegistry';
 import type { Notification } from '@/domain/modules/notifications/models/Notification';
 
 export function useNotificationSubscription(userId: string | undefined | null) {
@@ -46,9 +46,10 @@ export function useNotificationSubscription(userId: string | undefined | null) {
           queryClient.invalidateQueries({ queryKey: [...NOTIFICATIONS_QUERY_KEY, userId] });
 
           const descriptor = describeNotification(newNotification.type);
+          const content = descriptor.getContent(newNotification, userId);
           addToast({
             type: descriptor.toastVariant,
-            message: descriptor.getMessage(newNotification, userId),
+            message: notificationToastMessage(content),
             duration: 4000,
           });
         }
