@@ -22,6 +22,7 @@ export interface Patient {
   isActive: boolean;
 
   idNumber: string;
+  idNumberType: 'cedula' | 'temporal';
   firstName: string;
   middleName: string | null;
   lastName: string;
@@ -30,7 +31,7 @@ export interface Patient {
   phone: string | null;
   bloodType: BloodTypeEnum | null;
 
-  birthDate: string;
+  birthDate: string | null;
   birthPlace: string | null;
   gender: GenderEnum;
   nationality: string | null;
@@ -48,12 +49,12 @@ export interface Patient {
   companyPhone: string | null;
   companyAddress: string | null;
 
-  homeAddress: string;
+  homeAddress: string | null;
   neighborhood: string | null;
   geographicLocationId: string | null;
   geographicLocation?: GeographicLocation;
 
-  infoSourceType: InformationSourceEnum;
+  infoSourceType: InformationSourceEnum | null;
   infoSourceOther: string | null;
   infoSourceName: string | null;
   infoSourcePhone: string | null;
@@ -92,13 +93,16 @@ export interface PatientClinicalAntecedent {
 // DTOs for creating and updating
 export type CreatePatientDTO = Omit<
   Patient,
-  'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt' | 'isActive' | 'occupation' | 'geographicLocation' | 'emergencyContacts' | 'clinicalAntecedents'
+  'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt' | 'isActive' | 'idNumber' | 'occupation' | 'geographicLocation' | 'emergencyContacts' | 'clinicalAntecedents'
 > & {
+  idNumber?: string | null;
   emergencyContacts?: Omit<PatientEmergencyContact, 'id' | 'patientId' | 'createdAt' | 'updatedAt'>[];
   clinicalAntecedents?: Omit<PatientClinicalAntecedent, 'id' | 'patientId' | 'isActive' | 'createdAt' | 'updatedAt'>[];
 };
 
-export type UpdatePatientDTO = Partial<Omit<CreatePatientDTO, 'idNumber' | 'emergencyContacts' | 'clinicalAntecedents'>> & {
+export type UpdatePatientDTO = Partial<Omit<CreatePatientDTO, 'emergencyContacts' | 'clinicalAntecedents'>> & {
+  idNumber?: string | null;
+  idNumberType?: 'cedula' | 'temporal';
   isActive?: boolean;
   emergencyContacts?: (Omit<PatientEmergencyContact, 'id' | 'patientId' | 'createdAt' | 'updatedAt'> & { id?: string })[];
   clinicalAntecedents?: (Omit<PatientClinicalAntecedent, 'id' | 'patientId' | 'isActive' | 'createdAt' | 'updatedAt'> & { id?: string })[];
@@ -108,6 +112,7 @@ export type UpdatePatientDTO = Partial<Omit<CreatePatientDTO, 'idNumber' | 'emer
 export interface PatientListItem {
   id: string;
   idNumber: string;
+  idNumberType: 'cedula' | 'temporal';
   firstName: string;
   lastName: string;
   secondLastName: string | null;
