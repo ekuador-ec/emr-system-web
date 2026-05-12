@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import { usePatients } from "@/presentation/modules/patient/hooks/usePatients";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
@@ -14,7 +16,31 @@ export function PatientsPage() {
     patientFilters,
     hasSearched,
     selectedPatientId,
+    setPatientFilters,
+    setHasSearched,
   } = usePatientStore();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const queryFromUrl = searchParams.get("search");
+    if (!queryFromUrl) return;
+
+    const cleanQuery = queryFromUrl.trim();
+    if (cleanQuery.length === 0) return;
+
+    const isIdNumber = /^\d+$/.test(cleanQuery);
+    setPatientFilters({
+      idNumber: isIdNumber ? cleanQuery : undefined,
+      search: !isIdNumber ? cleanQuery : undefined,
+      page: 1,
+    });
+    setHasSearched(true);
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("search");
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setPatientFilters, setHasSearched, setSearchParams]);
 
   const {
     data: patientsResult,

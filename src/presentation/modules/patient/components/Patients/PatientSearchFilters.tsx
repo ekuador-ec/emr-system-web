@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
@@ -16,12 +16,19 @@ const DEFAULT_FILTERS: PatientQuickFilterState = {
 };
 
 export function PatientSearchFilters() {
-  const { setPatientFilters, hasSearched, setHasSearched, resetPatientFilters } = usePatientStore();
+  const { setPatientFilters, hasSearched, setHasSearched, resetPatientFilters, patientFilters } = usePatientStore();
   const { addToast } = useToastStore();
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(
+    () => patientFilters.idNumber || patientFilters.search || ""
+  );
   const [isFilterPopoverOpen, setIsFilterPopoverOpen] = useState(false);
   const [localFilters, setLocalFilters] = useState<PatientQuickFilterState>(DEFAULT_FILTERS);
+
+  useEffect(() => {
+    const storeValue = patientFilters.idNumber || patientFilters.search || "";
+    setSearchQuery(storeValue);
+  }, [patientFilters.idNumber, patientFilters.search]);
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
