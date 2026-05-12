@@ -5,6 +5,10 @@ import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Ico
 import WcSearchInput from "@/presentation/modules/shared/components/ui/webcomponents/Searchs/wcSearchInput";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import {
+  WcDateRangeFilter,
+  type WcDateRange,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Filters/wcDateRangeFilter";
+import {
   PatientQuickFilterPopover,
   type PatientQuickFilterState,
 } from "@/presentation/modules/patient/components/Patients/PatientQuickFilterPopover";
@@ -16,23 +20,6 @@ const DEFAULT_FILTERS: PatientQuickFilterState = {
 };
 
 const MAX_DATE_RANGE_DAYS = 31;
-
-function toLocalDateInputValue(date: Date): string {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, "0");
-  const day = `${date.getDate()}`.padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function buildPresetRange(daysBack: number): { startDate: string; endDate: string } {
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - daysBack);
-  return {
-    startDate: toLocalDateInputValue(startDate),
-    endDate: toLocalDateInputValue(endDate),
-  };
-}
 
 function validateDateRange(
   startDate: string,
@@ -95,7 +82,7 @@ export function PatientSearchFilters() {
   const applySearch = (
     query: string,
     filters: PatientQuickFilterState,
-    range: { startDate: string; endDate: string },
+    range: WcDateRange,
   ) => {
     let isActiveFilter: boolean | undefined = undefined;
     if (filters.isActive === "active") isActiveFilter = true;
@@ -146,8 +133,7 @@ export function PatientSearchFilters() {
     applySearch(searchQuery, localFilters, { startDate, endDate });
   };
 
-  const handleApplyPreset = (daysBack: number) => {
-    const range = buildPresetRange(daysBack);
+  const handleApplyPreset = (range: WcDateRange) => {
     setStartDate(range.startDate);
     setEndDate(range.endDate);
     applySearch(searchQuery, localFilters, range);
@@ -214,57 +200,14 @@ export function PatientSearchFilters() {
         </div>
       </div>
 
-      <div
-        className="card"
-        style={{
-          padding: "var(--space-3) var(--space-4)",
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-4)",
-          flexWrap: "wrap",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", color: "var(--color-text-secondary)", fontSize: "var(--font-size-sm)" }}>
-          <Icon name="icon-calendar" size={16} />
-          <span>Periodo de registro</span>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
-            <label style={{ fontSize: "var(--font-size-xs)", color: "var(--color-text-secondary)" }}>Desde</label>
-            <input
-              type="date"
-              className="input-field"
-              value={startDate}
-              onChange={(event) => setStartDate(event.target.value)}
-              max={endDate || undefined}
-            />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
-            <label style={{ fontSize: "var(--font-size-xs)", color: "var(--color-text-secondary)" }}>Hasta</label>
-            <input
-              type="date"
-              className="input-field"
-              value={endDate}
-              onChange={(event) => setEndDate(event.target.value)}
-              min={startDate || undefined}
-            />
-          </div>
-        </div>
-
-        <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center", flexWrap: "wrap", marginLeft: "auto" }}>
-          <span style={{ fontSize: "var(--font-size-xs)", color: "var(--color-text-secondary)" }}>Acceso rápido:</span>
-          <WcButton variant="terciary" onClick={() => handleApplyPreset(6)}>
-            Últimos 7 días
-          </WcButton>
-          <WcButton variant="terciary" onClick={() => handleApplyPreset(14)}>
-            Últimos 15 días
-          </WcButton>
-          <WcButton variant="terciary" onClick={() => handleApplyPreset(30)}>
-            Últimos 31 días
-          </WcButton>
-        </div>
-      </div>
+      <WcDateRangeFilter
+        title="Periodo de registro"
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        onApplyPreset={handleApplyPreset}
+      />
     </div>
   );
 }
