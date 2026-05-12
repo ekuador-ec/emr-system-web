@@ -4,6 +4,7 @@ import type { MedicalRecordFilters } from '@/domain/modules/medical-record/model
 interface MedicalRecordStoreState {
   filters: MedicalRecordFilters;
   setFilters: (filters: Partial<MedicalRecordFilters>) => void;
+  resetFilters: () => void;
   selectedMedicalRecordId: string | null;
   setSelectedMedicalRecordId: (id: string | null) => void;
   isConfigModalOpen: boolean;
@@ -11,17 +12,24 @@ interface MedicalRecordStoreState {
   hasSearched: boolean;
 }
 
+const INITIAL_FILTERS: MedicalRecordFilters = {
+  page: 1,
+  limit: 10,
+  search: '',
+};
+
 export const useMedicalRecordStore = create<MedicalRecordStoreState>((set) => ({
-  filters: {
-    page: 1,
-    limit: 10,
-    search: '',
-  },
-  setFilters: (newFilters) => 
-    set((state) => ({ 
+  filters: { ...INITIAL_FILTERS },
+  setFilters: (newFilters) =>
+    set((state) => ({
       filters: { ...state.filters, ...newFilters },
-      hasSearched: true 
+      hasSearched: true,
     })),
+  resetFilters: () =>
+    set({
+      filters: { ...INITIAL_FILTERS },
+      hasSearched: true,
+    }),
   selectedMedicalRecordId: null,
   setSelectedMedicalRecordId: (id) => set({ selectedMedicalRecordId: id }),
   isConfigModalOpen: false,

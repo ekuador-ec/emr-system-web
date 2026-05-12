@@ -20,7 +20,7 @@ import {
 } from "@/presentation/modules/medical-record/utils/dateRange";
 
 export function MedicalRecordsPage() {
-  const { filters, setFilters } = useMedicalRecordStore();
+  const { filters, resetFilters } = useMedicalRecordStore();
   const { data: records, isLoading, isError, error } = useMedicalRecords(filters);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -56,12 +56,7 @@ export function MedicalRecordsPage() {
   }, [addToast, validationMessage]);
 
   const handleResetToRecentRange = () => {
-    const recentRange = getRecentMedicalRecordDateRange();
-    setFilters({
-      startDate: recentRange.startDate,
-      endDate: recentRange.endDate,
-      page: 1,
-    });
+    resetFilters();
   };
 
   return (
