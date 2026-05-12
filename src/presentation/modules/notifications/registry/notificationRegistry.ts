@@ -97,6 +97,8 @@ const NOTIFICATION_REGISTRY: Record<string, NotificationDescriptor> = {
       };
     },
     getRoute: (n) => {
+      const patientId = asString(n.metadata.patientId) ?? asString(n.entityId);
+      if (patientId) return `/pacientes?openId=${patientId}`;
       const idNumber = asString(n.metadata.patientIdNumber);
       return idNumber ? `/pacientes?search=${encodeURIComponent(idNumber)}` : '/pacientes';
     },
@@ -120,8 +122,7 @@ const NOTIFICATION_REGISTRY: Record<string, NotificationDescriptor> = {
     getRoute: (n) => {
       const patientId = asString(n.metadata.patientId);
       if (patientId) return `/pacientes/${patientId}/historia`;
-      const idNumber = asString(n.metadata.patientIdNumber);
-      return idNumber ? `/historias-clinicas?search=${encodeURIComponent(idNumber)}` : '/historias-clinicas';
+      return '/historias-clinicas';
     },
   },
 
@@ -148,8 +149,7 @@ const NOTIFICATION_REGISTRY: Record<string, NotificationDescriptor> = {
       if (patientId && evolutionId) {
         return `/pacientes/${patientId}/historia/evoluciones/${evolutionId}`;
       }
-      const idNumber = asString(n.metadata.patientIdNumber);
-      return idNumber ? `/evoluciones?search=${encodeURIComponent(idNumber)}` : '/evoluciones';
+      return '/evoluciones';
     },
   },
 

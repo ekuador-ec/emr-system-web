@@ -18,29 +18,48 @@ export function PatientsPage() {
     selectedPatientId,
     setPatientFilters,
     setHasSearched,
+    setSelectedPatientId,
   } = usePatientStore();
 
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
+    const openIdFromUrl = searchParams.get("openId");
     const queryFromUrl = searchParams.get("search");
-    if (!queryFromUrl) return;
 
-    const cleanQuery = queryFromUrl.trim();
-    if (cleanQuery.length === 0) return;
+    if (!openIdFromUrl && !queryFromUrl) return;
 
-    const isIdNumber = /^\d+$/.test(cleanQuery);
-    setPatientFilters({
-      idNumber: isIdNumber ? cleanQuery : undefined,
-      search: !isIdNumber ? cleanQuery : undefined,
-      page: 1,
-    });
-    setHasSearched(true);
-
+    let mutated = false;
     const nextParams = new URLSearchParams(searchParams);
-    nextParams.delete("search");
-    setSearchParams(nextParams, { replace: true });
-  }, [searchParams, setPatientFilters, setHasSearched, setSearchParams]);
+
+    if (openIdFromUrl) {
+      const cleanId = openIdFromUrl.trim();
+      if (cleanId.length > 0) {
+        setSelectedPatientId(cleanId);
+        nextParams.delete("openId");
+        mutated = true;
+      }
+    }
+
+    if (queryFromUrl) {
+      const cleanQuery = queryFromUrl.trim();
+      if (cleanQuery.length > 0) {
+        const isIdNumber = /^\d+$/.test(cleanQuery);
+        setPatientFilters({
+          idNumber: isIdNumber ? cleanQuery : undefined,
+          search: !isIdNumber ? cleanQuery : undefined,
+          page: 1,
+        });
+        setHasSearched(true);
+        nextParams.delete("search");
+        mutated = true;
+      }
+    }
+
+    if (mutated) {
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [searchParams, setPatientFilters, setHasSearched, setSelectedPatientId, setSearchParams]);
 
   const {
     data: patientsResult,
