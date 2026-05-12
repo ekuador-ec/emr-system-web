@@ -5,8 +5,8 @@ import {
 import type { GenderEnum } from "@/domain/modules/catalog/models/Catalog";
 
 export type PatientQuickFilterState = {
-  gender: string[];
-  isActive: string[];
+  gender: string;
+  isActive: string;
 };
 
 type PatientQuickFilterPopoverProps = {

@@ -11,8 +11,8 @@ import {
 import type { GenderEnum } from "@/domain/modules/catalog/models/Catalog";
 
 const DEFAULT_FILTERS: PatientQuickFilterState = {
-  gender: ["all"],
-  isActive: ["all"],
+  gender: "all",
+  isActive: "all",
 };
 
 export function PatientSearchFilters() {
@@ -32,18 +32,18 @@ export function PatientSearchFilters() {
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
-    if (localFilters.gender[0] !== "all") count++;
-    if (localFilters.isActive[0] !== "all") count++;
+    if (localFilters.gender !== "all") count++;
+    if (localFilters.isActive !== "all") count++;
     return count;
   }, [localFilters]);
 
   const applySearch = (query: string, filters: PatientQuickFilterState) => {
     let isActiveFilter: boolean | undefined = undefined;
-    if (filters.isActive[0] === "active") isActiveFilter = true;
-    if (filters.isActive[0] === "inactive") isActiveFilter = false;
+    if (filters.isActive === "active") isActiveFilter = true;
+    if (filters.isActive === "inactive") isActiveFilter = false;
 
     let genderFilter: GenderEnum | undefined = undefined;
-    if (filters.gender[0] !== "all") genderFilter = filters.gender[0] as GenderEnum;
+    if (filters.gender !== "all") genderFilter = filters.gender as GenderEnum;
 
     const cleanQuery = query.trim();
     const isIdNumber = /^\d+$/.test(cleanQuery);
