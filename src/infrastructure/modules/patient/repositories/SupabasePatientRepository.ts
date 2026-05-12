@@ -69,6 +69,14 @@ export class SupabasePatientRepository implements PatientRepository {
       );
     }
 
+    if (filters?.startDate) {
+      query = query.gte("created_at", `${filters.startDate}T00:00:00Z`);
+    }
+
+    if (filters?.endDate) {
+      query = query.lte("created_at", `${filters.endDate}T23:59:59Z`);
+    }
+
     const { data, count, error } = await query;
 
     if (error) {
