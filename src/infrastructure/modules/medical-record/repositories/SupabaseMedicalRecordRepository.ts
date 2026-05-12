@@ -6,6 +6,10 @@ import type {
   MedicalRecordFilters,
 } from "@/domain/modules/medical-record/models/MedicalRecord";
 import { supabase } from "@/infrastructure/core/supabaseClient";
+import {
+  endOfLocalDayIso,
+  startOfLocalDayIso,
+} from "@/infrastructure/core/dateBoundaries";
 import { MedicalRecordMapper } from "../mappers/MedicalRecordMapper";
 
 export class SupabaseMedicalRecordRepository implements MedicalRecordRepository {
@@ -85,11 +89,11 @@ export class SupabaseMedicalRecordRepository implements MedicalRecordRepository 
     }
 
     if (filters?.startDate) {
-      query = query.gte("updated_at", `${filters.startDate}T00:00:00Z`);
+      query = query.gte("updated_at", startOfLocalDayIso(filters.startDate));
     }
 
     if (filters?.endDate) {
-      query = query.lte("updated_at", `${filters.endDate}T23:59:59Z`);
+      query = query.lte("updated_at", endOfLocalDayIso(filters.endDate));
     }
 
     const { data, count, error } = await query;

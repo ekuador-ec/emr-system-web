@@ -9,6 +9,10 @@ import type {
 } from "@/domain/modules/evolution/models/Evolution";
 import { EvolutionMapper } from "../mappers/EvolutionMapper";
 import { supabase } from "@/infrastructure/core/supabaseClient";
+import {
+  endOfLocalDayIso,
+  startOfLocalDayIso,
+} from "@/infrastructure/core/dateBoundaries";
 
 interface EvolutionListRow {
   id: string;
@@ -340,11 +344,11 @@ export class SupabaseEvolutionRepository implements EvolutionRepository {
     }
 
     if (filters?.startDate) {
-      query = query.gte("updated_at", `${filters.startDate}T00:00:00-05:00`);
+      query = query.gte("updated_at", startOfLocalDayIso(filters.startDate));
     }
 
     if (filters?.endDate) {
-      query = query.lte("updated_at", `${filters.endDate}T23:59:59-05:00`);
+      query = query.lte("updated_at", endOfLocalDayIso(filters.endDate));
     }
 
     const { data, count, error } = await query;

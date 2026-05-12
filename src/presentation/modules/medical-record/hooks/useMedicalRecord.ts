@@ -28,16 +28,11 @@ export const useMedicalRecordByPatient = (patientId: string, options?: { enabled
 export const useMedicalRecords = (filters?: MedicalRecordFilters) => {
   const defaultDateRange = getRecentMedicalRecordDateRange();
   const hasTextSearch = !!filters?.search?.trim();
-  const queryFilters = hasTextSearch
-    ? {
-        ...filters,
-        search: filters?.search?.trim(),
-        startDate: undefined,
-        endDate: undefined,
-      }
-    : filters?.startDate || filters?.endDate
-      ? filters
-      : { ...filters, ...defaultDateRange };
+  const hasExplicitDateRange = !!(filters?.startDate || filters?.endDate);
+
+  const queryFilters: MedicalRecordFilters = hasTextSearch || hasExplicitDateRange
+    ? { ...filters, search: filters?.search?.trim() }
+    : { ...filters, ...defaultDateRange };
 
   return useQuery({
     queryKey: ["medical-records", queryFilters],

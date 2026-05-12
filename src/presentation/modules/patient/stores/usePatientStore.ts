@@ -9,6 +9,8 @@ interface PatientFiltersState {
   lastName?: string;
   gender?: GenderEnum | "";
   isActive?: boolean;
+  startDate?: string;
+  endDate?: string;
   page: number;
   limit: number;
 }

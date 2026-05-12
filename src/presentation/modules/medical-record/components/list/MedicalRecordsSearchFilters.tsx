@@ -1,246 +1,170 @@
-import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
+import { useState, useEffect } from "react";
 import { useMedicalRecordStore } from "@/presentation/modules/medical-record/stores/useMedicalRecordStore";
-import { useEffect, useState } from "react";
+import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
+import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import WcSearchInput from "@/presentation/modules/shared/components/ui/webcomponents/Searchs/wcSearchInput";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
-import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import {
-  formatMedicalRecordDateRange,
-  getRecentMedicalRecordDateRange,
-  type MedicalRecordDateRange,
-} from "@/presentation/modules/medical-record/utils/dateRange";
-import { MedicalRecordsDateFilterPopover } from "@/presentation/modules/medical-record/components/list/MedicalRecordsDateFilterPopover";
+  WcDateRangeFilter,
+  type WcDateRange,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Filters/wcDateRangeFilter";
+
+const MAX_DATE_RANGE_DAYS = 31;
+
+const DATE_PRESETS = [
+  { label: "Últimos 2 días", daysBack: 1 },
+  { label: "Últimos 7 días", daysBack: 6 },
+  { label: "Últimos 31 días", daysBack: 30 },
+];
+
+function validateDateRange(
+  startDate: string,
+  endDate: string,
+): { valid: boolean; message: string } {
+  if (!startDate && !endDate) return { valid: true, message: "" };
+  if (!startDate || !endDate) {
+    return { valid: false, message: "Debe ingresar ambas fechas para filtrar por rango." };
+  }
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  if (start > end) {
+    return { valid: false, message: "La fecha inicial no puede ser mayor que la fecha final." };
+  }
+
+  const diffDays = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays > MAX_DATE_RANGE_DAYS) {
+    return {
+      valid: false,
+      message: `El rango de búsqueda por fecha de edición no puede ser mayor a ${MAX_DATE_RANGE_DAYS} días.`,
+    };
+  }
+
+  return { valid: true, message: "" };
+}
 
 export function MedicalRecordsSearchFilters() {
-  const { setFilters, filters } = useMedicalRecordStore();
+  const { setFilters, resetFilters, filters } = useMedicalRecordStore();
   const { addToast } = useToastStore();
-  const defaultDateRange = getRecentMedicalRecordDateRange();
-  const [localSearch, setLocalSearch] = useState(filters.search || "");
-  const [localStartDate, setLocalStartDate] = useState(
-    filters.startDate || defaultDateRange.startDate,
-  );
-  const [localEndDate, setLocalEndDate] = useState(filters.endDate || defaultDateRange.endDate);
-  const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState<string>(() => filters.search ?? "");
+  const [startDate, setStartDate] = useState<string>(() => filters.startDate ?? "");
+  const [endDate, setEndDate] = useState<string>(() => filters.endDate ?? "");
 
   useEffect(() => {
-    if (filters.search !== undefined) {
-      setLocalSearch(filters.search);
-      return;
-    }
+    setSearchQuery(filters.search ?? "");
+  }, [filters.search]);
 
-    if (filters.startDate && filters.endDate) {
-      setLocalStartDate(filters.startDate);
-      setLocalEndDate(filters.endDate);
-      return;
-    }
+  useEffect(() => {
+    setStartDate(filters.startDate ?? "");
+    setEndDate(filters.endDate ?? "");
+  }, [filters.startDate, filters.endDate]);
 
-    if (!filters.search && !filters.startDate && !filters.endDate) {
-      setLocalSearch("");
-      setLocalStartDate(defaultDateRange.startDate);
-      setLocalEndDate(defaultDateRange.endDate);
-    }
-  }, [
-    defaultDateRange.endDate,
-    defaultDateRange.startDate,
-    filters.endDate,
-    filters.search,
-    filters.startDate,
-  ]);
+  const hasDateRange = Boolean(startDate || endDate);
 
-  const applySearchFilters = () => {
-    const normalizedSearch = localSearch.trim();
-
-    if (!normalizedSearch) {
-      setFilters({
-        search: undefined,
-        page: 1,
-      });
-      return;
-    }
-
+  const applyFilters = (search: string, range: WcDateRange) => {
+    const cleanQuery = search.trim();
     setFilters({
-      search: normalizedSearch,
-      startDate: undefined,
-      endDate: undefined,
+      search: cleanQuery || undefined,
+      startDate: range.startDate || undefined,
+      endDate: range.endDate || undefined,
       page: 1,
     });
-
-    setIsDatePopoverOpen(false);
   };
 
-  const applyDateFilters = () => {
-    if (localStartDate && localEndDate) {
-      const start = new Date(localStartDate);
-      const end = new Date(localEndDate);
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const handleSearchSubmit = () => {
+    const validation = validateDateRange(startDate, endDate);
+    if (!validation.valid) {
+      addToast({ type: "warning", message: validation.message });
+      return;
+    }
 
-      if (diffDays > 31) {
-        addToast({
-          type: "warning",
-          message: "El rango de búsqueda por fecha de edición no puede ser mayor a 31 días.",
-        });
-        return;
-      }
-
-      if (start > end) {
-        addToast({
-          type: "warning",
-          message: "La fecha inicial no puede ser mayor que la fecha final.",
-        });
-        return;
-      }
-    } else if ((localStartDate && !localEndDate) || (!localStartDate && localEndDate)) {
+    if (!searchQuery.trim() && !hasDateRange) {
       addToast({
         type: "warning",
-        message: "Debes ingresar ambas fechas o dejar ambas vacías.",
+        message: "Por favor ingrese un término de búsqueda o seleccione un rango de fechas.",
       });
       return;
     }
 
-    setFilters({
-      search: undefined,
-      startDate: localStartDate || undefined,
-      endDate: localEndDate || undefined,
-      page: 1,
-    });
-
-    setLocalSearch("");
-    setIsDatePopoverOpen(false);
+    applyFilters(searchQuery, { startDate, endDate });
   };
 
-  const clearDateFilters = () => {
-    setLocalStartDate(defaultDateRange.startDate);
-    setLocalEndDate(defaultDateRange.endDate);
-    setLocalSearch("");
-    setFilters({
-      search: undefined,
-      startDate: defaultDateRange.startDate,
-      endDate: defaultDateRange.endDate,
-      page: 1,
-    });
-    setIsDatePopoverOpen(false);
+  const handleApplyPreset = (range: WcDateRange) => {
+    setStartDate(range.startDate);
+    setEndDate(range.endDate);
+    applyFilters(searchQuery, range);
   };
 
-  const handlePresetRange = (range: MedicalRecordDateRange) => {
-    setLocalStartDate(range.startDate);
-    setLocalEndDate(range.endDate);
-    setFilters({
-      search: undefined,
-      startDate: range.startDate,
-      endDate: range.endDate,
-      page: 1,
-    });
-    setLocalSearch("");
-    setIsDatePopoverOpen(false);
+  const handleReset = () => {
+    setSearchQuery("");
+    setStartDate("");
+    setEndDate("");
+    resetFilters();
   };
 
-  const activeModeLabel = filters.search?.trim()
-    ? `Búsqueda textual: ${filters.search.trim()}`
-    : filters.startDate && filters.endDate
-      ? `Rango: ${formatMedicalRecordDateRange({ startDate: filters.startDate, endDate: filters.endDate })}`
-      : `Rango por defecto: ${formatMedicalRecordDateRange(defaultDateRange)}`;
+  const hasAnyExplicitFilter = Boolean(
+    searchQuery.trim() || hasDateRange || filters.search || filters.startDate || filters.endDate,
+  );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", width: "100%" }}>
       <div
-        className="card"
         style={{
-          padding: "var(--space-5)",
-          display: "grid",
+          display: "flex",
           gap: "var(--space-4)",
+          alignItems: "center",
+          width: "100%",
+          flexWrap: "wrap",
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--space-2)",
-              flexWrap: "wrap",
+        <div style={{ flex: "1 1 300px" }}>
+          <WcSearchInput
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+            placeholder="Buscar por nombre, apellido o cédula..."
+            showSearchIcon={true}
+            showClearButton={true}
+            onClear={() => setSearchQuery("")}
+            showSubmitButton={true}
+            submitButtonLabel="Buscar"
+            onSubmit={handleSearchSubmit}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") handleSearchSubmit();
             }}
-          >
-            <Icon name="icon-search-folder" size={18} />
-            <h2 style={{ margin: 0, fontSize: "var(--font-size-lg)" }}>
-              Consulta de historias clínicas
-            </h2>
-          </div>
-          <p
-            style={{
-              margin: 0,
-              color: "var(--color-text-secondary)",
-              fontSize: "var(--font-size-sm)",
-            }}
-          >
-            Usa el buscador para localizar por nombre, apellido o cédula, o abre el filtro de fecha
-            para acotar por edición.
-          </p>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) auto",
-            gap: "var(--space-3)",
-            alignItems: "start",
-          }}
-        >
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
-            <WcSearchInput
-              value={localSearch}
-              onValueChange={setLocalSearch}
-              placeholder="Buscar por nombre, apellido o cédula..."
-              showSearchIcon={true}
-              showClearButton={true}
-              showSubmitButton={true}
-              submitButtonLabel="Buscar"
-              onSubmit={applySearchFilters}
-            />
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "var(--space-2)",
-                alignItems: "center",
-                color: "var(--color-text-secondary)",
-                fontSize: "var(--font-size-xs)",
-              }}
-            >
-              <span
-                style={{
-                  padding: "var(--space-1) var(--space-2)",
-                  borderRadius: "999px",
-                  border: "1px solid var(--color-border)",
-                }}
-              >
-                Búsqueda textual independiente
-              </span>
-              <span
-                style={{
-                  padding: "var(--space-1) var(--space-2)",
-                  borderRadius: "999px",
-                  border: "1px solid var(--color-border)",
-                }}
-              >
-                {activeModeLabel}
-              </span>
-            </div>
-          </div>
-
-          <MedicalRecordsDateFilterPopover
-            isOpen={isDatePopoverOpen}
-            onToggle={() => setIsDatePopoverOpen((prev) => !prev)}
-            startDate={localStartDate}
-            endDate={localEndDate}
-            activeFiltersCount={filters.startDate && filters.endDate ? 1 : 0}
-            onStartDateChange={setLocalStartDate}
-            onEndDateChange={setLocalEndDate}
-            onApply={applyDateFilters}
-            onClear={clearDateFilters}
-            onPresetRange={handlePresetRange}
           />
         </div>
+        <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+          {hasAnyExplicitFilter && (
+            <WcButton
+              variant="terciary"
+              onClick={handleReset}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-1)",
+                fontSize: "var(--font-size-sm)",
+                padding: "var(--space-2) var(--space-3)",
+              }}
+              title="Vuelve al filtro por defecto (últimas 48h)"
+            >
+              <Icon name="icon-restore" size={14} />
+              Restablecer
+            </WcButton>
+          )}
+        </div>
       </div>
+
+      <WcDateRangeFilter
+        title="Periodo de edición"
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        onApplyPreset={handleApplyPreset}
+        presets={DATE_PRESETS}
+      />
     </div>
   );
 }
