@@ -11,6 +11,10 @@ import type {
 } from "@/domain/modules/patient/models/Patient";
 import { supabase } from "@/infrastructure/core/supabaseClient";
 import {
+  endOfLocalDayIso,
+  startOfLocalDayIso,
+} from "@/infrastructure/core/dateBoundaries";
+import {
   mapPatientRow,
   mapPatientListItemRow,
 } from "@/infrastructure/modules/patient/mappers/patientMapper";
@@ -70,11 +74,11 @@ export class SupabasePatientRepository implements PatientRepository {
     }
 
     if (filters?.startDate) {
-      query = query.gte("created_at", `${filters.startDate}T00:00:00Z`);
+      query = query.gte("created_at", startOfLocalDayIso(filters.startDate));
     }
 
     if (filters?.endDate) {
-      query = query.lte("created_at", `${filters.endDate}T23:59:59Z`);
+      query = query.lte("created_at", endOfLocalDayIso(filters.endDate));
     }
 
     const { data, count, error } = await query;
