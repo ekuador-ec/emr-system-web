@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import { usePatients } from "@/presentation/modules/patient/hooks/usePatients";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
@@ -14,7 +16,50 @@ export function PatientsPage() {
     patientFilters,
     hasSearched,
     selectedPatientId,
+    setPatientFilters,
+    setHasSearched,
+    setSelectedPatientId,
   } = usePatientStore();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const openIdFromUrl = searchParams.get("openId");
+    const queryFromUrl = searchParams.get("search");
+
+    if (!openIdFromUrl && !queryFromUrl) return;
+
+    let mutated = false;
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (openIdFromUrl) {
+      const cleanId = openIdFromUrl.trim();
+      if (cleanId.length > 0) {
+        setSelectedPatientId(cleanId);
+        nextParams.delete("openId");
+        mutated = true;
+      }
+    }
+
+    if (queryFromUrl) {
+      const cleanQuery = queryFromUrl.trim();
+      if (cleanQuery.length > 0) {
+        const isIdNumber = /^\d+$/.test(cleanQuery);
+        setPatientFilters({
+          idNumber: isIdNumber ? cleanQuery : undefined,
+          search: !isIdNumber ? cleanQuery : undefined,
+          page: 1,
+        });
+        setHasSearched(true);
+        nextParams.delete("search");
+        mutated = true;
+      }
+    }
+
+    if (mutated) {
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [searchParams, setPatientFilters, setHasSearched, setSelectedPatientId, setSearchParams]);
 
   const {
     data: patientsResult,

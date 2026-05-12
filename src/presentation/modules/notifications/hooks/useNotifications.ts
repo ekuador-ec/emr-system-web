@@ -16,20 +16,22 @@ export function useNotificationsList(userId: string | undefined) {
   });
 }
 
-export function useMarkNotificationRead() {
+export function useMarkNotificationRead(userId: string | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (notificationId: string) => notificationService.markAsRead(notificationId),
     onSuccess: (_, notificationId) => {
-      queryClient.setQueryData(
-        NOTIFICATIONS_QUERY_KEY,
-        (oldData: Notification[] | undefined) => {
-          if (!oldData) return oldData;
-          return oldData.map(n => n.id === notificationId ? { ...n, isRead: true } : n);
-        }
-      );
-      queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY });
+      if (userId) {
+        queryClient.setQueryData(
+          [...NOTIFICATIONS_QUERY_KEY, userId],
+          (oldData: Notification[] | undefined) => {
+            if (!oldData) return oldData;
+            return oldData.map(n => n.id === notificationId ? { ...n, isRead: true } : n);
+          }
+        );
+      }
+      queryClient.invalidateQueries({ queryKey: [...NOTIFICATIONS_QUERY_KEY, userId] });
     },
   });
 }

@@ -1,26 +1,32 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotificationsList, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/presentation/modules/notifications/hooks/useNotifications';
+import { describeNotification, type NotificationStatusTone } from '@/presentation/modules/notifications/registry/notificationRegistry';
 import WcButtonIcon from '@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon';
+import { Icon } from '@/presentation/modules/shared/components/Sidebar/icons/Icon';
 import type { Notification } from '@/domain/modules/notifications/models/Notification';
 
 interface NotificationBellProps {
   userId: string | undefined;
 }
 
-function getNotificationMessage(notification: Notification, currentUserId: string | undefined): string {
-  const isSelf = currentUserId && notification.actorId === currentUserId;
+const STATUS_TONE_STYLES: Record<NotificationStatusTone, { background: string; color: string }> = {
+  info:    { background: 'rgba(59, 130, 246, 0.12)',  color: '#1D4ED8' },
+  success: { background: 'rgba(16, 185, 129, 0.12)',  color: '#047857' },
+  warning: { background: 'rgba(245, 158, 11, 0.15)',  color: '#B45309' },
+  neutral: { background: 'rgba(148, 163, 184, 0.15)', color: '#475569' },
+};
 
-  switch (notification.type) {
-    case 'NEW_USER':
-      return isSelf
-        ? 'Has registrado un nuevo usuario exitosamente'
-        : `${notification.actorName || 'Un administrador'} ha registrado un nuevo usuario`;
-    default:
-      return isSelf
-        ? 'Has realizado una acci\u00f3n en el sistema'
-        : `${notification.actorName || 'Alguien'} ha realizado una acci\u00f3n`;
-  }
+function formatRelativeTime(createdAt: Date): string {
+  const diffMs = Date.now() - createdAt.getTime();
+  if (diffMs < 60_000) return 'hace unos segundos';
+  const diffMin = Math.floor(diffMs / 60_000);
+  if (diffMin < 60) return `hace ${diffMin} min`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `hace ${diffH} h`;
+  const diffD = Math.floor(diffH / 24);
+  if (diffD < 7) return `hace ${diffD} d`;
+  return createdAt.toLocaleDateString();
 }
 
 export function NotificationBell({ userId }: NotificationBellProps) {
@@ -29,7 +35,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   const navigate = useNavigate();
 
   const { data: notifications = [], isLoading } = useNotificationsList(userId);
-  const { mutate: markAsRead } = useMarkNotificationRead();
+  const { mutate: markAsRead } = useMarkNotificationRead(userId);
   const { mutate: markAllAsRead, isPending: isMarkingAll } = useMarkAllNotificationsRead(userId);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -49,8 +55,10 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       markAsRead(notification.id);
     }
 
-    if (notification.type === 'NEW_USER') {
-      navigate('/users');
+    const descriptor = describeNotification(notification.type);
+    const route = descriptor.getRoute?.(notification);
+    if (route) {
+      navigate(route);
     }
     setIsOpen(false);
   };
@@ -100,8 +108,8 @@ export function NotificationBell({ userId }: NotificationBellProps) {
 
       {isOpen && (
         <div className="notification-popover">
-          <div style={{ 
-            padding: '16px', 
+          <div style={{
+            padding: '16px',
             borderBottom: '1px solid var(--color-border)',
             display: 'flex',
             justifyContent: 'space-between',
@@ -136,37 +144,132 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                 No tienes notificaciones
               </div>
             ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  onClick={() => handleNotificationClick(notification)}
-                  style={{
-                    padding: '12px 16px',
-                    borderBottom: '1px solid var(--color-border)',
-                    background: notification.isRead ? 'transparent' : 'var(--color-primary-light)',
-                    cursor: 'pointer',
-                    transition: 'background 0.2s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (notification.isRead) e.currentTarget.style.background = 'var(--color-surface-hover)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = notification.isRead ? 'transparent' : 'var(--color-primary-light)';
-                  }}
-                >
-                  <p style={{ 
-                    margin: '0 0 4px 0', 
-                    fontSize: '14px', 
-                    color: 'var(--color-text)',
-                    fontWeight: notification.isRead ? 'normal' : '500' 
-                  }}>
-                    {getNotificationMessage(notification, userId)}
-                  </p>
-                  <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                    {new Date(notification.createdAt).toLocaleDateString()} a las {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              ))
+              notifications.map((notification) => {
+                const descriptor = describeNotification(notification.type);
+                const content = descriptor.getContent(notification, userId);
+                const isClickable = Boolean(descriptor.getRoute?.(notification));
+                return (
+                  <div
+                    key={notification.id}
+                    onClick={() => handleNotificationClick(notification)}
+                    role={isClickable ? 'button' : undefined}
+                    tabIndex={isClickable ? 0 : undefined}
+                    style={{
+                      padding: '14px 16px',
+                      borderBottom: '1px solid var(--color-border)',
+                      background: notification.isRead ? 'transparent' : 'var(--color-primary-light)',
+                      cursor: isClickable ? 'pointer' : 'default',
+                      transition: 'background 0.15s ease',
+                      display: 'flex',
+                      gap: '12px',
+                      alignItems: 'flex-start',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (notification.isRead) e.currentTarget.style.background = 'var(--color-surface-hover)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = notification.isRead ? 'transparent' : 'var(--color-primary-light)';
+                    }}
+                  >
+                    <div
+                      style={{
+                        flex: '0 0 auto',
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        background: notification.isRead
+                          ? 'var(--color-surface-hover)'
+                          : 'rgba(59, 130, 246, 0.18)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--color-primary)',
+                      }}
+                    >
+                      <Icon name={descriptor.icon} size={18} />
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span
+                          style={{
+                            fontSize: '13px',
+                            fontWeight: notification.isRead ? 500 : 600,
+                            color: 'var(--color-text)',
+                          }}
+                        >
+                          {content.title}
+                        </span>
+                        {!notification.isRead && (
+                          <span
+                            aria-label="No leída"
+                            style={{
+                              width: '8px',
+                              height: '8px',
+                              borderRadius: '50%',
+                              background: 'var(--color-primary)',
+                              display: 'inline-block',
+                            }}
+                          />
+                        )}
+                      </div>
+
+                      {content.description && (
+                        <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+                          {content.description}
+                        </span>
+                      )}
+
+                      {content.primary && (
+                        <span
+                          style={{
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: 'var(--color-text)',
+                            wordBreak: 'break-word',
+                          }}
+                        >
+                          {content.primary}
+                        </span>
+                      )}
+
+                      {content.secondary && (
+                        <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                          {content.secondary}
+                        </span>
+                      )}
+
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          marginTop: '2px',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        {content.status && (
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              padding: '2px 8px',
+                              borderRadius: '999px',
+                              letterSpacing: '0.02em',
+                              ...STATUS_TONE_STYLES[content.status.tone],
+                            }}
+                          >
+                            {content.status.label}
+                          </span>
+                        )}
+                        <span style={{ fontSize: '11px', color: 'var(--color-text-tertiary, #94A3B8)' }}>
+                          {formatRelativeTime(new Date(notification.createdAt))}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
@@ -178,8 +281,8 @@ export function NotificationBell({ userId }: NotificationBellProps) {
             position: absolute;
             top: calc(100% + 8px);
             right: 0;
-            width: 320px;
-            max-height: 400px;
+            width: 360px;
+            max-height: 480px;
             background: var(--color-surface);
             border: 1px solid var(--color-border);
             border-radius: var(--radius-lg);
@@ -198,7 +301,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
               left: 0;
               right: 0;
               width: 100%;
-              max-height: 70vh;
+              max-height: 75vh;
               border-radius: var(--radius-lg) var(--radius-lg) 0 0;
             }
           }
