@@ -13,6 +13,7 @@ export interface NotificationMetadata {
   subjectName?: string | null;
   subjectEmail?: string | null;
   subjectRole?: string | null;
+  patientId?: string | null;
   patientName?: string | null;
   patientIdNumber?: string | null;
   evolutionStatus?: string | null;
