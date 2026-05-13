@@ -37,6 +37,30 @@ function normalizeHeightMeters(value: number | null | undefined): number | null 
   return value;
 }
 
+/**
+ * Empty strings produced by HTML date / time / datetime-local inputs after
+ * the user clears the field. PostgreSQL refuses them on DATE / TIME /
+ * TIMESTAMPTZ columns, so we coerce them to null at the boundary.
+ */
+function nullIfBlank(value: string | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string" && value.trim() === "") return null;
+  return value;
+}
+
+/**
+ * Clamps a number into an INT column. valueAsNumber on an empty input emits
+ * NaN, which PostgreSQL rejects on every integer column. Returns null in
+ * that case so the column stays empty instead of breaking the whole save.
+ * Non-integer numbers get rounded (the schema only stores whole numbers
+ * for vitals).
+ */
+function clampInteger(value: number | null | undefined): number | null {
+  if (value === null || value === undefined) return null;
+  if (!Number.isFinite(value)) return null;
+  return Math.round(value);
+}
+
 export class EvolutionMapper {
   static toDomain(data: any): MedicalEvolution {
     return {
@@ -170,13 +194,13 @@ export class EvolutionMapper {
       referring_person: domain.referringPerson,
       contact_number: domain.contactNumber,
 
-      attention_date: domain.attentionDate,
-      attention_time: domain.attentionTime,
+      attention_date: nullIfBlank(domain.attentionDate),
+      attention_time: nullIfBlank(domain.attentionTime),
       clinical_cause: domain.clinicalCause,
       clinical_cause_description: domain.clinicalCauseDescription,
       notify_police: domain.notifyPolice,
-      
-      event_date_time: domain.eventDateTime,
+
+      event_date_time: nullIfBlank(domain.eventDateTime),
       event_location: domain.eventLocation,
       event_address: domain.eventAddress,
       requires_police_custody: domain.requiresPoliceCustody,
@@ -189,41 +213,41 @@ export class EvolutionMapper {
 
       bp_right: domain.bpRight,
       bp_left: domain.bpLeft,
-      heart_rate: domain.heartRate,
-      respiratory_rate: domain.respiratoryRate,
+      heart_rate: clampInteger(domain.heartRate),
+      respiratory_rate: clampInteger(domain.respiratoryRate),
       temperature: clampNumeric(domain.temperature, 4, 2),
       bmi: clampNumeric(domain.bmi, 5, 2),
       weight: clampNumeric(domain.weight, 6, 2),
       height: clampNumeric(normalizeHeightMeters(domain.height), 4, 2),
       right_pupil_reaction: domain.rightPupilReaction,
       left_pupil_reaction: domain.leftPupilReaction,
-      capillary_refill_time: domain.capillaryRefillTime,
-      oxygen_saturation: domain.oxygenSaturation,
-      glasgow_ocular: domain.glasgowOcular,
-      glasgow_verbal: domain.glasgowVerbal,
-      glasgow_motor: domain.glasgowMotor,
-      glasgow_total: domain.glasgowTotal,
-      
-      gestations: domain.gestations,
-      parturitions: domain.parturitions,
-      abortions: domain.abortions,
-      cesareans: domain.cesareans,
-      last_menstruation_date: domain.lastMenstruationDate,
-      gestational_weeks: domain.gestationalWeeks,
+      capillary_refill_time: clampInteger(domain.capillaryRefillTime),
+      oxygen_saturation: clampInteger(domain.oxygenSaturation),
+      glasgow_ocular: clampInteger(domain.glasgowOcular),
+      glasgow_verbal: clampInteger(domain.glasgowVerbal),
+      glasgow_motor: clampInteger(domain.glasgowMotor),
+      glasgow_total: clampInteger(domain.glasgowTotal),
+
+      gestations: clampInteger(domain.gestations),
+      parturitions: clampInteger(domain.parturitions),
+      abortions: clampInteger(domain.abortions),
+      cesareans: clampInteger(domain.cesareans),
+      last_menstruation_date: nullIfBlank(domain.lastMenstruationDate),
+      gestational_weeks: clampInteger(domain.gestationalWeeks),
       fetal_movement: domain.fetalMovement,
-      fetal_heart_rate: domain.fetalHeartRate,
+      fetal_heart_rate: clampInteger(domain.fetalHeartRate),
       ruptured_membranes: domain.rupturedMembranes,
-      ruptured_time: domain.rupturedTime,
+      ruptured_time: nullIfBlank(domain.rupturedTime),
       uterine_height: clampNumeric(domain.uterineHeight, 5, 2),
       presentation: domain.presentation,
-      dilation: domain.dilation,
-      effacement: domain.effacement,
+      dilation: clampInteger(domain.dilation),
+      effacement: clampInteger(domain.effacement),
       plane: domain.plane,
       useful_pelvis: domain.usefulPelvis,
       vaginal_bleeding: domain.vaginalBleeding,
       contractions: domain.contractions,
-      
-      incapacity_days: domain.incapacityDays,
+
+      incapacity_days: clampInteger(domain.incapacityDays),
       referral_service: domain.referralService,
       referral_facility: domain.referralFacility,
       death_in_emergency: domain.deathInEmergency,

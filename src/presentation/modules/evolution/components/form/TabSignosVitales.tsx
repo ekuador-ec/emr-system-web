@@ -12,22 +12,34 @@ export function TabSignosVitales() {
   const glasgowVerbal = useWatch({ control, name: "glasgowVerbal" });
   const glasgowMotor = useWatch({ control, name: "glasgowMotor" });
 
-  // Auto-calculate BMI
+  // Auto-calculate BMI. When the user clears either weight or height the
+  // derived BMI is cleared too, so a stale value does not survive on the form
+  // (which used to keep the previous BMI and break the save with stale data).
   useEffect(() => {
-    if (weight && height && height > 0) {
-      const heightInMeters = height > 3 ? height / 100 : height; // Handle cm vs m
-      const bmi = weight / (heightInMeters * heightInMeters);
+    const w = Number(weight);
+    const h = Number(height);
+    if (Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0) {
+      const heightInMeters = h > 3 ? h / 100 : h;
+      const bmi = w / (heightInMeters * heightInMeters);
       setValue("bmi", parseFloat(bmi.toFixed(2)));
+    } else {
+      setValue("bmi", null);
     }
   }, [weight, height, setValue]);
 
-  // Auto-calculate Glasgow
+  // Auto-calculate Glasgow total. Clear the total when no component is set so
+  // an empty form does not persist a stale total from a previous edit.
   useEffect(() => {
-    const o = Number(glasgowOcular) || 0;
-    const v = Number(glasgowVerbal) || 0;
-    const m = Number(glasgowMotor) || 0;
-    if (o > 0 || v > 0 || m > 0) {
-      setValue("glasgowTotal", o + v + m);
+    const o = Number(glasgowOcular);
+    const v = Number(glasgowVerbal);
+    const m = Number(glasgowMotor);
+    const validO = Number.isFinite(o) && o > 0;
+    const validV = Number.isFinite(v) && v > 0;
+    const validM = Number.isFinite(m) && m > 0;
+    if (validO || validV || validM) {
+      setValue("glasgowTotal", (validO ? o : 0) + (validV ? v : 0) + (validM ? m : 0));
+    } else {
+      setValue("glasgowTotal", null);
     }
   }, [glasgowOcular, glasgowVerbal, glasgowMotor, setValue]);
 
