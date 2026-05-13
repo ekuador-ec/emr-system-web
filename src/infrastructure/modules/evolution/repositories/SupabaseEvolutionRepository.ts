@@ -53,6 +53,181 @@ function isUuidLike(value: string): boolean {
   return /^[0-9a-fA-F-]{36}$/.test(value);
 }
 
+/**
+ * Removes incomplete or duplicate child rows before sending them to the
+ * server. The form treats array rows as ephemeral scratchpads (a row exists
+ * the moment the user clicks "Agregar"), so we filter out anything that does
+ * not satisfy the table's NOT NULL / UNIQUE constraints. Otherwise a single
+ * incomplete row used to fail the whole multi-row INSERT, taking the rest of
+ * the EM down with it. dedupe keys mirror the SQL UNIQUE constraints so
+ * adding the same combo twice no longer breaks the save.
+ */
+type SystemsReviewInsert = {
+  evolution_id: string;
+  airway_status: string;
+  general_condition: string;
+  description: string | null;
+};
+
+function cleanSystemsReview(
+  items: NonNullable<UpdateEvolutionPayload["systemsReview"]> | undefined,
+  evolutionId: string,
+): SystemsReviewInsert[] {
+  if (!items) return [];
+  const seen = new Set<string>();
+  const result: SystemsReviewInsert[] = [];
+  for (const item of items) {
+    if (!item.airwayStatus || !item.generalCondition) continue;
+    const key = `${item.airwayStatus}::${item.generalCondition}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push({
+      evolution_id: evolutionId,
+      airway_status: item.airwayStatus,
+      general_condition: item.generalCondition,
+      description: item.description?.trim() ? item.description : null,
+    });
+  }
+  return result;
+}
+
+type PhysicalExamInsert = {
+  evolution_id: string;
+  region: string;
+  has_pathology: boolean;
+  description: string | null;
+};
+
+function cleanPhysicalExams(
+  items: NonNullable<UpdateEvolutionPayload["physicalExams"]> | undefined,
+  evolutionId: string,
+): PhysicalExamInsert[] {
+  if (!items) return [];
+  const seen = new Set<string>();
+  const result: PhysicalExamInsert[] = [];
+  for (const item of items) {
+    if (!item.region) continue;
+    if (seen.has(item.region)) continue;
+    seen.add(item.region);
+    result.push({
+      evolution_id: evolutionId,
+      region: item.region,
+      has_pathology: Boolean(item.hasPathology),
+      description: item.description?.trim() ? item.description : null,
+    });
+  }
+  return result;
+}
+
+type InjuryInsert = { evolution_id: string; injury_type: string };
+
+function cleanInjuries(
+  items: NonNullable<UpdateEvolutionPayload["injuries"]> | undefined,
+  evolutionId: string,
+): InjuryInsert[] {
+  if (!items) return [];
+  const seen = new Set<string>();
+  const result: InjuryInsert[] = [];
+  for (const item of items) {
+    if (!item.injuryType) continue;
+    if (seen.has(item.injuryType)) continue;
+    seen.add(item.injuryType);
+    result.push({ evolution_id: evolutionId, injury_type: item.injuryType });
+  }
+  return result;
+}
+
+type DiagnosisInsert = {
+  evolution_id: string;
+  cie10_id: string;
+  type: string;
+  certainty: string;
+  description: string | null;
+};
+
+function cleanDiagnoses(
+  items: NonNullable<UpdateEvolutionPayload["diagnoses"]> | undefined,
+  evolutionId: string,
+): DiagnosisInsert[] {
+  if (!items) return [];
+  const result: DiagnosisInsert[] = [];
+  for (const item of items) {
+    const cie10 = (item.cie10Id ?? "").trim();
+    if (!isUuidLike(cie10)) continue;
+    if (!item.type || !item.certainty) continue;
+    result.push({
+      evolution_id: evolutionId,
+      cie10_id: cie10,
+      type: item.type,
+      certainty: item.certainty,
+      description: item.description?.trim() ? item.description : null,
+    });
+  }
+  return result;
+}
+
+type DischargeInsert = { evolution_id: string; discharge_type: string };
+
+function cleanDischarges(
+  items: NonNullable<UpdateEvolutionPayload["discharges"]> | undefined,
+  evolutionId: string,
+): DischargeInsert[] {
+  if (!items) return [];
+  const seen = new Set<string>();
+  const result: DischargeInsert[] = [];
+  for (const item of items) {
+    if (!item.dischargeType) continue;
+    if (seen.has(item.dischargeType)) continue;
+    seen.add(item.dischargeType);
+    result.push({ evolution_id: evolutionId, discharge_type: item.dischargeType });
+  }
+  return result;
+}
+
+type TreatmentPlanInsert = {
+  evolution_id: string;
+  indication: string;
+  medication: string;
+  posology: string;
+};
+
+function cleanTreatmentPlans(
+  items: NonNullable<UpdateEvolutionPayload["treatmentPlans"]> | undefined,
+  evolutionId: string,
+): TreatmentPlanInsert[] {
+  if (!items) return [];
+  const result: TreatmentPlanInsert[] = [];
+  for (const item of items) {
+    const indication = (item.indication ?? "").trim();
+    const medication = (item.medication ?? "").trim();
+    const posology = (item.posology ?? "").trim();
+    // Skip fully empty placeholder rows added by the UI; keep partial rows so
+    // the user can save in progress.
+    if (!indication && !medication && !posology) continue;
+    result.push({
+      evolution_id: evolutionId,
+      indication,
+      medication,
+      posology,
+    });
+  }
+  return result;
+}
+
+async function deleteChildRows(table: string, evolutionId: string): Promise<void> {
+  const { error } = await supabase.from(table).delete().eq("evolution_id", evolutionId);
+  if (error) throw new Error(`Error clearing ${table}: ${error.message}`);
+}
+
+async function insertChildRows<TRow extends { evolution_id: string }>(
+  table: string,
+  rows: TRow[],
+): Promise<void> {
+  if (rows.length === 0) return;
+  const { error } = await supabase.from(table).insert(rows);
+  if (error) throw new Error(`Error saving ${table}: ${error.message}`);
+}
+
 export class SupabaseEvolutionRepository implements EvolutionRepository {
   private async getUserId(): Promise<string> {
     const {
@@ -84,68 +259,12 @@ export class SupabaseEvolutionRepository implements EvolutionRepository {
 
     const evolutionId = evolution.id;
 
-    if (payload.systemsReview && payload.systemsReview.length > 0) {
-      await supabase.from("evolution_systems_review").insert(
-        payload.systemsReview.map((item) => ({
-          evolution_id: evolutionId,
-          airway_status: item.airwayStatus,
-          general_condition: item.generalCondition,
-          description: item.description,
-        })),
-      );
-    }
-
-    if (payload.physicalExams && payload.physicalExams.length > 0) {
-      await supabase.from("evolution_physical_exams").insert(
-        payload.physicalExams.map((item) => ({
-          evolution_id: evolutionId,
-          region: item.region,
-          has_pathology: item.hasPathology,
-          description: item.description,
-        })),
-      );
-    }
-
-    if (payload.injuries && payload.injuries.length > 0) {
-      await supabase.from("evolution_injuries").insert(
-        payload.injuries.map((item) => ({
-          evolution_id: evolutionId,
-          injury_type: item.injuryType,
-        })),
-      );
-    }
-
-    if (payload.diagnoses && payload.diagnoses.length > 0) {
-      await supabase.from("evolution_diagnoses").insert(
-        payload.diagnoses.map((item) => ({
-          evolution_id: evolutionId,
-          cie10_id: item.cie10Id,
-          type: item.type,
-          certainty: item.certainty,
-          description: item.description,
-        })),
-      );
-    }
-
-    if (payload.discharges && payload.discharges.length > 0) {
-      await supabase.from("evolution_discharges").insert(
-        payload.discharges.map((item) => ({
-          evolution_id: evolutionId,
-          discharge_type: item.dischargeType,
-        })),
-      );
-    }
-
-    if (payload.treatmentPlans && payload.treatmentPlans.length > 0) {
-      await supabase.from("evolution_treatment_plans").insert(
-        payload.treatmentPlans.map((item) => ({
-          evolution_id: evolutionId,
-          indication: item.indication,
-          medication: item.medication,
-          posology: item.posology,
-        })),
-      );
-    }
+    await insertChildRows("evolution_systems_review", cleanSystemsReview(payload.systemsReview, evolutionId));
+    await insertChildRows("evolution_physical_exams", cleanPhysicalExams(payload.physicalExams, evolutionId));
+    await insertChildRows("evolution_injuries", cleanInjuries(payload.injuries, evolutionId));
+    await insertChildRows("evolution_diagnoses", cleanDiagnoses(payload.diagnoses, evolutionId));
+    await insertChildRows("evolution_discharges", cleanDischarges(payload.discharges, evolutionId));
+    await insertChildRows("evolution_treatment_plans", cleanTreatmentPlans(payload.treatmentPlans, evolutionId));
 
     return this.getById(evolutionId);
   }
@@ -163,83 +282,33 @@ export class SupabaseEvolutionRepository implements EvolutionRepository {
     }
 
     if (payload.systemsReview) {
-      await supabase.from("evolution_systems_review").delete().eq("evolution_id", id);
-      if (payload.systemsReview.length > 0) {
-        await supabase.from("evolution_systems_review").insert(
-          payload.systemsReview.map((item) => ({
-            evolution_id: id,
-            airway_status: item.airwayStatus,
-            general_condition: item.generalCondition,
-            description: item.description,
-          })),
-        );
-      }
+      await deleteChildRows("evolution_systems_review", id);
+      await insertChildRows("evolution_systems_review", cleanSystemsReview(payload.systemsReview, id));
     }
 
     if (payload.physicalExams) {
-      await supabase.from("evolution_physical_exams").delete().eq("evolution_id", id);
-      if (payload.physicalExams.length > 0) {
-        await supabase.from("evolution_physical_exams").insert(
-          payload.physicalExams.map((item) => ({
-            evolution_id: id,
-            region: item.region,
-            has_pathology: item.hasPathology,
-            description: item.description,
-          })),
-        );
-      }
+      await deleteChildRows("evolution_physical_exams", id);
+      await insertChildRows("evolution_physical_exams", cleanPhysicalExams(payload.physicalExams, id));
     }
 
     if (payload.injuries) {
-      await supabase.from("evolution_injuries").delete().eq("evolution_id", id);
-      if (payload.injuries.length > 0) {
-        await supabase
-          .from("evolution_injuries")
-          .insert(
-            payload.injuries.map((item) => ({ evolution_id: id, injury_type: item.injuryType })),
-          );
-      }
+      await deleteChildRows("evolution_injuries", id);
+      await insertChildRows("evolution_injuries", cleanInjuries(payload.injuries, id));
     }
 
     if (payload.diagnoses) {
-      await supabase.from("evolution_diagnoses").delete().eq("evolution_id", id);
-      if (payload.diagnoses.length > 0) {
-        await supabase.from("evolution_diagnoses").insert(
-          payload.diagnoses.map((item) => ({
-            evolution_id: id,
-            cie10_id: item.cie10Id,
-            type: item.type,
-            certainty: item.certainty,
-            description: item.description,
-          })),
-        );
-      }
+      await deleteChildRows("evolution_diagnoses", id);
+      await insertChildRows("evolution_diagnoses", cleanDiagnoses(payload.diagnoses, id));
     }
 
     if (payload.discharges) {
-      await supabase.from("evolution_discharges").delete().eq("evolution_id", id);
-      if (payload.discharges.length > 0) {
-        await supabase.from("evolution_discharges").insert(
-          payload.discharges.map((item) => ({
-            evolution_id: id,
-            discharge_type: item.dischargeType,
-          })),
-        );
-      }
+      await deleteChildRows("evolution_discharges", id);
+      await insertChildRows("evolution_discharges", cleanDischarges(payload.discharges, id));
     }
 
     if (payload.treatmentPlans) {
-      await supabase.from("evolution_treatment_plans").delete().eq("evolution_id", id);
-      if (payload.treatmentPlans.length > 0) {
-        await supabase.from("evolution_treatment_plans").insert(
-          payload.treatmentPlans.map((item) => ({
-            evolution_id: id,
-            indication: item.indication,
-            medication: item.medication,
-            posology: item.posology,
-          })),
-        );
-      }
+      await deleteChildRows("evolution_treatment_plans", id);
+      await insertChildRows("evolution_treatment_plans", cleanTreatmentPlans(payload.treatmentPlans, id));
     }
 
     return this.getById(id);
