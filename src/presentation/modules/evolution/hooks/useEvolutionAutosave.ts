@@ -7,7 +7,7 @@ import {
 } from "@/infrastructure/core/draftCache";
 import type { UpdateEvolutionDraftFormValues } from "@/presentation/modules/evolution/schemas/evolution.schema";
 
-export type EvolutionAutosaveStatus = "idle" | "saving" | "saved" | "error";
+export type EvolutionAutosaveStatus = "idle" | "dirty" | "saving" | "saved" | "error";
 
 export interface UseEvolutionAutosaveResult {
   status: EvolutionAutosaveStatus;
@@ -62,7 +62,10 @@ export function useEvolutionAutosave({
 
     const data = methods.getValues();
     const snapshot = JSON.stringify(data);
-    if (snapshot === lastSnapshotRef.current) return;
+    if (snapshot === lastSnapshotRef.current) {
+      setStatus((prev) => (prev === "dirty" || prev === "saving" ? "saved" : prev));
+      return;
+    }
 
     inFlightRef.current = true;
     setStatus("saving");
@@ -75,15 +78,12 @@ export function useEvolutionAutosave({
       lastSnapshotRef.current = snapshot;
       setLastSavedAt(new Date());
       setStatus("saved");
-      // Only clear the local cache if no edits happened while the server
-      // call was in flight. Otherwise the newer keystrokes stay safe in
-      // localStorage for the next refresh.
-      if (JSON.stringify(methods.getValues()) === snapshot) {
-        clearLocalDraft(evolutionId);
-      }
-    } catch {
-      // The watch-event eager cache write already covered this scenario,
-      // so we only need to surface the failure to the UI.
+      // Always clear the local cache after a successful server save. If the
+      // user kept typing during the request, the very next watch event will
+      // refill the cache 800 ms later, so the recovery window stays minimal.
+      clearLocalDraft(evolutionId);
+    } catch (error) {
+      console.error("Autosave failed", error);
       setStatus("error");
     } finally {
       inFlightRef.current = false;
@@ -102,6 +102,13 @@ export function useEvolutionAutosave({
     lastSnapshotRef.current = JSON.stringify(methods.getValues());
 
     const subscription = methods.watch(() => {
+      // Skip phantom events that did not actually change the data (RHF can
+      // emit them when arrays reshuffle, fields are registered, etc.).
+      const currentSnapshot = JSON.stringify(methods.getValues());
+      if (currentSnapshot === lastSnapshotRef.current) return;
+
+      setStatus("dirty");
+
       // Eager local cache so even a hard refresh recovers the latest edits.
       cancelLocalTimer();
       localTimerRef.current = setTimeout(() => {
@@ -131,7 +138,34 @@ export function useEvolutionAutosave({
     cancelLocalTimer,
   ]);
 
-  // Flush any pending autosave when the consumer unmounts.
+  // Flush any pending autosave when the user navigates away or hides the tab.
+  useEffect(() => {
+    if (!evolutionId || !enabled) return undefined;
+
+    const flushIfPending = () => {
+      if (serverTimerRef.current || inFlightRef.current) {
+        void performAutosave();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        flushIfPending();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", flushIfPending);
+    window.addEventListener("pagehide", flushIfPending);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", flushIfPending);
+      window.removeEventListener("pagehide", flushIfPending);
+    };
+  }, [evolutionId, enabled, performAutosave]);
+
+  // Clean up timers on unmount.
   useEffect(() => {
     return () => {
       cancelServerTimer();
@@ -147,4 +181,3 @@ export function useEvolutionAutosave({
 
   return { status, lastSavedAt, flush };
 }
-

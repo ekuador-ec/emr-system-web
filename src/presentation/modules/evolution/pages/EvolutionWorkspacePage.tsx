@@ -245,7 +245,13 @@ export function EvolutionWorkspacePage() {
 
       const cachedAt = new Date(cached.savedAt).getTime();
       const serverAt = new Date(evolutionRef.updatedAt).getTime();
-      if (cachedAt <= serverAt) {
+      // The local cache writes every ~800 ms while the server only catches up
+      // every few seconds, so the cache will almost always look "newer" by a
+      // few hundred milliseconds even in the happy path. Only treat it as a
+      // recovery scenario when the gap is wide enough to suggest the user
+      // actually lost data (refresh / crash / offline gap).
+      const RECOVERY_GAP_MS = 30_000;
+      if (cachedAt - serverAt < RECOVERY_GAP_MS) {
         clearLocalDraft(evolutionId);
         return;
       }
@@ -253,7 +259,7 @@ export function EvolutionWorkspacePage() {
       const restore = await confirm({
         title: "Cambios sin sincronizar",
         message:
-          "Detectamos cambios locales más recientes que los guardados en el servidor. ¿Deseas restaurarlos en este formulario?",
+          "Detectamos cambios locales más recientes que los guardados en el servidor. Probablemente la conexión se perdió o el navegador se cerró. ¿Deseas restaurarlos en este formulario?",
         confirmText: "Restaurar",
         cancelText: "Descartar",
         type: "warning",
@@ -310,10 +316,18 @@ export function EvolutionWorkspacePage() {
         },
       });
       methods.reset(data); // reset dirty state
-      addToast({ type: "success", message: "Borrador guardado temporalmente." });
+      if (evolutionId) clearLocalDraft(evolutionId);
+      addToast({
+        type: "success",
+        message: "Borrador guardado. Puedes seguir editando o salir sin perder los cambios.",
+      });
     } catch (error) {
       console.error("Failed to save draft", error);
-      addToast({ type: "error", message: "Ocurrió un error al guardar el borrador." });
+      addToast({
+        type: "error",
+        message:
+          "No se pudo guardar en el servidor. Los cambios siguen seguros en este navegador.",
+      });
     }
   };
 
@@ -862,32 +876,55 @@ export function EvolutionWorkspacePage() {
 }
 
 interface AutosaveStatusIndicatorProps {
-  status: "idle" | "saving" | "saved" | "error";
+  status: "idle" | "dirty" | "saving" | "saved" | "error";
   lastSavedAt: Date | null;
 }
 
 function AutosaveStatusIndicator({ status, lastSavedAt }: AutosaveStatusIndicatorProps) {
+  let icon = "icon-cloud-close-solid";
   let text = "";
   let color = "var(--color-text-secondary)";
 
   if (status === "saving") {
+    icon = "icon-save";
     text = "Guardando…";
+  } else if (status === "dirty") {
+    icon = "icon-edit";
+    text = "Cambios sin guardar";
+    color = "var(--color-text-secondary)";
   } else if (status === "error") {
-    text = "Cambios pendientes — guardando localmente";
+    icon = "icon-alert-triangle";
+    text = "Sin conexión — borrador a salvo en este navegador";
     color = "var(--color-warning)";
   } else if (status === "saved" && lastSavedAt) {
-    text = `Guardado ${formatRelativeSeconds(lastSavedAt)}`;
+    icon = "icon-check-solid";
+    text = `Borrador guardado ${formatRelativeSeconds(lastSavedAt)}`;
+    color = "var(--color-success)";
   } else {
     return null;
   }
 
   return (
-    <span style={{ fontSize: "0.75rem", color, fontStyle: "italic" }}>{text}</span>
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "6px",
+        fontSize: "0.75rem",
+        color,
+        fontStyle: "italic",
+      }}
+      title={text}
+    >
+      <Icon name={icon} size={14} />
+      {text}
+    </span>
   );
 }
 
 function formatRelativeSeconds(date: Date): string {
   const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+  if (seconds < 5) return "ahora mismo";
   if (seconds < 60) return `hace ${seconds}s`;
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `hace ${minutes} min`;
