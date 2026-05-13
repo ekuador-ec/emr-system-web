@@ -107,6 +107,7 @@ function ShortcutsPopover({ open, onClose }: ShortcutsPopoverProps): ReactNode {
       <div className="evolution-banner__shortcuts-row">
         <span>Detalle del paciente</span>
         <span className="evolution-banner__kbd">
+          <kbd>Shift</kbd>
           <kbd>Alt</kbd>
           <kbd>P</kbd>
         </span>
@@ -178,6 +179,16 @@ export function EvolutionPatientBanner({
                 </>
               ) : null}
             </div>
+            {patient ? (
+              <button
+                type="button"
+                className="evolution-banner__detail-link"
+                onClick={onOpenPatientDetail}
+              >
+                <Icon name="icon-see-details" size={14} />
+                Ver detalle del paciente
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -199,13 +210,6 @@ export function EvolutionPatientBanner({
         </div>
 
         <div className="evolution-banner__actions">
-          {patient ? (
-            <WcButton variant="terciary" onClick={onOpenPatientDetail}>
-              <Icon name="icon-see-details" size={16} />
-              Detalle paciente
-            </WcButton>
-          ) : null}
-
           {!isClosed ? (
             <>
               <WcButton variant="secondary" onClick={onSaveDraft} disabled={isSavingDraft}>

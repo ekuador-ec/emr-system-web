@@ -72,6 +72,35 @@
   color: var(--color-text-secondary);
 }
 
+.evolution-banner__detail-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  align-self: flex-start;
+  transition: color var(--transition-fast);
+}
+
+.evolution-banner__detail-link:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+.evolution-banner__detail-link:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 .evolution-banner__chip {
   display: inline-flex;
   align-items: center;
