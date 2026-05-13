@@ -25,6 +25,7 @@ import { TabAlta } from "../components/form/TabAlta";
 import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import { useConfirmDialog } from "@/presentation/modules/shared/components/ui/useConfirmDialog";
 import { usePatient } from "@/presentation/modules/patient/hooks/usePatients";
+import { useAuth } from "@/presentation/modules/auth/hooks/useAuth";
 
 const TABS = [
   { label: "Admisión", icon: "icon-hospital-user", name: "Registro de Admisión" },
@@ -50,6 +51,8 @@ export function EvolutionWorkspacePage() {
   const { data: patient } = usePatient(patientId || "");
   const updateEvolution = useUpdateEvolution();
   const closeEvolution = useCloseEvolution();
+  const { user } = useAuth();
+  const canCloseEvolution = user?.role === "doctor" || user?.role === "admin";
   const { activeTab, setActiveTab, reset } = useEvolutionUIStore();
   const { addToast } = useToastStore();
   const { confirm, DialogComponent } = useConfirmDialog();
@@ -258,6 +261,14 @@ export function EvolutionWorkspacePage() {
   };
 
   const handleCloseEvolution = async () => {
+    if (!canCloseEvolution) {
+      addToast({
+        type: "warning",
+        message: "Solo personal médico o administradores pueden firmar y cerrar una evolución.",
+      });
+      return;
+    }
+
     const data = methods.getValues();
 
     // Strict validation
@@ -335,7 +346,7 @@ export function EvolutionWorkspacePage() {
       // @ts-ignore
       await updateEvolution.mutateAsync({ id: evolutionId!, payload: data });
       // 2. Trigger the close procedure (signatures, status change)
-      await closeEvolution.mutateAsync(evolutionId!);
+      await closeEvolution.mutateAsync({ id: evolutionId!, actorRole: user?.role });
       addToast({ type: "success", message: "Evolución médica firmada y cerrada exitosamente." });
       navigate(`/pacientes/${patientId}/historia`);
     } catch (error) {
@@ -526,23 +537,48 @@ export function EvolutionWorkspacePage() {
         </div>
 
         {!isClosed && (
-          <div style={{ display: "flex", gap: "var(--space-3)", marginTop: "24px" }}>
-            <WcButton
-              variant="secondary"
-              onClick={methods.handleSubmit(handleSaveDraft)}
-              disabled={updateEvolution.isPending}
-            >
-              <Icon name="icon-save" size={16} />
-              {updateEvolution.isPending ? "Guardando..." : "Guardar Temporalmente"}
-            </WcButton>
-            <WcButton
-              variant="primary"
-              onClick={handleCloseEvolution}
-              disabled={closeEvolution.isPending || updateEvolution.isPending}
-            >
-              <Icon name="icon-check" size={16} />
-              {closeEvolution.isPending ? "Cerrando..." : "Firmar y Cerrar Evolución"}
-            </WcButton>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: "var(--space-2)",
+              marginTop: "24px",
+            }}
+          >
+            <div style={{ display: "flex", gap: "var(--space-3)" }}>
+              <WcButton
+                variant="secondary"
+                onClick={methods.handleSubmit(handleSaveDraft)}
+                disabled={updateEvolution.isPending}
+              >
+                <Icon name="icon-save" size={16} />
+                {updateEvolution.isPending ? "Guardando..." : "Guardar Temporalmente"}
+              </WcButton>
+              {canCloseEvolution && (
+                <WcButton
+                  variant="primary"
+                  onClick={handleCloseEvolution}
+                  disabled={closeEvolution.isPending || updateEvolution.isPending}
+                >
+                  <Icon name="icon-check" size={16} />
+                  {closeEvolution.isPending ? "Cerrando..." : "Firmar y Cerrar Evolución"}
+                </WcButton>
+              )}
+            </div>
+            {!canCloseEvolution && (
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "0.75rem",
+                  color: "var(--color-text-secondary)",
+                  maxWidth: "520px",
+                }}
+              >
+                Tu rol puede editar la evolución, pero solo personal médico o
+                administradores pueden firmarla y cerrarla.
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -717,7 +753,8 @@ export function EvolutionWorkspacePage() {
               Siguiente
             </WcButton>
           ) : (
-            !isClosed && (
+            !isClosed &&
+            canCloseEvolution && (
               <WcButton
                 variant="primary"
                 onClick={handleCloseEvolution}

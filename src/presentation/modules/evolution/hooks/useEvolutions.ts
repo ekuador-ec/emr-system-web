@@ -6,6 +6,7 @@ import { GetEvolutionByIdUseCase } from "@/application/modules/evolution/use-cas
 import { GetEvolutionsByMedicalRecordUseCase } from "@/application/modules/evolution/use-cases/GetEvolutionsByMedicalRecordUseCase";
 import { ListEvolutionsUseCase } from "@/application/modules/evolution/use-cases/ListEvolutionsUseCase";
 import { SupabaseEvolutionRepository } from "@/infrastructure/modules/evolution/repositories/SupabaseEvolutionRepository";
+import type { UserRole } from "@/domain/modules/users/models/User";
 import type {
   CreateEvolutionPayload,
   EvolutionFilters,
@@ -90,7 +91,8 @@ export function useCloseEvolution() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => closeEvolutionUseCase.execute(id),
+    mutationFn: ({ id, actorRole }: { id: string; actorRole: UserRole | undefined }) =>
+      closeEvolutionUseCase.execute(id, actorRole),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: evolutionKeys.detail(data.id) });
       queryClient.invalidateQueries({ queryKey: evolutionKeys.lists() });
