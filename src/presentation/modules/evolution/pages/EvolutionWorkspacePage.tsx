@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useParams, useNavigate, useBlocker } from "react-router-dom";
 import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,6 +12,7 @@ import { useEvolutionAutosave } from "../hooks/useEvolutionAutosave";
 import { useEvolutionUIStore } from "../stores/useEvolutionUIStore";
 import {
   clearDraft as clearLocalDraft,
+  loadDraft as loadLocalDraft,
   saveDraft as saveLocalDraft,
 } from "@/infrastructure/core/draftCache";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
@@ -225,6 +226,46 @@ export function EvolutionWorkspacePage() {
     }
     return () => reset(); // Reset UI store on unmount
   }, [evolution, methods, reset]);
+
+  // Offer to restore a locally cached draft (encrypted via session key) when
+  // it is newer than the server copy. This recovers the user's work after a
+  // failed autosave or a brutal browser refresh. Runs at most once per
+  // evolution mount.
+  const draftRestoreCheckedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!evolutionId || !evolution) return;
+    if (draftRestoreCheckedRef.current === evolutionId) return;
+    draftRestoreCheckedRef.current = evolutionId;
+
+    const evolutionRef = evolution;
+
+    (async () => {
+      const cached = await loadLocalDraft<UpdateEvolutionDraftFormValues>(evolutionId);
+      if (!cached) return;
+
+      const cachedAt = new Date(cached.savedAt).getTime();
+      const serverAt = new Date(evolutionRef.updatedAt).getTime();
+      if (cachedAt <= serverAt) {
+        clearLocalDraft(evolutionId);
+        return;
+      }
+
+      const restore = await confirm({
+        title: "Cambios sin sincronizar",
+        message:
+          "Detectamos cambios locales más recientes que los guardados en el servidor. ¿Deseas restaurarlos en este formulario?",
+        confirmText: "Restaurar",
+        cancelText: "Descartar",
+        type: "warning",
+      });
+
+      if (restore) {
+        methods.reset(cached.payload);
+      } else {
+        clearLocalDraft(evolutionId);
+      }
+    })();
+  }, [evolutionId, evolution, confirm, methods]);
 
   const isClosed = evolution?.status === "CERRADA";
   const isDirty = methods.formState.isDirty;

@@ -20,28 +20,39 @@ interface UseEvolutionAutosaveOptions {
   methods: UseFormReturn<UpdateEvolutionDraftFormValues>;
   enabled: boolean;
   debounceMs?: number;
+  localCacheDebounceMs?: number;
 }
 
 const DEFAULT_DEBOUNCE_MS = 6000;
+const DEFAULT_LOCAL_CACHE_DEBOUNCE_MS = 800;
 
 export function useEvolutionAutosave({
   evolutionId,
   methods,
   enabled,
   debounceMs = DEFAULT_DEBOUNCE_MS,
+  localCacheDebounceMs = DEFAULT_LOCAL_CACHE_DEBOUNCE_MS,
 }: UseEvolutionAutosaveOptions): UseEvolutionAutosaveResult {
   const updateEvolution = useUpdateEvolution();
   const [status, setStatus] = useState<EvolutionAutosaveStatus>("idle");
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   const lastSnapshotRef = useRef<string>("");
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const serverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const localTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlightRef = useRef<boolean>(false);
 
-  const cancelPendingTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
+  const cancelServerTimer = useCallback(() => {
+    if (serverTimerRef.current) {
+      clearTimeout(serverTimerRef.current);
+      serverTimerRef.current = null;
+    }
+  }, []);
+
+  const cancelLocalTimer = useCallback(() => {
+    if (localTimerRef.current) {
+      clearTimeout(localTimerRef.current);
+      localTimerRef.current = null;
     }
   }, []);
 
@@ -64,53 +75,76 @@ export function useEvolutionAutosave({
       lastSnapshotRef.current = snapshot;
       setLastSavedAt(new Date());
       setStatus("saved");
-      clearLocalDraft(evolutionId);
+      // Only clear the local cache if no edits happened while the server
+      // call was in flight. Otherwise the newer keystrokes stay safe in
+      // localStorage for the next refresh.
+      if (JSON.stringify(methods.getValues()) === snapshot) {
+        clearLocalDraft(evolutionId);
+      }
     } catch {
+      // The watch-event eager cache write already covered this scenario,
+      // so we only need to surface the failure to the UI.
       setStatus("error");
-      await saveLocalDraft(evolutionId, data);
     } finally {
       inFlightRef.current = false;
     }
   }, [enabled, evolutionId, methods, updateEvolution]);
 
-  // Subscribe to form changes and debounce the save.
+  // Subscribe to form changes, debounce both the server autosave and the
+  // local cache write.
   useEffect(() => {
     if (!evolutionId || !enabled) {
-      cancelPendingTimer();
+      cancelServerTimer();
+      cancelLocalTimer();
       return;
     }
 
-    // Seed snapshot with the current values so the first autosave only
-    // fires after a real edit.
     lastSnapshotRef.current = JSON.stringify(methods.getValues());
 
     const subscription = methods.watch(() => {
-      cancelPendingTimer();
-      timerRef.current = setTimeout(() => {
+      // Eager local cache so even a hard refresh recovers the latest edits.
+      cancelLocalTimer();
+      localTimerRef.current = setTimeout(() => {
+        void saveLocalDraft(evolutionId, methods.getValues());
+      }, localCacheDebounceMs);
+
+      // Slower server autosave: gives the user time to keep typing.
+      cancelServerTimer();
+      serverTimerRef.current = setTimeout(() => {
         void performAutosave();
       }, debounceMs);
     });
 
     return () => {
       subscription.unsubscribe();
-      cancelPendingTimer();
+      cancelServerTimer();
+      cancelLocalTimer();
     };
-  }, [evolutionId, enabled, methods, debounceMs, performAutosave, cancelPendingTimer]);
+  }, [
+    evolutionId,
+    enabled,
+    methods,
+    debounceMs,
+    localCacheDebounceMs,
+    performAutosave,
+    cancelServerTimer,
+    cancelLocalTimer,
+  ]);
 
   // Flush any pending autosave when the consumer unmounts.
   useEffect(() => {
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
+      cancelServerTimer();
+      cancelLocalTimer();
     };
-  }, []);
+  }, [cancelServerTimer, cancelLocalTimer]);
 
   const flush = useCallback(async () => {
-    cancelPendingTimer();
+    cancelServerTimer();
+    cancelLocalTimer();
     await performAutosave();
-  }, [cancelPendingTimer, performAutosave]);
+  }, [cancelServerTimer, cancelLocalTimer, performAutosave]);
 
   return { status, lastSavedAt, flush };
 }
+
