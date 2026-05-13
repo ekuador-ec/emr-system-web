@@ -104,6 +104,13 @@ export class EvolutionMapper {
       discharges: data.evolution_discharges ? data.evolution_discharges.map((item: any) => ({
         id: item.id,
         dischargeType: item.discharge_type
+      })) : [],
+
+      treatmentPlans: data.evolution_treatment_plans ? data.evolution_treatment_plans.map((item: any) => ({
+        id: item.id,
+        indication: item.indication,
+        medication: item.medication,
+        posology: item.posology
       })) : []
     };
   }

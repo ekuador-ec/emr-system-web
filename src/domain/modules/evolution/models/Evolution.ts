@@ -107,6 +107,13 @@ export interface EvolutionDischarge {
   dischargeType: DischargeType;
 }
 
+export interface EvolutionTreatmentPlan {
+  id?: string;
+  indication: string;
+  medication: string;
+  posology: string;
+}
+
 export interface MedicalEvolution {
   id: string;
   medicalRecordId: string;
@@ -195,6 +202,7 @@ export interface MedicalEvolution {
   physicalExams?: EvolutionPhysicalExam[];
   injuries?: EvolutionInjury[];
   diagnoses?: EvolutionDiagnosis[];
+  treatmentPlans?: EvolutionTreatmentPlan[];
   discharges?: EvolutionDischarge[];
 }
 

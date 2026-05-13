@@ -135,6 +135,17 @@ export class SupabaseEvolutionRepository implements EvolutionRepository {
       );
     }
 
+    if (payload.treatmentPlans && payload.treatmentPlans.length > 0) {
+      await supabase.from("evolution_treatment_plans").insert(
+        payload.treatmentPlans.map((item) => ({
+          evolution_id: evolutionId,
+          indication: item.indication,
+          medication: item.medication,
+          posology: item.posology,
+        })),
+      );
+    }
+
     return this.getById(evolutionId);
   }
 
@@ -215,6 +226,20 @@ export class SupabaseEvolutionRepository implements EvolutionRepository {
       }
     }
 
+    if (payload.treatmentPlans) {
+      await supabase.from("evolution_treatment_plans").delete().eq("evolution_id", id);
+      if (payload.treatmentPlans.length > 0) {
+        await supabase.from("evolution_treatment_plans").insert(
+          payload.treatmentPlans.map((item) => ({
+            evolution_id: id,
+            indication: item.indication,
+            medication: item.medication,
+            posology: item.posology,
+          })),
+        );
+      }
+    }
+
     return this.getById(id);
   }
 
@@ -250,7 +275,8 @@ export class SupabaseEvolutionRepository implements EvolutionRepository {
           *,
           cie10_pathologies(code, description)
         ),
-        evolution_discharges(*)
+        evolution_discharges(*),
+        evolution_treatment_plans(*)
       `)
       .eq("id", id)
       .single();

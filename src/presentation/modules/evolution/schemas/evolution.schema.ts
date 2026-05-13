@@ -115,6 +115,20 @@ export const EvolutionDischargeSchema = z.object({
   dischargeType: DischargeTypeSchema,
 });
 
+export const EvolutionTreatmentPlanSchema = z.object({
+  id: z.string().optional(),
+  indication: z.string(),
+  medication: z.string(),
+  posology: z.string(),
+});
+
+export const EvolutionTreatmentPlanStrictSchema = z.object({
+  id: z.string().optional(),
+  indication: z.string().min(1, "La indicación es obligatoria"),
+  medication: z.string().min(1, "El medicamento es obligatorio"),
+  posology: z.string().min(1, "La posología es obligatoria"),
+});
+
 // Relaxed schema for drafting/auto-saving
 export const UpdateEvolutionDraftSchema = z.object({
   medicalRecordId: z.string().uuid(),
@@ -198,6 +212,7 @@ export const UpdateEvolutionDraftSchema = z.object({
   physicalExams: z.array(EvolutionPhysicalExamSchema).optional(),
   injuries: z.array(EvolutionInjurySchema).optional(),
   diagnoses: z.array(EvolutionDiagnosisSchema).optional(),
+  treatmentPlans: z.array(EvolutionTreatmentPlanSchema).optional(),
   discharges: z.array(EvolutionDischargeSchema).optional(),
 });
 
@@ -252,6 +267,9 @@ export const CloseEvolutionStrictSchema = UpdateEvolutionDraftSchema.extend({
   diagnoses: z
     .array(EvolutionDiagnosisSchema)
     .min(1, "Debe registrar al menos un diagnóstico (Ingreso o Alta)"),
+  treatmentPlans: z
+    .array(EvolutionTreatmentPlanStrictSchema)
+    .min(1, "Debe registrar al menos una fila en el plan de tratamiento"),
   discharges: z
     .array(EvolutionDischargeSchema)
     .min(1, "Debe registrar al menos una condición de alta"),

@@ -20,6 +20,7 @@ import { TabEmergenciaObstetrica } from "../components/form/TabEmergenciaObstetr
 import { TabSignosVitales } from "../components/form/TabSignosVitales";
 import { TabExamen } from "../components/form/TabExamen";
 import { TabDiagnostico } from "../components/form/TabDiagnostico";
+import { TabPlanTratamiento } from "../components/form/TabPlanTratamiento";
 import { TabAlta } from "../components/form/TabAlta";
 import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import { useConfirmDialog } from "@/presentation/modules/shared/components/ui/useConfirmDialog";
@@ -37,6 +38,7 @@ const TABS = [
   { label: "Signos Vitales", icon: "icon-ecg-heart", name: "Signos Vitales" },
   { label: "Examen Físico", icon: "icon-user-search", name: "Examen Físico" },
   { label: "Diagnóstico", icon: "icon-diagnostic-medical", name: "Diagnóstico" },
+  { label: "Plan de Tratamiento", icon: "icon-edit", name: "Plan de Tratamiento" },
   { label: "Alta Médica", icon: "icon-house-medical", name: "Alta Médica" },
 ];
 
@@ -151,6 +153,10 @@ export function EvolutionWorkspacePage() {
       return { tabName: "Diagnóstico", tabIndex: 5 };
     }
 
+    if (["treatmentPlans"].includes(field)) {
+      return { tabName: "Plan de Tratamiento", tabIndex: 6 };
+    }
+
     if (
       [
         "discharges",
@@ -161,7 +167,7 @@ export function EvolutionWorkspacePage() {
         "deathCause",
       ].includes(field)
     ) {
-      return { tabName: "Alta Médica", tabIndex: 6 };
+      return { tabName: "Alta Médica", tabIndex: 7 };
     }
 
     return { tabName: "General", tabIndex: 0 };
@@ -180,6 +186,7 @@ export function EvolutionWorkspacePage() {
       physicalExams: [],
       injuries: [],
       diagnoses: [],
+      treatmentPlans: [],
       discharges: [],
     },
   });
@@ -199,6 +206,7 @@ export function EvolutionWorkspacePage() {
         physicalExams: evolution.physicalExams || [],
         injuries: evolution.injuries || [],
         diagnoses: evolution.diagnoses || [],
+        treatmentPlans: evolution.treatmentPlans || [],
         discharges: evolution.discharges || [],
       });
     }
@@ -683,7 +691,8 @@ export function EvolutionWorkspacePage() {
               {activeTab === 3 && <TabSignosVitales />}
               {activeTab === 4 && <TabExamen />}
               {activeTab === 5 && <TabDiagnostico />}
-              {activeTab === 6 && <TabAlta />}
+              {activeTab === 6 && <TabPlanTratamiento />}
+              {activeTab === 7 && <TabAlta />}
             </div>
           </form>
         </FormProvider>
