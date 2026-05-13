@@ -222,6 +222,11 @@ export function PatientDetailsDrawer() {
                           </span>
                           <span className="patient-drawer__field-label">{ant.diagnosisDate}</span>
                         </div>
+                        {ant.pathology && (
+                          <div className="patient-drawer__field-value patient-drawer__field-value--bold" style={{ color: 'var(--drawer-name-color)', marginTop: '4px' }}>
+                            [{ant.pathology.code}] {ant.pathology.description}
+                          </div>
+                        )}
                         {ant.description && (
                           <div className="patient-drawer__field-value patient-drawer__field-value--multiline">
                             {ant.description}
@@ -251,7 +256,10 @@ export function PatientDetailsDrawer() {
                 setSelectedPatientId(null);
               }}
             >
-              Ir a Historia
+              <div className="patient-drawer__btn-inner">
+                <Icon name="icon-open-folder" size={16} />
+                <span>Ver HCI</span>
+              </div>
             </WcButton>
 
             <WcButton
@@ -262,7 +270,10 @@ export function PatientDetailsDrawer() {
                 setSelectedPatientId(null);
               }}
             >
-              Editar
+              <div className="patient-drawer__btn-inner">
+                <Icon name="icon-edit" size={16} />
+                <span>Editar</span>
+              </div>
             </WcButton>
           </div>
         )}

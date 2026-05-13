@@ -298,6 +298,12 @@
   border-top: var(--drawer-footer-border);
 }
 
+.patient-drawer__btn-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* ── Botón Editar ── */
 .drawer-footer__btn-edit {
   box-shadow: 0 2px 8px rgba(var(--color-primary-rgb, 99, 102, 241), 0.3);
