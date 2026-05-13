@@ -8,7 +8,9 @@ import {
   type UpdateEvolutionDraftFormValues,
 } from "../schemas/evolution.schema";
 import { useEvolution, useUpdateEvolution, useCloseEvolution } from "../hooks/useEvolutions";
+import { useEvolutionAutosave } from "../hooks/useEvolutionAutosave";
 import { useEvolutionUIStore } from "../stores/useEvolutionUIStore";
+import { clearDraft as clearLocalDraft } from "@/infrastructure/core/draftCache";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import { UnsavedChangesModal } from "../components/UnsavedChangesModal";
@@ -219,6 +221,12 @@ export function EvolutionWorkspacePage() {
   const isClosed = evolution?.status === "CERRADA";
   const isDirty = methods.formState.isDirty;
 
+  const autosave = useEvolutionAutosave({
+    evolutionId,
+    methods,
+    enabled: Boolean(evolutionId) && !isClosed,
+  });
+
   // Intercept React Router navigation
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
@@ -347,6 +355,7 @@ export function EvolutionWorkspacePage() {
       await updateEvolution.mutateAsync({ id: evolutionId!, payload: data });
       // 2. Trigger the close procedure (signatures, status change)
       await closeEvolution.mutateAsync({ id: evolutionId!, actorRole: user?.role });
+      if (evolutionId) clearLocalDraft(evolutionId);
       addToast({ type: "success", message: "Evolución médica firmada y cerrada exitosamente." });
       navigate(`/pacientes/${patientId}/historia`);
     } catch (error) {
@@ -495,6 +504,12 @@ export function EvolutionWorkspacePage() {
             >
               {evolution.status.replace("_", " ")}
             </span>
+            {!isClosed && (
+              <AutosaveStatusIndicator
+                status={autosave.status}
+                lastSavedAt={autosave.lastSavedAt}
+              />
+            )}
           </div>
 
           <div
@@ -787,4 +802,38 @@ export function EvolutionWorkspacePage() {
       <PatientDetailsDrawer />
     </div>
   );
+}
+
+interface AutosaveStatusIndicatorProps {
+  status: "idle" | "saving" | "saved" | "error";
+  lastSavedAt: Date | null;
+}
+
+function AutosaveStatusIndicator({ status, lastSavedAt }: AutosaveStatusIndicatorProps) {
+  let text = "";
+  let color = "var(--color-text-secondary)";
+
+  if (status === "saving") {
+    text = "Guardando…";
+  } else if (status === "error") {
+    text = "Cambios pendientes — guardando localmente";
+    color = "var(--color-warning)";
+  } else if (status === "saved" && lastSavedAt) {
+    text = `Guardado ${formatRelativeSeconds(lastSavedAt)}`;
+  } else {
+    return null;
+  }
+
+  return (
+    <span style={{ fontSize: "0.75rem", color, fontStyle: "italic" }}>{text}</span>
+  );
+}
+
+function formatRelativeSeconds(date: Date): string {
+  const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+  if (seconds < 60) return `hace ${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `hace ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  return `hace ${hours} h`;
 }
