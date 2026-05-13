@@ -1,34 +1,128 @@
-import { useFormContext, useFieldArray, useWatch } from 'react-hook-form';
-import type { UpdateEvolutionDraftFormValues } from '../../schemas/evolution.schema';
-import { Icon } from '@/presentation/modules/shared/components/Sidebar/icons/Icon';
-import WcButton from '@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton';
-import { WcCheckbox } from '@/presentation/modules/shared/components/ui/webcomponents/Checkbox/WcCheckbox';
-import type { AirwayStatus, GeneralCondition } from '@/domain/modules/evolution/models/Evolution';
+import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
+import type { UpdateEvolutionDraftFormValues } from "../../schemas/evolution.schema";
+import type {
+  AirwayStatus,
+  GeneralCondition,
+  InjuryType,
+  PhysicalExamRegion,
+} from "@/domain/modules/evolution/models/Evolution";
+import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
+import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
+import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
+import { WcCheckbox } from "@/presentation/modules/shared/components/ui/webcomponents/Checkbox/WcCheckbox";
+import {
+  WcField,
+  WcFormGrid,
+  WcFormSection,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Forms";
+import {
+  WcInput,
+  WcSelect,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Inputs";
 
-const SYSTEM_REVIEW_COMBOS: Array<{ airwayStatus: AirwayStatus; generalCondition: GeneralCondition }> = [
-  { airwayStatus: 'VIA_AEREA_LIBRE', generalCondition: 'CONDICION_ESTABLE' },
-  { airwayStatus: 'VIA_AEREA_LIBRE', generalCondition: 'CONDICION_INESTABLE' },
-  { airwayStatus: 'VIA_AEREA_OBSTRUIDA', generalCondition: 'CONDICION_ESTABLE' },
-  { airwayStatus: 'VIA_AEREA_OBSTRUIDA', generalCondition: 'CONDICION_INESTABLE' },
+const SYSTEM_REVIEW_COMBOS: Array<{
+  airwayStatus: AirwayStatus;
+  generalCondition: GeneralCondition;
+}> = [
+  { airwayStatus: "VIA_AEREA_LIBRE", generalCondition: "CONDICION_ESTABLE" },
+  { airwayStatus: "VIA_AEREA_LIBRE", generalCondition: "CONDICION_INESTABLE" },
+  { airwayStatus: "VIA_AEREA_OBSTRUIDA", generalCondition: "CONDICION_ESTABLE" },
+  { airwayStatus: "VIA_AEREA_OBSTRUIDA", generalCondition: "CONDICION_INESTABLE" },
 ];
+
+const AIRWAY_OPTIONS = [
+  { value: "VIA_AEREA_LIBRE", label: "Vía aérea libre" },
+  { value: "VIA_AEREA_OBSTRUIDA", label: "Vía aérea obstruida" },
+];
+
+const GENERAL_CONDITION_OPTIONS = [
+  { value: "CONDICION_ESTABLE", label: "Estable" },
+  { value: "CONDICION_INESTABLE", label: "Inestable" },
+];
+
+const REGION_OPTIONS = [
+  { value: "CABEZA", label: "Cabeza" },
+  { value: "CUELLO", label: "Cuello" },
+  { value: "TORAX", label: "Tórax" },
+  { value: "ABDOMEN", label: "Abdomen" },
+  { value: "COLUMNA", label: "Columna" },
+  { value: "PELVIS", label: "Pelvis" },
+  { value: "EXTREMIDADES", label: "Extremidades" },
+  { value: "OTRO", label: "Otro" },
+];
+
+const INJURY_OPTIONS = [
+  { value: "HERIDA_PENETRANTE", label: "Herida Penetrante" },
+  { value: "HERIDA_CORTANTE", label: "Herida Cortante" },
+  { value: "FRACTURA_CERRADA", label: "Fractura Cerrada" },
+  { value: "CUERPO_EXTRANO", label: "Cuerpo Extraño" },
+  { value: "HEMORRAGIA", label: "Hemorragia" },
+  { value: "MORDEDURA", label: "Mordedura" },
+  { value: "PICADURA", label: "Picadura" },
+  { value: "EXCORIACION", label: "Excoriación" },
+  { value: "DEFORMIDAD_MASA", label: "Deformidad o Masa" },
+  { value: "HEMATOMA", label: "Hematoma" },
+  { value: "ERITEMA_INFLAMACION", label: "Eritema / Inflamación" },
+  { value: "LUXACION_ESGUINCE", label: "Luxación / Esguince" },
+  { value: "QUEMADURA", label: "Quemadura" },
+  { value: "OTRO", label: "Otro" },
+];
+
+const ROW_CARD_STYLE = {
+  backgroundColor: "var(--color-bg)",
+  border: "1px solid var(--color-border)",
+  borderRadius: "var(--radius-md)",
+  padding: "var(--space-3)",
+  display: "flex",
+  flexDirection: "column" as const,
+  gap: "var(--space-3)",
+};
+
+const ROW_HEADER_STYLE = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "var(--space-2)",
+  paddingBottom: "var(--space-2)",
+  borderBottom: "1px dashed var(--color-border)",
+};
+
+const ROW_TITLE_STYLE = {
+  margin: 0,
+  fontFamily: "var(--font-heading)",
+  fontSize: "var(--font-size-xs)",
+  fontWeight: 600,
+  color: "var(--color-text-secondary)",
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.04em",
+};
+
+const EMPTY_STATE_STYLE = {
+  color: "var(--color-text-secondary)",
+  fontSize: "0.875rem",
+  margin: 0,
+};
 
 export function TabExamen() {
   const { control, register } = useFormContext<UpdateEvolutionDraftFormValues>();
 
-  const { fields: systemsFields, append: appendSystem, remove: removeSystem } = useFieldArray({
-    control,
-    name: "systemsReview"
-  });
+  const {
+    fields: systemsFields,
+    append: appendSystem,
+    remove: removeSystem,
+  } = useFieldArray({ control, name: "systemsReview" });
 
-  const { fields: examFields, append: appendExam, remove: removeExam } = useFieldArray({
-    control,
-    name: "physicalExams"
-  });
+  const {
+    fields: examFields,
+    append: appendExam,
+    remove: removeExam,
+  } = useFieldArray({ control, name: "physicalExams" });
 
-  const { fields: injuryFields, append: appendInjury, remove: removeInjury } = useFieldArray({
-    control,
-    name: "injuries"
-  });
+  const {
+    fields: injuryFields,
+    append: appendInjury,
+    remove: removeInjury,
+  } = useFieldArray({ control, name: "injuries" });
 
   const watchedSystems = useWatch({ control, name: "systemsReview" }) as
     | { airwayStatus?: AirwayStatus; generalCondition?: GeneralCondition }[]
@@ -38,7 +132,8 @@ export function TabExamen() {
     (combo) =>
       !(watchedSystems ?? []).some(
         (row) =>
-          row.airwayStatus === combo.airwayStatus && row.generalCondition === combo.generalCondition,
+          row.airwayStatus === combo.airwayStatus &&
+          row.generalCondition === combo.generalCondition,
       ),
   );
 
@@ -49,183 +144,201 @@ export function TabExamen() {
     appendSystem({
       airwayStatus: nextCombo.airwayStatus,
       generalCondition: nextCombo.generalCondition,
-      description: '',
+      description: "",
     });
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-
-      {/* S3: Revisión de Sistemas */}
-      <section style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--space-6)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '12px', marginBottom: 'var(--space-4)' }}>
-          <div>
-            <h2 style={{ margin: 0, fontSize: '1.125rem' }}>3. Revisión de Sistemas</h2>
-            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
-              Cada fila combina el estado de la vía aérea y la condición general, con una descripción única.
-            </p>
-          </div>
-          <WcButton variant="terciary" onClick={handleAppendSystem} disabled={!canAddSystem}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
+      <WcFormSection
+        title="Revisión por sistemas"
+        subtitle="Cada fila combina el estado de la vía aérea y la condición general, con una descripción única."
+        actions={
+          <WcButton
+            variant="terciary"
+            onClick={handleAppendSystem}
+            disabled={!canAddSystem}
+          >
             <Icon name="icon-add" size={16} /> Agregar combinación
           </WcButton>
-        </div>
-
+        }
+      >
         {systemsFields.length === 0 ? (
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+          <p style={EMPTY_STATE_STYLE}>
             No hay revisiones registradas. Haz clic en "Agregar combinación".
           </p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
             {systemsFields.map((field, index) => (
-              <div
-                key={field.id}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'minmax(180px, 1fr) minmax(180px, 1fr) minmax(220px, 2fr) auto',
-                  gap: '12px',
-                  alignItems: 'flex-start',
-                  padding: '16px',
-                  backgroundColor: 'var(--color-bg)',
-                  borderRadius: '8px',
-                  border: '1px solid var(--color-border)',
-                }}
-              >
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>Vía aérea</label>
-                  <select
-                    {...register(`systemsReview.${index}.airwayStatus` as const)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
+              <div key={field.id} style={ROW_CARD_STYLE}>
+                <div style={ROW_HEADER_STYLE}>
+                  <h4 style={ROW_TITLE_STYLE}>Combinación {index + 1}</h4>
+                  <WcButtonIcon
+                    variant="danger"
+                    shape="square"
+                    size="sm"
+                    onClick={() => removeSystem(index)}
+                    aria-label={`Eliminar combinación ${index + 1}`}
                   >
-                    <option value="VIA_AEREA_LIBRE">Vía aérea libre</option>
-                    <option value="VIA_AEREA_OBSTRUIDA">Vía aérea obstruida</option>
-                  </select>
+                    <Icon name="icon-trash" size={16} />
+                  </WcButtonIcon>
                 </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>Condición general</label>
-                  <select
-                    {...register(`systemsReview.${index}.generalCondition` as const)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
-                  >
-                    <option value="CONDICION_ESTABLE">Estable</option>
-                    <option value="CONDICION_INESTABLE">Inestable</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>Descripción</label>
-                  <input
-                    type="text"
-                    {...register(`systemsReview.${index}.description` as const)}
-                    placeholder="Hallazgos clínicos, manejo aplicado..."
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeSystem(index)}
-                  aria-label={`Eliminar combinación ${index + 1}`}
-                  style={{
-                    marginTop: '24px',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--color-danger)',
-                    cursor: 'pointer',
-                    padding: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Icon name="icon-trash" size={20} />
-                </button>
+                <WcFormGrid columns={3}>
+                  <WcField label="Vía aérea">
+                    <Controller
+                      control={control}
+                      name={`systemsReview.${index}.airwayStatus` as const}
+                      render={({ field: f }) => (
+                        <WcSelect
+                          value={f.value ?? null}
+                          onChange={(value) => f.onChange(value as AirwayStatus)}
+                          options={AIRWAY_OPTIONS}
+                        />
+                      )}
+                    />
+                  </WcField>
+                  <WcField label="Condición general">
+                    <Controller
+                      control={control}
+                      name={`systemsReview.${index}.generalCondition` as const}
+                      render={({ field: f }) => (
+                        <WcSelect
+                          value={f.value ?? null}
+                          onChange={(value) => f.onChange(value as GeneralCondition)}
+                          options={GENERAL_CONDITION_OPTIONS}
+                        />
+                      )}
+                    />
+                  </WcField>
+                  <WcField label="Descripción">
+                    <WcInput
+                      type="text"
+                      placeholder="Hallazgos clínicos, manejo aplicado..."
+                      {...register(`systemsReview.${index}.description` as const)}
+                    />
+                  </WcField>
+                </WcFormGrid>
               </div>
             ))}
           </div>
         )}
-      </section>
+      </WcFormSection>
 
-      {/* S5: Examen Físico */}
-      <section style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--space-6)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '12px', marginBottom: 'var(--space-4)' }}>
-          <h2 style={{ margin: 0, fontSize: '1.125rem' }}>5. Examen Físico Regional</h2>
-          <WcButton variant="terciary" onClick={() => appendExam({ region: 'OTRO', hasPathology: false, description: '' })}>
+      <WcFormSection
+        title="Examen físico"
+        actions={
+          <WcButton
+            variant="terciary"
+            onClick={() =>
+              appendExam({ region: "OTRO", hasPathology: false, description: "" })
+            }
+          >
             <Icon name="icon-add" size={16} /> Agregar
           </WcButton>
-        </div>
-
+        }
+      >
         {examFields.length === 0 ? (
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>No hay exámenes registrados. Haz clic en "Agregar".</p>
+          <p style={EMPTY_STATE_STYLE}>
+            No hay exámenes registrados. Haz clic en "Agregar".
+          </p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
             {examFields.map((field, index) => (
-              <div key={field.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(150px, 1fr) auto minmax(200px, 2fr) auto', gap: '16px', alignItems: 'flex-start', padding: '16px', backgroundColor: 'var(--color-bg)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>Región</label>
-                  <select {...register(`physicalExams.${index}.region` as const)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
-                    <option value="CABEZA">Cabeza</option>
-                    <option value="CUELLO">Cuello</option>
-                    <option value="TORAX">Tórax</option>
-                    <option value="ABDOMEN">Abdomen</option>
-                    <option value="COLUMNA">Columna</option>
-                    <option value="PELVIS">Pelvis</option>
-                    <option value="EXTREMIDADES">Extremidades</option>
-                    <option value="OTRO">Otro</option>
-                  </select>
+              <div key={field.id} style={ROW_CARD_STYLE}>
+                <div style={ROW_HEADER_STYLE}>
+                  <h4 style={ROW_TITLE_STYLE}>Región {index + 1}</h4>
+                  <WcButtonIcon
+                    variant="danger"
+                    shape="square"
+                    size="sm"
+                    onClick={() => removeExam(index)}
+                    aria-label={`Eliminar región ${index + 1}`}
+                  >
+                    <Icon name="icon-trash" size={16} />
+                  </WcButtonIcon>
                 </div>
-                <div style={{ marginTop: '28px' }}>
-                  <WcCheckbox {...register(`physicalExams.${index}.hasPathology` as const)} label="Con Patología (CP)" />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>Hallazgos</label>
-                  <input type="text" {...register(`physicalExams.${index}.description` as const)} placeholder="Descripción de la patología..." style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }} />
-                </div>
-                <button type="button" onClick={() => removeExam(index)} style={{ marginTop: '24px', background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center' }}>
-                  <Icon name="icon-trash" size={20} />
-                </button>
+                <WcFormGrid columns={3}>
+                  <WcField label="Región">
+                    <Controller
+                      control={control}
+                      name={`physicalExams.${index}.region` as const}
+                      render={({ field: f }) => (
+                        <WcSelect
+                          value={f.value ?? null}
+                          onChange={(value) => f.onChange(value as PhysicalExamRegion)}
+                          options={REGION_OPTIONS}
+                        />
+                      )}
+                    />
+                  </WcField>
+                  <WcField label="Estado">
+                    <WcCheckbox
+                      {...register(`physicalExams.${index}.hasPathology` as const)}
+                      label="Con Patología (CP)"
+                    />
+                  </WcField>
+                  <WcField label="Hallazgos">
+                    <WcInput
+                      type="text"
+                      placeholder="Descripción de la patología..."
+                      {...register(`physicalExams.${index}.description` as const)}
+                    />
+                  </WcField>
+                </WcFormGrid>
               </div>
             ))}
           </div>
         )}
-      </section>
+      </WcFormSection>
 
-      {/* S6: Lesiones */}
-      <section style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--space-6)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '12px', marginBottom: 'var(--space-4)' }}>
-          <h2 style={{ margin: 0, fontSize: '1.125rem' }}>6. Localización de Lesiones</h2>
-          <WcButton variant="terciary" onClick={() => appendInjury({ injuryType: 'OTRO' })}>
+      <WcFormSection
+        title="Lesiones"
+        actions={
+          <WcButton variant="terciary" onClick={() => appendInjury({ injuryType: "OTRO" })}>
             <Icon name="icon-add" size={16} /> Agregar
           </WcButton>
-        </div>
-
+        }
+      >
         {injuryFields.length === 0 ? (
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>No hay lesiones registradas. Haz clic en "Agregar".</p>
+          <p style={EMPTY_STATE_STYLE}>
+            No hay lesiones registradas. Haz clic en "Agregar".
+          </p>
         ) : (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
             {injuryFields.map((field, index) => (
-              <div key={field.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'var(--color-bg)', borderRadius: '24px', border: '1px solid var(--color-border)' }}>
-                <select {...register(`injuries.${index}.injuryType` as const)} style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '0.875rem', fontWeight: 500 }}>
-                  <option value="HERIDA_PENETRANTE">Herida Penetrante</option>
-                  <option value="HERIDA_CORTANTE">Herida Cortante</option>
-                  <option value="FRACTURA_CERRADA">Fractura Cerrada</option>
-                  <option value="CUERPO_EXTRANO">Cuerpo Extraño</option>
-                  <option value="HEMORRAGIA">Hemorragia</option>
-                  <option value="MORDEDURA">Mordedura</option>
-                  <option value="PICADURA">Picadura</option>
-                  <option value="EXCORIACION">Excoriación</option>
-                  <option value="DEFORMIDAD_MASA">Deformidad o Masa</option>
-                  <option value="HEMATOMA">Hematoma</option>
-                  <option value="ERITEMA_INFLAMACION">Eritema / Inflamación</option>
-                  <option value="LUXACION_ESGUINCE">Luxación / Esguince</option>
-                  <option value="QUEMADURA">Quemadura</option>
-                  <option value="OTRO">Otro</option>
-                </select>
-                <button type="button" onClick={() => removeInjury(index)} style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', padding: '0 4px', display: 'flex', alignItems: 'center' }}>
-                  <Icon name="icon-x" size={14} />
-                </button>
+              <div key={field.id} style={ROW_CARD_STYLE}>
+                <div style={ROW_HEADER_STYLE}>
+                  <h4 style={ROW_TITLE_STYLE}>Lesión {index + 1}</h4>
+                  <WcButtonIcon
+                    variant="danger"
+                    shape="square"
+                    size="sm"
+                    onClick={() => removeInjury(index)}
+                    aria-label={`Eliminar lesión ${index + 1}`}
+                  >
+                    <Icon name="icon-trash" size={16} />
+                  </WcButtonIcon>
+                </div>
+                <WcFormGrid columns={2}>
+                  <WcField label="Tipo de lesión" spanFull>
+                    <Controller
+                      control={control}
+                      name={`injuries.${index}.injuryType` as const}
+                      render={({ field: f }) => (
+                        <WcSelect
+                          value={f.value ?? null}
+                          onChange={(value) => f.onChange(value as InjuryType)}
+                          options={INJURY_OPTIONS}
+                        />
+                      )}
+                    />
+                  </WcField>
+                </WcFormGrid>
               </div>
             ))}
           </div>
         )}
-      </section>
-
+      </WcFormSection>
     </div>
   );
 }

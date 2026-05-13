@@ -1,5 +1,34 @@
-import { useFormContext, useWatch } from "react-hook-form";
+import { Controller, useFormContext, useWatch } from "react-hook-form";
 import type { UpdateEvolutionDraftFormValues } from "../../schemas/evolution.schema";
+import type { ArrivalMethod } from "@/domain/modules/evolution/models/Evolution";
+import {
+  WcField,
+  WcFormGrid,
+  WcFormSection,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Forms";
+import {
+  WcInput,
+  WcSelect,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Inputs";
+
+const ARRIVAL_METHOD_OPTIONS = [
+  { value: "AMBULATORIO", label: "Ambulatorio" },
+  { value: "AMBULANCIA", label: "Ambulancia" },
+  { value: "OTRO", label: "Otro Transporte" },
+];
+
+const TEXTAREA_STYLE = {
+  width: "100%",
+  minHeight: "80px",
+  padding: "var(--space-2) var(--space-3)",
+  borderRadius: "var(--radius-md)",
+  border: "1px solid var(--color-border)",
+  backgroundColor: "var(--color-surface)",
+  color: "var(--color-text)",
+  fontFamily: "var(--font-body)",
+  fontSize: "var(--font-size-sm)",
+  resize: "vertical" as const,
+};
 
 export function TabAdmision() {
   const {
@@ -12,160 +41,54 @@ export function TabAdmision() {
   const showOtherObservation = arrivalMethod === "OTRO";
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "var(--space-6)" }}>
-      <section
-        style={{
-          backgroundColor: "var(--color-surface)",
-          padding: "var(--space-6)",
-          borderRadius: "var(--radius-lg)",
-          border: "1px solid var(--color-border)",
-        }}
-      >
-        <h2
-          style={{
-            marginTop: 0,
-            fontSize: "1.125rem",
-            borderBottom: "1px solid var(--color-border)",
-            paddingBottom: "12px",
-            marginBottom: "var(--space-4)",
-          }}
-        >
-          Forma de llegada
-        </h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-          <div>
-            <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "4px" }}>
-              Forma de llegada <span style={{ color: "var(--color-danger)" }}>*</span>
-            </label>
-            <select
-              {...register("arrivalMethod")}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: errors.arrivalMethod
-                  ? "1px solid var(--color-danger)"
-                  : "1px solid var(--color-border)",
-                backgroundColor: "var(--color-surface)",
-                color: "var(--color-text)",
-              }}
-            >
-              <option value="">Seleccione...</option>
-              <option value="AMBULATORIO">Ambulatorio</option>
-              <option value="AMBULANCIA">Ambulancia</option>
-              <option value="OTRO">Otro Transporte</option>
-            </select>
-            {errors.arrivalMethod && (
-              <span
-                style={{
-                  fontSize: "0.75rem",
-                  color: "var(--color-danger)",
-                  marginTop: "4px",
-                  display: "block",
-                }}
-              >
-                {errors.arrivalMethod.message as string}
-              </span>
-            )}
-          </div>
+    <WcFormGrid columns={2} min="320px">
+      <WcFormSection title="Forma de llegada">
+        <WcFormGrid columns={1}>
+          <WcField
+            label="Forma de llegada"
+            required
+            error={errors.arrivalMethod?.message as string | undefined}
+          >
+            <Controller
+              control={control}
+              name="arrivalMethod"
+              render={({ field }) => (
+                <WcSelect
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value as ArrivalMethod)}
+                  options={ARRIVAL_METHOD_OPTIONS}
+                  placeholder="Seleccione..."
+                  error={Boolean(errors.arrivalMethod)}
+                />
+              )}
+            />
+          </WcField>
 
-          {showOtherObservation && (
-            <div>
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "4px" }}>
-                Observaciones de Forma de llegada
-              </label>
+          {showOtherObservation ? (
+            <WcField label="Observaciones de Forma de llegada">
               <textarea
                 {...register("arrivalMethodObservations")}
                 rows={2}
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  borderRadius: "4px",
-                  border: "1px solid var(--color-border)",
-                  backgroundColor: "var(--color-surface)",
-                  color: "var(--color-text)",
-                }}
+                style={TEXTAREA_STYLE}
               />
-            </div>
-          )}
-        </div>
-      </section>
+            </WcField>
+          ) : null}
+        </WcFormGrid>
+      </WcFormSection>
 
-      <section
-        style={{
-          backgroundColor: "var(--color-surface)",
-          padding: "var(--space-6)",
-          borderRadius: "var(--radius-lg)",
-          border: "1px solid var(--color-border)",
-        }}
-      >
-        <h2
-          style={{
-            marginTop: 0,
-            fontSize: "1.125rem",
-            borderBottom: "1px solid var(--color-border)",
-            paddingBottom: "12px",
-            marginBottom: "var(--space-4)",
-          }}
-        >
-          Datos del referente
-        </h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-          <div>
-            <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "4px" }}>
-              Fuente de información / Referido de
-            </label>
-            <input
-              type="text"
-              {...register("informationSource")}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-                backgroundColor: "var(--color-surface)",
-                color: "var(--color-text)",
-              }}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "4px" }}>
-              Institución o persona que entrega
-            </label>
-            <input
-              type="text"
-              {...register("referringPerson")}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-                backgroundColor: "var(--color-surface)",
-                color: "var(--color-text)",
-              }}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "4px" }}>
-              Número o teléfono de contacto
-            </label>
-            <input
-              type="text"
-              {...register("contactNumber")}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-                backgroundColor: "var(--color-surface)",
-                color: "var(--color-text)",
-              }}
-            />
-          </div>
-        </div>
-      </section>
-    </div>
+      <WcFormSection title="Datos del referente">
+        <WcFormGrid columns={1}>
+          <WcField label="Fuente de información / Referido de">
+            <WcInput type="text" {...register("informationSource")} />
+          </WcField>
+          <WcField label="Institución o persona que entrega">
+            <WcInput type="text" {...register("referringPerson")} />
+          </WcField>
+          <WcField label="Número o teléfono de contacto">
+            <WcInput type="tel" {...register("contactNumber")} />
+          </WcField>
+        </WcFormGrid>
+      </WcFormSection>
+    </WcFormGrid>
   );
 }

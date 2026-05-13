@@ -1,94 +1,190 @@
-import { useFormContext, useFieldArray, useWatch } from 'react-hook-form';
-import type { UpdateEvolutionDraftFormValues } from '../../schemas/evolution.schema';
-import { Icon } from '@/presentation/modules/shared/components/Sidebar/icons/Icon';
-import WcButton from '@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton';
-import { WcCheckbox } from '@/presentation/modules/shared/components/ui/webcomponents/Checkbox/WcCheckbox';
+import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
+import type { UpdateEvolutionDraftFormValues } from "../../schemas/evolution.schema";
+import type { DischargeType } from "@/domain/modules/evolution/models/Evolution";
+import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
+import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
+import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
+import { WcCheckbox } from "@/presentation/modules/shared/components/ui/webcomponents/Checkbox/WcCheckbox";
+import {
+  WcField,
+  WcFormGrid,
+  WcFormSection,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Forms";
+import {
+  WcInput,
+  WcNumberInput,
+  WcSelect,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Inputs";
+
+const DISCHARGE_TYPE_OPTIONS = [
+  { value: "DOMICILIO", label: "Domicilio" },
+  { value: "CONSULTA_EXTERNA", label: "Consulta Externa" },
+  { value: "OBSERVACION", label: "Observación" },
+  { value: "INTERNACION", label: "Internación" },
+  { value: "REFERENCIA", label: "Referencia" },
+  { value: "EGRESA_VIVO", label: "Egresa Vivo" },
+  { value: "CONDICION_ESTABLE", label: "Condición Estable" },
+  { value: "CONDICION_INESTABLE", label: "Condición Inestable" },
+  { value: "DIAS_INCAPACIDAD", label: "Días de Incapacidad" },
+];
+
+const ROW_CARD_STYLE = {
+  backgroundColor: "var(--color-bg)",
+  border: "1px solid var(--color-border)",
+  borderRadius: "var(--radius-md)",
+  padding: "var(--space-3)",
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--space-3)",
+};
+
+const EMPTY_STATE_STYLE = {
+  color: "var(--color-text-secondary)",
+  fontSize: "0.875rem",
+  textAlign: "center" as const,
+  padding: "var(--space-4)",
+  backgroundColor: "var(--color-bg)",
+  borderRadius: "var(--radius-md)",
+  margin: 0,
+};
+
+const DEATH_TEXTAREA_STYLE = {
+  width: "100%",
+  padding: "var(--space-2) var(--space-3)",
+  borderRadius: "var(--radius-md)",
+  border: "1px solid var(--color-danger)",
+  backgroundColor: "var(--color-surface)",
+  color: "var(--color-text)",
+  fontFamily: "var(--font-body)",
+  fontSize: "var(--font-size-sm)",
+  resize: "vertical" as const,
+};
 
 export function TabAlta() {
   const { control, register } = useFormContext<UpdateEvolutionDraftFormValues>();
-  
-  const { fields: dischargeFields, append: appendDischarge, remove: removeDischarge } = useFieldArray({
-    control,
-    name: "discharges"
-  });
 
-  const isDeathInEmergency = useWatch({ control, name: 'deathInEmergency' });
+  const {
+    fields: dischargeFields,
+    append: appendDischarge,
+    remove: removeDischarge,
+  } = useFieldArray({ control, name: "discharges" });
+
+  const isDeathInEmergency = useWatch({ control, name: "deathInEmergency" });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-      
-      {/* S13: Alta Médica */}
-      <section style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--space-6)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)' }}>
-        <h2 style={{ marginTop: 0, fontSize: '1.125rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '12px', marginBottom: 'var(--space-4)' }}>
-          13. Alta Médica
-        </h2>
-        
-        <div style={{ marginTop: 'var(--space-4)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500 }}>Condiciones del Alta</label>
-            <WcButton variant="secondary" onClick={() => appendDischarge({ dischargeType: 'DOMICILIO' })}>
-              <Icon name="icon-plus" size={16} /> Agregar Condición
-            </WcButton>
-          </div>
-
-          {dischargeFields.length === 0 ? (
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginTop: '16px', textAlign: 'center', padding: '16px', backgroundColor: 'var(--color-bg)', borderRadius: '8px' }}>
-              No hay condiciones de alta agregadas.
-            </p>
-          ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginTop: '16px', marginBottom: '24px' }}>
-              {dischargeFields.map((field, index) => (
-                <div key={field.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'var(--color-bg)', borderRadius: '24px', border: '1px solid var(--color-border)' }}>
-                  <select {...register(`discharges.${index}.dischargeType` as const)} style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '0.875rem', fontWeight: 500 }}>
-                    <option value="DOMICILIO">Domicilio</option>
-                    <option value="CONSULTA_EXTERNA">Consulta Externa</option>
-                    <option value="OBSERVACION">Observación</option>
-                    <option value="INTERNACION">Internación</option>
-                    <option value="REFERENCIA">Referencia</option>
-                    <option value="EGRESA_VIVO">Egresa Vivo</option>
-                    <option value="CONDICION_ESTABLE">Condición Estable</option>
-                    <option value="CONDICION_INESTABLE">Condición Inestable</option>
-                    <option value="DIAS_INCAPACIDAD">Días de Incapacidad</option>
-                  </select>
-                  <button type="button" onClick={() => removeDischarge(index)} style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', padding: '0 4px', display: 'flex', alignItems: 'center' }}>
-                    <Icon name="icon-x" size={14} />
-                  </button>
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
+      <WcFormSection
+        title="Condiciones de alta"
+        actions={
+          <WcButton
+            variant="terciary"
+            onClick={() => appendDischarge({ dischargeType: "DOMICILIO" })}
+          >
+            <Icon name="icon-add" size={16} /> Agregar Condición
+          </WcButton>
+        }
+      >
+        {dischargeFields.length === 0 ? (
+          <p style={EMPTY_STATE_STYLE}>No hay condiciones de alta agregadas.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+            {dischargeFields.map((field, index) => (
+              <div key={field.id} style={ROW_CARD_STYLE}>
+                <div style={{ flex: 1 }}>
+                  <Controller
+                    control={control}
+                    name={`discharges.${index}.dischargeType` as const}
+                    render={({ field: f }) => (
+                      <WcSelect
+                        value={f.value ?? null}
+                        onChange={(value) => f.onChange(value as DischargeType)}
+                        options={DISCHARGE_TYPE_OPTIONS}
+                      />
+                    )}
+                  />
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'var(--space-4)', marginTop: 'var(--space-6)' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>Días de Incapacidad</label>
-            <input type="number" {...register('incapacityDays', { valueAsNumber: true })} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }} />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>Servicio de Referencia</label>
-            <input type="text" {...register('referralService')} placeholder="Si aplica..." style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }} />
-          </div>
-          <div style={{ gridColumn: '1 / -1' }}>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>Establecimiento de Referencia</label>
-            <input type="text" {...register('referralFacility')} placeholder="Si aplica..." style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }} />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px', gridColumn: '1 / -1', padding: '16px', backgroundColor: isDeathInEmergency ? 'var(--color-danger-light)' : 'transparent', borderRadius: '8px', transition: 'background-color 0.3s ease' }}>
-            <WcCheckbox 
-              {...register('deathInEmergency')} 
-              label="¿Registrar muerte en emergencia?" 
-              danger={isDeathInEmergency}
-            />
-            {isDeathInEmergency && (
-              <div style={{ animation: 'fadeIn 0.3s ease-in-out' }}>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px', color: 'var(--color-danger)' }}>Causa de Muerte</label>
-                <textarea {...register('deathCause')} rows={3} placeholder="Describa la causa..." style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-danger)' }} />
+                <WcButtonIcon
+                  variant="danger"
+                  shape="square"
+                  size="sm"
+                  onClick={() => removeDischarge(index)}
+                  aria-label={`Eliminar condición ${index + 1}`}
+                >
+                  <Icon name="icon-trash" size={16} />
+                </WcButtonIcon>
               </div>
-            )}
+            ))}
           </div>
-        </div>
-      </section>
+        )}
+      </WcFormSection>
 
+      <WcFormSection title="Días de incapacidad">
+        <WcFormGrid columns={2}>
+          <WcField label="Días">
+            <Controller
+              control={control}
+              name="incapacityDays"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  unit="días"
+                  min={0}
+                />
+              )}
+            />
+          </WcField>
+        </WcFormGrid>
+      </WcFormSection>
+
+      <WcFormSection title="Referencia externa">
+        <WcFormGrid columns={2}>
+          <WcField label="Servicio">
+            <WcInput
+              type="text"
+              placeholder="Si aplica..."
+              {...register("referralService")}
+            />
+          </WcField>
+          <WcField label="Establecimiento">
+            <WcInput
+              type="text"
+              placeholder="Si aplica..."
+              {...register("referralFacility")}
+            />
+          </WcField>
+        </WcFormGrid>
+      </WcFormSection>
+
+      <WcFormSection title="Fallecimiento">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--space-4)",
+            padding: isDeathInEmergency ? "var(--space-4)" : 0,
+            backgroundColor: isDeathInEmergency ? "var(--color-danger-light)" : "transparent",
+            borderRadius: "var(--radius-md)",
+            transition: "background-color 0.3s ease",
+          }}
+        >
+          <WcCheckbox
+            {...register("deathInEmergency")}
+            label="Falleció en emergencia"
+            danger={isDeathInEmergency}
+          />
+          {isDeathInEmergency ? (
+            <WcField label="Causa del fallecimiento" spanFull>
+              <textarea
+                {...register("deathCause")}
+                rows={3}
+                placeholder="Describa la causa..."
+                style={DEATH_TEXTAREA_STYLE}
+              />
+            </WcField>
+          ) : null}
+        </div>
+      </WcFormSection>
     </div>
   );
 }
