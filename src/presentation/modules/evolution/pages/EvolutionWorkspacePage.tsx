@@ -10,7 +10,10 @@ import {
 import { useEvolution, useUpdateEvolution, useCloseEvolution } from "../hooks/useEvolutions";
 import { useEvolutionAutosave } from "../hooks/useEvolutionAutosave";
 import { useEvolutionUIStore } from "../stores/useEvolutionUIStore";
-import { clearDraft as clearLocalDraft } from "@/infrastructure/core/draftCache";
+import {
+  clearDraft as clearLocalDraft,
+  saveDraft as saveLocalDraft,
+} from "@/infrastructure/core/draftCache";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import { UnsavedChangesModal } from "../components/UnsavedChangesModal";
@@ -789,10 +792,18 @@ export function EvolutionWorkspacePage() {
         isOpen={blocker.state === "blocked"}
         isPending={updateEvolution.isPending}
         onSaveAndExit={async () => {
-          await handleSaveDraft(methods.getValues());
+          try {
+            await handleSaveDraft(methods.getValues());
+          } catch {
+            if (evolutionId) {
+              await saveLocalDraft(evolutionId, methods.getValues());
+            }
+          }
           blocker.proceed?.();
         }}
         onExitWithoutSaving={() => {
+          if (evolutionId) clearLocalDraft(evolutionId);
+          methods.reset(methods.getValues(), { keepValues: false });
           blocker.proceed?.();
         }}
         onCancel={() => {
