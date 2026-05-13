@@ -530,7 +530,7 @@ export function EvolutionWorkspacePage() {
         return;
       }
 
-      if (event.altKey && (event.key === "p" || event.key === "P")) {
+      if (event.altKey && event.shiftKey && (event.key === "p" || event.key === "P")) {
         event.preventDefault();
         if (patient) setSelectedPatientId(patient.id);
         return;
@@ -578,7 +578,7 @@ export function EvolutionWorkspacePage() {
   }
 
   return (
-    <div style={{ padding: "var(--space-6) var(--space-8)", maxWidth: "1400px", margin: "0 auto" }}>
+    <div style={{ padding: "var(--space-6) var(--space-8)", maxWidth: "1120px", margin: "0 auto" }}>
       <EvolutionPatientBanner
         patient={patient}
         status={evolution.status}
