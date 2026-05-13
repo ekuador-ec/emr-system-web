@@ -1,0 +1,62 @@
+.wc-toggle-chip {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 3px;
+  gap: 2px;
+  transition: border-color var(--transition-fast);
+}
+
+.wc-toggle-chip[data-size="sm"] {
+  padding: 2px;
+}
+
+.wc-toggle-chip__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.wc-toggle-chip[data-size="sm"] .wc-toggle-chip__option {
+  padding: 4px var(--space-2);
+  font-size: 0.75rem;
+}
+
+.wc-toggle-chip__option:hover:not([data-active="true"]):not(:disabled) {
+  color: var(--color-text);
+}
+
+.wc-toggle-chip__option[data-active="true"] {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  box-shadow: var(--shadow-sm);
+}
+
+.wc-toggle-chip__option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wc-toggle-chip__option:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.wc-toggle-chip__icon {
+  display: inline-flex;
+  align-items: center;
+}
