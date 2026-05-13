@@ -1,9 +1,9 @@
-import { useFormContext, useWatch } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import type { UpdateEvolutionDraftFormValues } from "../../schemas/evolution.schema";
 import { WcCheckbox } from "@/presentation/modules/shared/components/ui/webcomponents/Checkbox/WcCheckbox";
 
 export function TabEmergenciaObstetrica() {
-  const { register, control } = useFormContext<UpdateEvolutionDraftFormValues>();
+  const { register } = useFormContext<UpdateEvolutionDraftFormValues>();
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>

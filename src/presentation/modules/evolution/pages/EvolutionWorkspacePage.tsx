@@ -17,8 +17,12 @@ import {
 } from "@/infrastructure/core/draftCache";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
+import { WcTabsFolder } from "@/presentation/modules/shared/components/ui/webcomponents/Tabs/wcTabsFolder";
+import type { WcTabsFolderItem } from "@/presentation/modules/shared/components/ui/webcomponents/Tabs/wcTabsFolder";
 import { UnsavedChangesModal } from "../components/UnsavedChangesModal";
+import { EvolutionPatientBanner } from "../components/EvolutionPatientBanner";
 import { PatientDetailsDrawer } from "@/presentation/modules/patient/components/Patients/PatientDetailsDrawer";
+import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 
 import { TabAdmision } from "../components/form/TabAdmision";
 import { TabMotivo } from "../components/form/TabMotivo";
@@ -62,6 +66,7 @@ export function EvolutionWorkspacePage() {
   const { activeTab, setActiveTab, reset } = useEvolutionUIStore();
   const { addToast } = useToastStore();
   const { confirm, DialogComponent } = useConfirmDialog();
+  const setSelectedPatientId = usePatientStore((state) => state.setSelectedPatientId);
 
   const [validationErrors, setValidationErrors] = useState<
     Record<string, { tabIndex: number; messages: string[] }>
@@ -224,8 +229,15 @@ export function EvolutionWorkspacePage() {
         { keepDirtyValues: true },
       );
     }
-    return () => reset(); // Reset UI store on unmount
-  }, [evolution, methods, reset]);
+  }, [evolution, methods]);
+
+  // Reset UI store ONLY when the workspace unmounts. Previously this cleanup
+  // lived inside the data-loading effect, which made it fire on every
+  // evolution refetch (e.g. after autosave invalidates the query) and bounced
+  // the user back to the first tab in the middle of their edits.
+  useEffect(() => {
+    return () => reset();
+  }, [reset]);
 
   // Offer to restore a locally cached draft (encrypted via session key) when
   // it is newer than the server copy. This recovers the user's work after a
@@ -427,10 +439,7 @@ export function EvolutionWorkspacePage() {
     }
   };
 
-  const isFemale =
-    (patient?.gender as unknown as string) === "Femenino" ||
-    patient?.gender === "FEMENINO" ||
-    (patient?.gender as unknown as string) === "F";
+  const isFemale = patient?.gender === "FEMENINO";
 
   const visibleTabs = useMemo(() => {
     return TABS.filter((tab) => {
@@ -442,14 +451,10 @@ export function EvolutionWorkspacePage() {
 
   // Calculate progress
   const progressPercentage = useMemo(() => {
-    // Simple mock logic: complete if visited or valid. Real logic would check fields.
-    // For now we do a simple based on active tabs + errors.
-    // This is an approximation.
     return isClosed ? 100 : Math.round(((activeTab + 1) / visibleTabs.length) * 100);
   }, [activeTab, visibleTabs.length, isClosed]);
 
   const getVisibleTabIndex = (tabIndex: number) => {
-    // Find the index of the given global tab within the currently visible tabs
     return visibleTabs.findIndex((visibleTab) => visibleTab.label === TABS[tabIndex]?.label);
   };
 
@@ -489,19 +494,74 @@ export function EvolutionWorkspacePage() {
   useEffect(() => {
     const activeTabObj = TABS[activeTab];
     if (activeTabObj && !visibleTabs.find((t) => t.label === activeTabObj.label)) {
-      // Find the closest valid tab before the removed one.
       const newIndex = getActualTabIndex(Math.max(0, currentVisibleTabIndex - 1));
       setActiveTab(newIndex);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visibleTabs]);
 
-  const getTabStatusColor = (tabName: string, index: number) => {
-    if (validationErrors[tabName]) return "var(--color-danger)";
-    if (index === activeTab) return "var(--color-primary)";
-    if (index < activeTab) return "var(--color-success)";
-    return "var(--color-text-tertiary)"; // default unvisited
-  };
+  // Keyboard shortcuts: Ctrl+S (save draft), Alt+Left/Right (tab nav),
+  // Alt+P (open patient detail drawer). Mod keys disabled while editing
+  // inside a contenteditable so plain typing is never hijacked.
+  useEffect(() => {
+    function handleKey(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      if (target?.isContentEditable) return;
+
+      const isMod = event.ctrlKey || event.metaKey;
+
+      if (isMod && (event.key === "s" || event.key === "S")) {
+        event.preventDefault();
+        if (!isClosed) {
+          void handleSaveDraft(methods.getValues());
+        }
+        return;
+      }
+
+      if (event.altKey && event.key === "ArrowLeft") {
+        event.preventDefault();
+        handlePrevTab();
+        return;
+      }
+
+      if (event.altKey && event.key === "ArrowRight") {
+        event.preventDefault();
+        handleNextTab();
+        return;
+      }
+
+      if (event.altKey && (event.key === "p" || event.key === "P")) {
+        event.preventDefault();
+        if (patient) setSelectedPatientId(patient.id);
+        return;
+      }
+    }
+
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isClosed, methods, patient, activeTab, visibleTabs]);
+
+  const tabComponents = [
+    <TabAdmision key="admision" />,
+    <TabMotivo key="motivo" />,
+    <TabEmergenciaObstetrica key="obstetrica" />,
+    <TabSignosVitales key="vitales" />,
+    <TabExamen key="examen" />,
+    <TabDiagnostico key="diagnostico" />,
+    <TabPlanTratamiento key="plan" />,
+    <TabAlta key="alta" />,
+  ];
+
+  const wcTabs: WcTabsFolderItem[] = visibleTabs.map((tab) => {
+    const globalIndex = TABS.findIndex((t) => t.label === tab.label);
+    return {
+      name: tab.label,
+      icon: <Icon name={tab.icon} size={16} />,
+      hasError: !!validationErrors[tab.name],
+      content: tabComponents[globalIndex],
+    };
+  });
 
   if (isLoading) {
     return (
@@ -519,207 +579,36 @@ export function EvolutionWorkspacePage() {
 
   return (
     <div style={{ padding: "var(--space-6) var(--space-8)", maxWidth: "1400px", margin: "0 auto" }}>
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: "var(--space-4)",
+      <EvolutionPatientBanner
+        patient={patient}
+        status={evolution.status}
+        attentionDate={evolution.attentionDate}
+        autosaveStatus={autosave.status}
+        lastSavedAt={autosave.lastSavedAt}
+        canCloseEvolution={canCloseEvolution}
+        isClosed={isClosed}
+        isSavingDraft={updateEvolution.isPending}
+        isClosing={closeEvolution.isPending}
+        onBack={handleGoBack}
+        onOpenPatientDetail={() => {
+          if (patient) setSelectedPatientId(patient.id);
         }}
-      >
-        <div style={{ flex: 1 }}>
-          <button
-            onClick={handleGoBack}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--color-primary)",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              padding: 0,
-              marginBottom: "var(--space-2)",
-            }}
-          >
-            <Icon name="icon-chevron-left" size={16} /> Volver a Historia Clínica
-          </button>
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)" }}>
-            <h1 style={{ margin: 0, fontSize: "1.75rem" }}>Evolución Médica</h1>
-            <span
-              style={{
-                fontSize: "0.875rem",
-                padding: "4px 12px",
-                borderRadius: "16px",
-                backgroundColor: isClosed
-                  ? "var(--color-success-light)"
-                  : evolution.status === "EN_PROCESO"
-                    ? "var(--color-primary-light)"
-                    : "var(--color-warning-light)",
-                color: isClosed
-                  ? "var(--color-success)"
-                  : evolution.status === "EN_PROCESO"
-                    ? "var(--color-primary)"
-                    : "var(--color-warning)",
-                fontWeight: 600,
-              }}
-            >
-              {evolution.status.replace("_", " ")}
-            </span>
-            {!isClosed && (
-              <AutosaveStatusIndicator
-                status={autosave.status}
-                lastSavedAt={autosave.lastSavedAt}
-              />
-            )}
-          </div>
+        onSaveDraft={() => handleSaveDraft(methods.getValues())}
+        onCloseEvolution={handleCloseEvolution}
+      />
 
-          <div
-            style={{
-              marginTop: "16px",
-              display: "flex",
-              alignItems: "center",
-              gap: "16px",
-              maxWidth: "400px",
-            }}
-          >
-            <div
-              style={{
-                flex: 1,
-                height: "8px",
-                backgroundColor: "var(--color-border)",
-                borderRadius: "4px",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  width: `${progressPercentage}%`,
-                  height: "100%",
-                  backgroundColor: "var(--color-primary)",
-                  transition: "width 0.3s ease",
-                }}
-              />
-            </div>
-            <span
-              style={{
-                fontSize: "0.875rem",
-                color: "var(--color-text-secondary)",
-                fontWeight: 500,
-              }}
-            >
-              {progressPercentage}% Completado
-            </span>
-          </div>
-        </div>
-
-        {!isClosed && (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              gap: "var(--space-2)",
-              marginTop: "24px",
-            }}
-          >
-            <div style={{ display: "flex", gap: "var(--space-3)" }}>
-              <WcButton
-                variant="secondary"
-                onClick={() => handleSaveDraft(methods.getValues())}
-                disabled={updateEvolution.isPending}
-              >
-                <Icon name="icon-save" size={16} />
-                {updateEvolution.isPending ? "Guardando..." : "Guardar Temporalmente"}
-              </WcButton>
-              {canCloseEvolution && (
-                <WcButton
-                  variant="primary"
-                  onClick={handleCloseEvolution}
-                  disabled={closeEvolution.isPending || updateEvolution.isPending}
-                >
-                  <Icon name="icon-check" size={16} />
-                  {closeEvolution.isPending ? "Cerrando..." : "Firmar y Cerrar Evolución"}
-                </WcButton>
-              )}
-            </div>
-            {!canCloseEvolution && (
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "0.75rem",
-                  color: "var(--color-text-secondary)",
-                  maxWidth: "520px",
-                }}
-              >
-                Tu rol puede editar la evolución, pero solo personal médico o
-                administradores pueden firmarla y cerrarla.
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Sticky Tab Bar */}
-      <div
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          backgroundColor: "var(--color-bg)",
-          paddingTop: "var(--space-4)",
-          paddingBottom: "var(--space-4)",
-          borderBottom: "1px solid var(--color-border)",
-          marginBottom: "var(--space-6)",
-          display: "flex",
-          gap: "8px",
-          overflowX: "auto",
-          scrollbarWidth: "none", // hide scrollbar for clean look
-        }}
-      >
-        {TABS.map((tab, index) => {
-          if (tab.onlyForFemale && !(isFemale && isObstetricEmergency)) return null;
-          const hasError = !!validationErrors[tab.name];
-          const statusColor = getTabStatusColor(tab.name, index);
-
-          return (
-            <button
-              key={index}
-              onClick={() => setActiveTab(index)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "12px 20px",
-                border: "none",
-                background: activeTab === index ? "var(--color-surface)" : "transparent",
-                borderBottom:
-                  activeTab === index ? `3px solid ${statusColor}` : "3px solid transparent",
-                color: activeTab === index ? "var(--color-text)" : "var(--color-text-secondary)",
-                fontWeight: activeTab === index ? 600 : 500,
-                borderRadius: "8px 8px 0 0",
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                transition: "all 0.2s ease",
-              }}
-            >
-              <Icon name={tab.icon as any} size={18} />
-              {tab.label}
-              {hasError && (
-                <span
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "50%",
-                    backgroundColor: "var(--color-danger)",
-                  }}
-                />
-              )}
-            </button>
-          );
-        })}
-      </div>
+      {!canCloseEvolution && !isClosed && (
+        <p
+          style={{
+            margin: "0 0 var(--space-4) 0",
+            fontSize: "var(--font-size-xs)",
+            color: "var(--color-text-secondary)",
+          }}
+        >
+          Tu rol puede editar la evolución, pero solo personal médico o administradores pueden
+          firmarla y cerrarla.
+        </p>
+      )}
 
       {Object.keys(validationErrors).length > 0 && (
         <div
@@ -728,34 +617,33 @@ export function EvolutionWorkspacePage() {
             border: "1px solid var(--color-danger)",
             padding: "var(--space-4)",
             borderRadius: "var(--radius-md)",
-            marginBottom: "var(--space-6)",
-            animation: "fadeIn 0.3s",
+            marginBottom: "var(--space-4)",
           }}
         >
           <h4
             style={{
               color: "var(--color-danger)",
-              margin: "0 0 var(--space-4) 0",
+              margin: "0 0 var(--space-3) 0",
               display: "flex",
               alignItems: "center",
               gap: "8px",
+              fontSize: "var(--font-size-sm)",
             }}
           >
             <Icon name="icon-alert-circle" size={16} />
             Errores de validación (Requeridos para cerrar)
           </h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
             {Object.entries(validationErrors).map(([tabName, data], i) => (
-              <div key={i} style={{ paddingLeft: "var(--space-2)" }}>
+              <div key={i}>
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
-                    marginBottom: "var(--space-1)",
+                    gap: "var(--space-2)",
                   }}
                 >
-                  <strong style={{ color: "var(--color-danger)", fontSize: "0.875rem" }}>
+                  <strong style={{ color: "var(--color-danger)", fontSize: "var(--font-size-sm)" }}>
                     {tabName}
                   </strong>
                   <button
@@ -765,7 +653,7 @@ export function EvolutionWorkspacePage() {
                       border: "none",
                       color: "var(--color-primary)",
                       textDecoration: "underline",
-                      fontSize: "0.75rem",
+                      fontSize: "var(--font-size-xs)",
                       cursor: "pointer",
                       padding: 0,
                     }}
@@ -774,10 +662,14 @@ export function EvolutionWorkspacePage() {
                   </button>
                 </div>
                 <ul
-                  style={{ margin: 0, paddingLeft: "var(--space-4)", color: "var(--color-danger)" }}
+                  style={{
+                    margin: 0,
+                    paddingLeft: "var(--space-4)",
+                    color: "var(--color-danger)",
+                  }}
                 >
                   {data.messages.map((err, j) => (
-                    <li key={j} style={{ fontSize: "0.875rem" }}>
+                    <li key={j} style={{ fontSize: "var(--font-size-xs)" }}>
                       {err}
                     </li>
                   ))}
@@ -792,56 +684,64 @@ export function EvolutionWorkspacePage() {
         style={{
           opacity: isClosed ? 0.8 : 1,
           pointerEvents: isClosed ? "none" : "auto",
-          minHeight: "500px",
         }}
       >
-        {/* Form Content */}
         <FormProvider {...methods}>
           <form id="evolution-form" onSubmit={(e) => e.preventDefault()}>
-            <div style={{ animation: "fadeIn 0.3s ease" }}>
-              {activeTab === 0 && <TabAdmision />}
-              {activeTab === 1 && <TabMotivo />}
-              {activeTab === 2 && isFemale && <TabEmergenciaObstetrica />}
-              {activeTab === 3 && <TabSignosVitales />}
-              {activeTab === 4 && <TabExamen />}
-              {activeTab === 5 && <TabDiagnostico />}
-              {activeTab === 6 && <TabPlanTratamiento />}
-              {activeTab === 7 && <TabAlta />}
-            </div>
+            <WcTabsFolder
+              tabs={wcTabs}
+              activeIndex={currentVisibleTabIndex >= 0 ? currentVisibleTabIndex : 0}
+              onChange={(visibleIndex) => setActiveTab(getActualTabIndex(visibleIndex))}
+            />
           </form>
         </FormProvider>
 
-        {/* Footer Navigation */}
         <div
           style={{
-            marginTop: "var(--space-8)",
-            paddingTop: "var(--space-6)",
-            borderTop: "1px solid var(--color-border)",
+            marginTop: "var(--space-6)",
             display: "flex",
             justifyContent: "space-between",
+            alignItems: "center",
+            gap: "var(--space-3)",
             pointerEvents: "auto",
           }}
         >
-          <WcButton variant="secondary" onClick={handlePrevTab} disabled={activeTab === 0}>
+          <WcButton
+            variant="secondary"
+            onClick={handlePrevTab}
+            disabled={currentVisibleTabIndex <= 0}
+          >
+            <Icon name="icon-chevron-left" size={16} />
             Anterior
           </WcButton>
+
+          <span
+            style={{
+              fontSize: "var(--font-size-xs)",
+              color: "var(--color-text-secondary)",
+              fontWeight: 500,
+            }}
+            aria-live="polite"
+          >
+            {`Paso ${Math.max(currentVisibleTabIndex + 1, 1)} de ${visibleTabs.length} · ${progressPercentage}%`}
+          </span>
 
           {!isLastTab ? (
             <WcButton variant="primary" onClick={handleNextTab}>
               Siguiente
+              <Icon name="icon-chevron-right" size={16} />
+            </WcButton>
+          ) : !isClosed && canCloseEvolution ? (
+            <WcButton
+              variant="primary"
+              onClick={handleCloseEvolution}
+              disabled={closeEvolution.isPending || updateEvolution.isPending}
+            >
+              <Icon name="icon-check" size={16} />
+              Firmar y cerrar
             </WcButton>
           ) : (
-            !isClosed &&
-            canCloseEvolution && (
-              <WcButton
-                variant="primary"
-                onClick={handleCloseEvolution}
-                disabled={closeEvolution.isPending || updateEvolution.isPending}
-              >
-                <Icon name="icon-check" size={16} />
-                Firmar y Cerrar
-              </WcButton>
-            )
+            <span aria-hidden="true" />
           )}
         </div>
       </div>
@@ -873,61 +773,4 @@ export function EvolutionWorkspacePage() {
       <PatientDetailsDrawer />
     </div>
   );
-}
-
-interface AutosaveStatusIndicatorProps {
-  status: "idle" | "dirty" | "saving" | "saved" | "error";
-  lastSavedAt: Date | null;
-}
-
-function AutosaveStatusIndicator({ status, lastSavedAt }: AutosaveStatusIndicatorProps) {
-  let icon = "icon-cloud-close-solid";
-  let text = "";
-  let color = "var(--color-text-secondary)";
-
-  if (status === "saving") {
-    icon = "icon-save";
-    text = "Guardando…";
-  } else if (status === "dirty") {
-    icon = "icon-edit";
-    text = "Cambios sin guardar";
-    color = "var(--color-text-secondary)";
-  } else if (status === "error") {
-    icon = "icon-alert-triangle";
-    text = "Sin conexión — borrador a salvo en este navegador";
-    color = "var(--color-warning)";
-  } else if (status === "saved" && lastSavedAt) {
-    icon = "icon-check-solid";
-    text = `Borrador guardado ${formatRelativeSeconds(lastSavedAt)}`;
-    color = "var(--color-success)";
-  } else {
-    return null;
-  }
-
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "6px",
-        fontSize: "0.75rem",
-        color,
-        fontStyle: "italic",
-      }}
-      title={text}
-    >
-      <Icon name={icon} size={14} />
-      {text}
-    </span>
-  );
-}
-
-function formatRelativeSeconds(date: Date): string {
-  const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
-  if (seconds < 5) return "ahora mismo";
-  if (seconds < 60) return `hace ${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `hace ${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  return `hace ${hours} h`;
 }

@@ -20,8 +20,7 @@ export function TabMotivo() {
   const isObstetricEmergency = useWatch({ control, name: "isObstetricEmergency" });
   const { patientId } = useParams<{ patientId: string }>();
   const { data: patient } = usePatient(patientId || "");
-  const isFemale =
-    patient?.gender === "Femenino" || patient?.gender === "FEMENINO" || patient?.gender === "F";
+  const isFemale = patient?.gender === "FEMENINO";
   const showNotifyPolice = ["TRAUMA", "CAUSA_QUIRURGICA", "OTRO"].includes(clinicalCause || "");
 
   return (
