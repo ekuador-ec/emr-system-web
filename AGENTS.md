@@ -48,6 +48,11 @@ El proyecto está estrictamente dividido en 4 capas. El código generado DEBE re
 ## Reglas de Seguridad y Buenas Prácticas
 
 - **Prevención XSS y Fuga de Datos:** NUNCA usar `localStorage` o el middleware `persist` de Zustand para guardar PII (Información Personal Identificable), historias clínicas o tokens médicos. Todo el estado sensible debe vivir en memoria (RAM) gestionado por TanStack Query.
+  - **Excepción única (borradores de EM cifrados):** los borradores activos de Evoluciones Médicas (status `ABIERTA` o `EN_PROCESO`) pueden almacenarse temporalmente en `localStorage` **siempre que** cumplan TODAS estas condiciones:
+    1. El payload se cifre con AES-GCM antes de escribir, usando una clave derivada del `access_token` de la sesión actual de Supabase (HKDF + `crypto.subtle`). La clave nunca se persiste.
+    2. Cada entrada se identifique por `emr:draft:<evolutionId>` y se limpie en cuanto el autosave al servidor responda OK.
+    3. Se limpien todas las entradas al cerrar sesión y al transicionar la EM a `CERRADA`.
+    4. Sirvan únicamente como red de seguridad offline frente a pérdida de conexión o cierre accidental — la fuente de verdad sigue siendo el servidor.
 - **Tipado Estricto:** Prohibido usar `any`. Todo el código debe estar fuertemente tipado mediante interfaces del dominio.
 - **Importaciones Estrictas:** Debido a la configuración `verbatimModuleSyntax`, TODOS los tipos e interfaces deben importarse usando `import type`. Además, ESTÁ PROHIBIDO el uso de rutas relativas (ej. `../../`). Se debe utilizar SIEMPRE el alias de ruta `@/` para apuntar a la carpeta `src/`.
 - **Restricciones de TypeScript (`erasableSyntaxOnly`):** Está ESTRICTAMENTE PROHIBIDO usar "propiedades de parámetros" en los constructores (ej. `constructor(private repo: Repo) {}`). Debido a la configuración de Type Stripping, todas las propiedades de clase deben declararse explícitamente y asignarse dentro del cuerpo del constructor.
