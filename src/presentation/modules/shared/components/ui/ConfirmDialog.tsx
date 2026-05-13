@@ -1,5 +1,6 @@
 import { Icon } from "../Sidebar/icons/Icon";
 import WcButton from "../ui/webcomponents/Buttons/wcButton";
+import "./ConfirmDialog.css";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -24,78 +25,50 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   if (!isOpen) return null;
 
+  const typeConfig = {
+    danger: {
+      color: "var(--color-danger, #EF4444)",
+      glowBg: "var(--color-danger-light, rgba(254, 226, 226, 0.4))",
+      icon: "icon-alert-triangle",
+    },
+    warning: {
+      color: "var(--color-warning, #F59E0B)",
+      glowBg: "var(--color-warning-light, rgba(254, 243, 199, 0.4))",
+      icon: "icon-alert-circle",
+    },
+    info: {
+      color: "var(--color-info, #3B82F6)",
+      glowBg: "var(--color-info-light, rgba(219, 234, 254, 0.4))",
+      icon: "icon-info",
+    },
+    primary: {
+      color: "var(--color-primary, #000034)",
+      glowBg: "var(--color-primary-light, rgba(219, 234, 254, 0.4))",
+      icon: "icon-info",
+    },
+  };
+
+  const config = typeConfig[type] || typeConfig.primary;
+
   return (
-    <div style={{
-      position: "fixed",
-      inset: 0,
-      zIndex: 9999,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
-      backdropFilter: "blur(4px)",
-    }}>
-      <div style={{
-        backgroundColor: "var(--color-surface, #ffffff)",
-        borderRadius: "var(--radius-lg, 8px)",
-        boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-        width: "100%",
-        maxWidth: "400px",
-        overflow: "hidden",
-        border: "1px solid var(--color-border)",
-        animation: "dialogIn 0.2s ease-out forwards",
-      }}>
-        <div style={{
-          padding: "var(--space-6) var(--space-6) var(--space-4)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center",
-        }}>
-          <div style={{
-            width: "48px",
-            height: "48px",
-            borderRadius: "50%",
-            backgroundColor: `var(--color-${type}-light)`,
-            color: `var(--color-${type})`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: "var(--space-4)",
-          }}>
-            <Icon 
-              name={type === "danger" ? "icon-alert-triangle" : type === "warning" ? "icon-alert-circle" : "icon-info"} 
-              size={24} 
-            />
+    <div className="confirm-dialog-overlay">
+      <div className="confirm-dialog-content">
+        <div
+          className="confirm-dialog-body"
+          style={{
+            background: `radial-gradient(ellipse at top center, ${config.glowBg} 0%, transparent 70%)`,
+          }}
+        >
+          <div className="confirm-dialog-icon-wrapper" style={{ backgroundColor: config.color }}>
+            <Icon name={config.icon} size={24} />
           </div>
-          
-          <h3 style={{ 
-            margin: "0 0 var(--space-2) 0", 
-            fontSize: "1.125rem", 
-            color: "var(--color-text)",
-            fontWeight: 600 
-          }}>
-            {title}
-          </h3>
-          
-          <p style={{ 
-            margin: 0, 
-            color: "var(--color-text-secondary)", 
-            fontSize: "0.875rem",
-            lineHeight: 1.5 
-          }}>
-            {message}
-          </p>
+
+          <h3 className="confirm-dialog-title">{title}</h3>
+
+          <p className="confirm-dialog-message">{message}</p>
         </div>
 
-        <div style={{
-          padding: "var(--space-4) var(--space-6)",
-          backgroundColor: "var(--color-bg)",
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: "var(--space-3)",
-          borderTop: "1px solid var(--color-border)",
-        }}>
+        <div className="confirm-dialog-actions">
           <WcButton variant="terciary" onClick={onCancel}>
             {cancelText}
           </WcButton>
@@ -104,14 +77,6 @@ export function ConfirmDialog({
           </WcButton>
         </div>
       </div>
-      <style>
-        {`
-          @keyframes dialogIn {
-            from { transform: scale(0.95); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-          }
-        `}
-      </style>
     </div>
   );
 }
