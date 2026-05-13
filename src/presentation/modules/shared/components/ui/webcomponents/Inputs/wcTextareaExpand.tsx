@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
@@ -8,6 +8,8 @@ interface WcTextareaExpandProps {
   onChange?: (value: string) => void;
   placeholder?: string;
   rows?: number;
+  minRows?: number;
+  maxRows?: number;
   disabled?: boolean;
   error?: string;
   label?: string;
@@ -17,7 +19,9 @@ export function WcTextareaExpand({
   value,
   onChange,
   placeholder = "Escriba aquí...",
-  rows = 3,
+  rows,
+  minRows = 2,
+  maxRows = 5,
   disabled = false,
   error,
   label
@@ -28,18 +32,32 @@ export function WcTextareaExpand({
   const modalTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [parentContainer, setParentContainer] = useState<HTMLElement | null>(null);
 
+  const initialRows = rows ?? minRows;
+
+  const autosize = useCallback((ta: HTMLTextAreaElement | null) => {
+    if (!ta) return;
+    const styles = window.getComputedStyle(ta);
+    const lineHeight = parseFloat(styles.lineHeight) || 21;
+    const paddingY =
+      (parseFloat(styles.paddingTop) || 0) + (parseFloat(styles.paddingBottom) || 0);
+    const borderY =
+      (parseFloat(styles.borderTopWidth) || 0) + (parseFloat(styles.borderBottomWidth) || 0);
+    const minHeight = lineHeight * minRows + paddingY + borderY;
+    const maxHeight = lineHeight * maxRows + paddingY + borderY;
+    ta.style.height = "auto";
+    const next = Math.max(minHeight, Math.min(ta.scrollHeight, maxHeight));
+    ta.style.height = `${next}px`;
+    ta.style.overflowY = ta.scrollHeight > maxHeight ? "auto" : "hidden";
+  }, [minRows, maxRows]);
+
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange?.(e.target.value);
-    e.target.style.height = "auto";
-    e.target.style.height = `${e.target.scrollHeight}px`;
+    autosize(e.target);
   };
 
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [value]);
+    autosize(textareaRef.current);
+  }, [value, autosize]);
 
   useEffect(() => {
     if (isExpanded && modalTextareaRef.current) {
@@ -181,7 +199,7 @@ export function WcTextareaExpand({
           value={value}
           onChange={handleInput}
           placeholder={placeholder}
-          rows={rows}
+          rows={initialRows}
           disabled={disabled}
           style={{
             width: "100%",
@@ -193,12 +211,9 @@ export function WcTextareaExpand({
             resize: "none",
             fontFamily: "inherit",
             lineHeight: "1.5",
-            minHeight: "80px",
-            overflow: "hidden",
             backgroundColor: "var(--color-surface)",
             color: "var(--color-text-primary)",
             transition: "border-color 0.2s, box-shadow 0.2s",
-            ...({ fieldSizing: "content" } as React.CSSProperties)
           }}
         />
         <WcButtonIcon

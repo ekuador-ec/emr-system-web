@@ -1,4 +1,4 @@
-import { useFormContext, useFieldArray } from "react-hook-form";
+import { Controller, useFormContext, useFieldArray } from "react-hook-form";
 import type { UpdateEvolutionDraftFormValues } from "../../schemas/evolution.schema";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
@@ -8,7 +8,7 @@ import {
   WcFormGrid,
   WcFormSection,
 } from "@/presentation/modules/shared/components/ui/webcomponents/Forms";
-import { WcInput } from "@/presentation/modules/shared/components/ui/webcomponents/Inputs";
+import { WcTextareaExpand } from "@/presentation/modules/shared/components/ui/webcomponents/Inputs/wcTextareaExpand";
 
 const ROW_CARD_STYLE = {
   backgroundColor: "var(--color-bg)",
@@ -48,7 +48,7 @@ const EMPTY_STATE_STYLE = {
 };
 
 export function TabPlanTratamiento() {
-  const { control, register } = useFormContext<UpdateEvolutionDraftFormValues>();
+  const { control } = useFormContext<UpdateEvolutionDraftFormValues>();
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -58,7 +58,7 @@ export function TabPlanTratamiento() {
   return (
     <WcFormSection
       title="Plan de tratamiento"
-      subtitle="Registre cada línea del plan con su indicación, medicamento y posología."
+      subtitle="Cada línea acepta varias filas de texto; use el icono para expandir si requiere más espacio."
       actions={
         <WcButton
           variant="terciary"
@@ -88,26 +88,53 @@ export function TabPlanTratamiento() {
                   <Icon name="icon-trash" size={16} />
                 </WcButtonIcon>
               </div>
-              <WcFormGrid columns={3}>
+              <WcFormGrid columns={1}>
                 <WcField label="Indicación">
-                  <WcInput
-                    type="text"
-                    placeholder="Ej. Hidratación"
-                    {...register(`treatmentPlans.${index}.indication` as const)}
+                  <Controller
+                    control={control}
+                    name={`treatmentPlans.${index}.indication` as const}
+                    render={({ field: f }) => (
+                      <WcTextareaExpand
+                        value={f.value ?? ""}
+                        onChange={f.onChange}
+                        placeholder="Ej. Hidratación parenteral, control de signos vitales cada 30 min…"
+                        minRows={2}
+                        maxRows={5}
+                        label="Indicación"
+                      />
+                    )}
                   />
                 </WcField>
                 <WcField label="Medicamento">
-                  <WcInput
-                    type="text"
-                    placeholder="Ej. Solución salina 0.9%"
-                    {...register(`treatmentPlans.${index}.medication` as const)}
+                  <Controller
+                    control={control}
+                    name={`treatmentPlans.${index}.medication` as const}
+                    render={({ field: f }) => (
+                      <WcTextareaExpand
+                        value={f.value ?? ""}
+                        onChange={f.onChange}
+                        placeholder="Ej. Solución salina 0.9%, Paracetamol 500 mg…"
+                        minRows={2}
+                        maxRows={5}
+                        label="Medicamento"
+                      />
+                    )}
                   />
                 </WcField>
                 <WcField label="Posología">
-                  <WcInput
-                    type="text"
-                    placeholder="Ej. 500 ml IV en 30 min"
-                    {...register(`treatmentPlans.${index}.posology` as const)}
+                  <Controller
+                    control={control}
+                    name={`treatmentPlans.${index}.posology` as const}
+                    render={({ field: f }) => (
+                      <WcTextareaExpand
+                        value={f.value ?? ""}
+                        onChange={f.onChange}
+                        placeholder="Ej. 500 ml IV en 30 minutos cada 8 horas por 3 días…"
+                        minRows={2}
+                        maxRows={5}
+                        label="Posología"
+                      />
+                    )}
                   />
                 </WcField>
               </WcFormGrid>
