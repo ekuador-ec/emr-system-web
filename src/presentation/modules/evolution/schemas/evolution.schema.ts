@@ -84,6 +84,13 @@ export const EvolutionSystemReviewSchema = z.object({
   id: z.string().optional(),
   airwayStatus: AirwayStatusSchema,
   generalCondition: GeneralConditionSchema,
+  description: z.string(),
+});
+
+export const EvolutionSystemReviewStrictSchema = z.object({
+  id: z.string().optional(),
+  airwayStatus: AirwayStatusSchema,
+  generalCondition: GeneralConditionSchema,
   description: z.string().min(1, "La descripción es obligatoria"),
 });
 
@@ -100,6 +107,14 @@ export const EvolutionInjurySchema = z.object({
 });
 
 export const EvolutionDiagnosisSchema = z.object({
+  id: z.string().optional(),
+  cie10Id: z.string(),
+  type: DiagnosisTypeSchema,
+  certainty: DiagnosisCertaintySchema,
+  description: z.string(),
+});
+
+export const EvolutionDiagnosisStrictSchema = z.object({
   id: z.string().optional(),
   cie10Id: z.string().min(1, "Debe seleccionar un diagnóstico CIE-10"),
   type: DiagnosisTypeSchema,
@@ -255,6 +270,7 @@ export const CloseEvolutionStrictSchema = UpdateEvolutionDraftSchema.extend({
   glasgowMotor: z.number({ message: "Glasgow Motor obligatorio" }).min(1).max(6),
 
   // Relations - required to have at least 1 item for mandatory sections
+  systemsReview: z.array(EvolutionSystemReviewStrictSchema).optional(),
   physicalExams: z
     .array(EvolutionPhysicalExamSchema)
     .min(1, "Debe registrar al menos un examen físico regional"),
@@ -262,7 +278,7 @@ export const CloseEvolutionStrictSchema = UpdateEvolutionDraftSchema.extend({
     .array(EvolutionInjurySchema)
     .min(1, 'Debe registrar la localización de al menos una lesión (o marcar "Ninguna/Otro")'),
   diagnoses: z
-    .array(EvolutionDiagnosisSchema)
+    .array(EvolutionDiagnosisStrictSchema)
     .min(1, "Debe registrar al menos un diagnóstico (Ingreso o Alta)"),
   treatmentPlans: z
     .array(EvolutionTreatmentPlanStrictSchema)

@@ -205,18 +205,23 @@ export function EvolutionWorkspacePage() {
     name: "isObstetricEmergency",
   }) as boolean | undefined;
 
-  // Load data when available
+  // Load data when available. keepDirtyValues makes sure that fields the user
+  // is actively editing are not blown away when the cache is invalidated after
+  // an autosave, which would otherwise stomp on their in-progress edits.
   useEffect(() => {
     if (evolution) {
-      methods.reset({
-        ...evolution,
-        systemsReview: evolution.systemsReview || [],
-        physicalExams: evolution.physicalExams || [],
-        injuries: evolution.injuries || [],
-        diagnoses: evolution.diagnoses || [],
-        treatmentPlans: evolution.treatmentPlans || [],
-        discharges: evolution.discharges || [],
-      });
+      methods.reset(
+        {
+          ...evolution,
+          systemsReview: evolution.systemsReview || [],
+          physicalExams: evolution.physicalExams || [],
+          injuries: evolution.injuries || [],
+          diagnoses: evolution.diagnoses || [],
+          treatmentPlans: evolution.treatmentPlans || [],
+          discharges: evolution.discharges || [],
+        },
+        { keepDirtyValues: true },
+      );
     }
     return () => reset(); // Reset UI store on unmount
   }, [evolution, methods, reset]);
@@ -567,7 +572,7 @@ export function EvolutionWorkspacePage() {
             <div style={{ display: "flex", gap: "var(--space-3)" }}>
               <WcButton
                 variant="secondary"
-                onClick={methods.handleSubmit(handleSaveDraft)}
+                onClick={() => handleSaveDraft(methods.getValues())}
                 disabled={updateEvolution.isPending}
               >
                 <Icon name="icon-save" size={16} />

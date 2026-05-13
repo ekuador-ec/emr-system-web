@@ -13,7 +13,13 @@ export class EvolutionMapper {
       closedAt: data.closed_at,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
-      
+
+      arrivalMethod: data.arrival_method ?? null,
+      arrivalMethodObservations: data.arrival_method_observations ?? null,
+      informationSource: data.information_source ?? null,
+      referringPerson: data.referring_person ?? null,
+      contactNumber: data.contact_number ?? null,
+
       attentionDate: data.attention_date,
       attentionTime: data.attention_time,
       clinicalCause: data.clinical_cause,
@@ -120,7 +126,13 @@ export class EvolutionMapper {
     return {
       medical_record_id: domain.medicalRecordId,
       status: domain.status,
-      
+
+      arrival_method: domain.arrivalMethod,
+      arrival_method_observations: domain.arrivalMethodObservations,
+      information_source: domain.informationSource,
+      referring_person: domain.referringPerson,
+      contact_number: domain.contactNumber,
+
       attention_date: domain.attentionDate,
       attention_time: domain.attentionTime,
       clinical_cause: domain.clinicalCause,
