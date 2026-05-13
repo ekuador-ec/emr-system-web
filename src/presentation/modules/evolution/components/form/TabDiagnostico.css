@@ -1,0 +1,259 @@
+.diagnoses-tab {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-5);
+}
+
+.diag-column {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition:
+    background-color var(--transition-normal),
+    border-color var(--transition-normal);
+}
+
+.diag-column__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.diag-column__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.diag-column__title-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+}
+
+.diag-column[data-variant="ingreso"] .diag-column__title-pill {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.diag-column[data-variant="alta"] .diag-column__title-pill {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.diag-column__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 0 6px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  margin-left: var(--space-2);
+}
+
+.diag-column[data-variant="ingreso"] .diag-column__count {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.diag-column[data-variant="alta"] .diag-column__count {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.diag-column__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  text-align: center;
+  padding: var(--space-6) var(--space-3);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.diag-column__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.diag-card {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.diag-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.diag-column[data-variant="ingreso"] .diag-card {
+  border-left-color: var(--color-success);
+}
+
+.diag-column[data-variant="alta"] .diag-card {
+  border-left-color: var(--color-primary);
+}
+
+.diag-card__summary {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  transition: background-color var(--transition-fast);
+}
+
+.diag-card__summary:hover {
+  background-color: var(--color-primary-light);
+}
+
+.diag-card__summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.diag-card__summary-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.diag-card__summary-code {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.diag-card__summary-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.diag-card__certainty {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.diag-card__certainty[data-certainty="PRESUNTIVO"] {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.diag-card__certainty[data-certainty="DEFINITIVO"] {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.diag-card__chevron {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+  transition: transform var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.diag-card[data-expanded="true"] .diag-card__chevron {
+  transform: rotate(180deg);
+}
+
+.diag-card__body {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.diag-card__field-label {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.diag-card__field-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.diag-card__field-input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+  border-color: var(--color-primary);
+}
+
+.diag-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--color-border);
+}
+
+.diag-card__actions-right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}

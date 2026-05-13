@@ -109,6 +109,8 @@ export const EvolutionInjurySchema = z.object({
 export const EvolutionDiagnosisSchema = z.object({
   id: z.string().optional(),
   cie10Id: z.string(),
+  cie10Code: z.string().optional(),
+  cie10Name: z.string().optional(),
   type: DiagnosisTypeSchema,
   certainty: DiagnosisCertaintySchema,
   description: z.string(),
@@ -117,6 +119,8 @@ export const EvolutionDiagnosisSchema = z.object({
 export const EvolutionDiagnosisStrictSchema = z.object({
   id: z.string().optional(),
   cie10Id: z.string().min(1, "Debe seleccionar un diagnóstico CIE-10"),
+  cie10Code: z.string().optional(),
+  cie10Name: z.string().optional(),
   type: DiagnosisTypeSchema,
   certainty: DiagnosisCertaintySchema,
   description: z.string(),
