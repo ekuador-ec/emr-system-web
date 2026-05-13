@@ -1,5 +1,42 @@
 import type { MedicalEvolution } from '@/domain/modules/evolution/models/Evolution';
 
+/**
+ * Clamps a numeric value to fit within a PostgreSQL NUMERIC(precision,scale)
+ * column. Returns null when:
+ *   - The value is null or undefined.
+ *   - The value cannot be safely represented within the column (NaN, Infinity,
+ *     or absolute value larger than the column's maximum).
+ *
+ * Mapping out-of-range values to null is a deliberate trade-off: a single
+ * mistyped field (e.g. talla in cm instead of meters) used to cause the entire
+ * save to fail with "numeric field overflow", losing every other change the
+ * user had made. Dropping just that field keeps the rest of the EM persistable
+ * while the user fixes the bad value.
+ */
+function clampNumeric(
+  value: number | null | undefined,
+  precision: number,
+  scale: number,
+): number | null {
+  if (value === null || value === undefined) return null;
+  if (!Number.isFinite(value)) return null;
+  const maxAbs = Math.pow(10, precision - scale) - Math.pow(10, -scale);
+  if (Math.abs(value) > maxAbs) return null;
+  return value;
+}
+
+/**
+ * Talla is captured in meters but some users instinctively type centimeters
+ * (e.g. 170 instead of 1.70). When the value clearly falls in the cm range we
+ * normalize it to meters before sending it to the database. Values that look
+ * like meters pass through unchanged.
+ */
+function normalizeHeightMeters(value: number | null | undefined): number | null {
+  if (value === null || value === undefined || !Number.isFinite(value)) return null;
+  if (value > 3 && value < 300) return value / 100;
+  return value;
+}
+
 export class EvolutionMapper {
   static toDomain(data: any): MedicalEvolution {
     return {
@@ -144,20 +181,20 @@ export class EvolutionMapper {
       event_address: domain.eventAddress,
       requires_police_custody: domain.requiresPoliceCustody,
       alcoholic_breath: domain.alcoholicBreath,
-      alcocheck_value: domain.alcocheckValue,
+      alcocheck_value: clampNumeric(domain.alcocheckValue, 5, 2),
       accident_type: domain.accidentType,
       violence_type: domain.violenceType,
       intoxication_type: domain.intoxicationType,
       event_observations: domain.eventObservations,
-      
+
       bp_right: domain.bpRight,
       bp_left: domain.bpLeft,
       heart_rate: domain.heartRate,
       respiratory_rate: domain.respiratoryRate,
-      temperature: domain.temperature,
-      bmi: domain.bmi,
-      weight: domain.weight,
-      height: domain.height,
+      temperature: clampNumeric(domain.temperature, 4, 2),
+      bmi: clampNumeric(domain.bmi, 5, 2),
+      weight: clampNumeric(domain.weight, 6, 2),
+      height: clampNumeric(normalizeHeightMeters(domain.height), 4, 2),
       right_pupil_reaction: domain.rightPupilReaction,
       left_pupil_reaction: domain.leftPupilReaction,
       capillary_refill_time: domain.capillaryRefillTime,
@@ -177,7 +214,7 @@ export class EvolutionMapper {
       fetal_heart_rate: domain.fetalHeartRate,
       ruptured_membranes: domain.rupturedMembranes,
       ruptured_time: domain.rupturedTime,
-      uterine_height: domain.uterineHeight,
+      uterine_height: clampNumeric(domain.uterineHeight, 5, 2),
       presentation: domain.presentation,
       dilation: domain.dilation,
       effacement: domain.effacement,

@@ -343,11 +343,12 @@ export function TabSignosVitales() {
                 marginBottom: "4px",
               }}
             >
-              Talla (m)
+              Talla (m o cm)
             </label>
             <input
               type="number"
               step="0.01"
+              placeholder="Ej: 1.70 o 170"
               {...register("height", { valueAsNumber: true })}
               style={{
                 width: "100%",
