@@ -88,7 +88,8 @@ export class SupabaseEvolutionRepository implements EvolutionRepository {
       await supabase.from("evolution_systems_review").insert(
         payload.systemsReview.map((item) => ({
           evolution_id: evolutionId,
-          condition: item.condition,
+          airway_status: item.airwayStatus,
+          general_condition: item.generalCondition,
           description: item.description,
         })),
       );
@@ -167,7 +168,8 @@ export class SupabaseEvolutionRepository implements EvolutionRepository {
         await supabase.from("evolution_systems_review").insert(
           payload.systemsReview.map((item) => ({
             evolution_id: id,
-            condition: item.condition,
+            airway_status: item.airwayStatus,
+            general_condition: item.generalCondition,
             description: item.description,
           })),
         );

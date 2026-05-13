@@ -39,12 +39,8 @@ export const IntoxicationTypeSchema = z.enum([
 ]);
 export const DiagnosisTypeSchema = z.enum(["INGRESO", "ALTA"]);
 export const DiagnosisCertaintySchema = z.enum(["PRESUNTIVO", "DEFINITIVO"]);
-export const SystemReviewConditionSchema = z.enum([
-  "VIA_AEREA_LIBRE",
-  "VIA_AEREA_OBSTRUIDA",
-  "CONDICION_ESTABLE",
-  "CONDICION_INESTABLE",
-]);
+export const AirwayStatusSchema = z.enum(["VIA_AEREA_LIBRE", "VIA_AEREA_OBSTRUIDA"]);
+export const GeneralConditionSchema = z.enum(["CONDICION_ESTABLE", "CONDICION_INESTABLE"]);
 export const PhysicalExamRegionSchema = z.enum([
   "CABEZA",
   "CUELLO",
@@ -86,7 +82,8 @@ export const ArrivalMethodSchema = z.enum(["AMBULATORIO", "AMBULANCIA", "OTRO"])
 
 export const EvolutionSystemReviewSchema = z.object({
   id: z.string().optional(),
-  condition: SystemReviewConditionSchema,
+  airwayStatus: AirwayStatusSchema,
+  generalCondition: GeneralConditionSchema,
   description: z.string().min(1, "La descripción es obligatoria"),
 });
 

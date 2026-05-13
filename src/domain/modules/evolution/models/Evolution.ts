@@ -34,11 +34,8 @@ export type IntoxicationType =
   | "OTRO";
 export type DiagnosisType = "INGRESO" | "ALTA";
 export type DiagnosisCertainty = "PRESUNTIVO" | "DEFINITIVO";
-export type SystemReviewCondition =
-  | "VIA_AEREA_LIBRE"
-  | "VIA_AEREA_OBSTRUIDA"
-  | "CONDICION_ESTABLE"
-  | "CONDICION_INESTABLE";
+export type AirwayStatus = "VIA_AEREA_LIBRE" | "VIA_AEREA_OBSTRUIDA";
+export type GeneralCondition = "CONDICION_ESTABLE" | "CONDICION_INESTABLE";
 export type PhysicalExamRegion =
   | "CABEZA"
   | "CUELLO"
@@ -76,7 +73,8 @@ export type DischargeType =
 
 export interface EvolutionSystemReview {
   id?: string;
-  condition: SystemReviewCondition;
+  airwayStatus: AirwayStatus;
+  generalCondition: GeneralCondition;
   description: string;
 }
 

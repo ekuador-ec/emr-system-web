@@ -75,7 +75,8 @@ export class EvolutionMapper {
 
       systemsReview: data.evolution_systems_review ? data.evolution_systems_review.map((item: any) => ({
         id: item.id,
-        condition: item.condition,
+        airwayStatus: item.airway_status,
+        generalCondition: item.general_condition,
         description: item.description
       })) : [],
 

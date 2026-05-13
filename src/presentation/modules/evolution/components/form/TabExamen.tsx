@@ -1,12 +1,20 @@
-import { useFormContext, useFieldArray } from 'react-hook-form';
+import { useFormContext, useFieldArray, useWatch } from 'react-hook-form';
 import type { UpdateEvolutionDraftFormValues } from '../../schemas/evolution.schema';
 import { Icon } from '@/presentation/modules/shared/components/Sidebar/icons/Icon';
 import WcButton from '@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton';
 import { WcCheckbox } from '@/presentation/modules/shared/components/ui/webcomponents/Checkbox/WcCheckbox';
+import type { AirwayStatus, GeneralCondition } from '@/domain/modules/evolution/models/Evolution';
+
+const SYSTEM_REVIEW_COMBOS: Array<{ airwayStatus: AirwayStatus; generalCondition: GeneralCondition }> = [
+  { airwayStatus: 'VIA_AEREA_LIBRE', generalCondition: 'CONDICION_ESTABLE' },
+  { airwayStatus: 'VIA_AEREA_LIBRE', generalCondition: 'CONDICION_INESTABLE' },
+  { airwayStatus: 'VIA_AEREA_OBSTRUIDA', generalCondition: 'CONDICION_ESTABLE' },
+  { airwayStatus: 'VIA_AEREA_OBSTRUIDA', generalCondition: 'CONDICION_INESTABLE' },
+];
 
 export function TabExamen() {
   const { control, register } = useFormContext<UpdateEvolutionDraftFormValues>();
-  
+
   const { fields: systemsFields, append: appendSystem, remove: removeSystem } = useFieldArray({
     control,
     name: "systemsReview"
@@ -22,38 +30,110 @@ export function TabExamen() {
     name: "injuries"
   });
 
+  const watchedSystems = useWatch({ control, name: "systemsReview" }) as
+    | { airwayStatus?: AirwayStatus; generalCondition?: GeneralCondition }[]
+    | undefined;
+
+  const availableCombos = SYSTEM_REVIEW_COMBOS.filter(
+    (combo) =>
+      !(watchedSystems ?? []).some(
+        (row) =>
+          row.airwayStatus === combo.airwayStatus && row.generalCondition === combo.generalCondition,
+      ),
+  );
+
+  const canAddSystem = availableCombos.length > 0;
+
+  const handleAppendSystem = () => {
+    const nextCombo = availableCombos[0] ?? SYSTEM_REVIEW_COMBOS[0];
+    appendSystem({
+      airwayStatus: nextCombo.airwayStatus,
+      generalCondition: nextCombo.generalCondition,
+      description: '',
+    });
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-      
+
       {/* S3: Revisión de Sistemas */}
       <section style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--space-6)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '12px', marginBottom: 'var(--space-4)' }}>
-          <h2 style={{ margin: 0, fontSize: '1.125rem' }}>3. Revisión de Sistemas</h2>
-          <WcButton variant="terciary" onClick={() => appendSystem({ condition: 'CONDICION_ESTABLE', description: '' })}>
-            <Icon name="icon-add" size={16} /> Agregar
+          <div>
+            <h2 style={{ margin: 0, fontSize: '1.125rem' }}>3. Revisión de Sistemas</h2>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+              Cada fila combina el estado de la vía aérea y la condición general, con una descripción única.
+            </p>
+          </div>
+          <WcButton variant="terciary" onClick={handleAppendSystem} disabled={!canAddSystem}>
+            <Icon name="icon-add" size={16} /> Agregar combinación
           </WcButton>
         </div>
-        
+
         {systemsFields.length === 0 ? (
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>No hay revisiones registradas. Haz clic en "Agregar".</p>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+            No hay revisiones registradas. Haz clic en "Agregar combinación".
+          </p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {systemsFields.map((field, index) => (
-              <div key={field.id} style={{ display: 'grid', gridTemplateColumns: '1fr 3fr auto', gap: '16px', alignItems: 'flex-start', padding: '16px', backgroundColor: 'var(--color-bg)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+              <div
+                key={field.id}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(180px, 1fr) minmax(180px, 1fr) minmax(220px, 2fr) auto',
+                  gap: '12px',
+                  alignItems: 'flex-start',
+                  padding: '16px',
+                  backgroundColor: 'var(--color-bg)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-border)',
+                }}
+              >
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>Condición</label>
-                  <select {...register(`systemsReview.${index}.condition` as const)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>Vía aérea</label>
+                  <select
+                    {...register(`systemsReview.${index}.airwayStatus` as const)}
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
+                  >
                     <option value="VIA_AEREA_LIBRE">Vía aérea libre</option>
                     <option value="VIA_AEREA_OBSTRUIDA">Vía aérea obstruida</option>
-                    <option value="CONDICION_ESTABLE">Condición Estable</option>
-                    <option value="CONDICION_INESTABLE">Condición Inestable</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>Condición general</label>
+                  <select
+                    {...register(`systemsReview.${index}.generalCondition` as const)}
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
+                  >
+                    <option value="CONDICION_ESTABLE">Estable</option>
+                    <option value="CONDICION_INESTABLE">Inestable</option>
                   </select>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>Descripción</label>
-                  <input type="text" {...register(`systemsReview.${index}.description` as const)} placeholder="Cronología, localización, características..." style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }} />
+                  <input
+                    type="text"
+                    {...register(`systemsReview.${index}.description` as const)}
+                    placeholder="Hallazgos clínicos, manejo aplicado..."
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
+                  />
                 </div>
-                <button type="button" onClick={() => removeSystem(index)} style={{ marginTop: '24px', background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => removeSystem(index)}
+                  aria-label={`Eliminar combinación ${index + 1}`}
+                  style={{
+                    marginTop: '24px',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-danger)',
+                    cursor: 'pointer',
+                    padding: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
                   <Icon name="icon-trash" size={20} />
                 </button>
               </div>
@@ -98,7 +178,7 @@ export function TabExamen() {
                   <input type="text" {...register(`physicalExams.${index}.description` as const)} placeholder="Descripción de la patología..." style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)' }} />
                 </div>
                 <button type="button" onClick={() => removeExam(index)} style={{ marginTop: '24px', background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center' }}>
-                  <Icon name="icon-add" size={20} />
+                  <Icon name="icon-trash" size={20} />
                 </button>
               </div>
             ))}
