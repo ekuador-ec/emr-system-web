@@ -295,7 +295,7 @@
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: var(--drawer-footer-border);
 }
 
 /* ── Botón Editar ── */
@@ -398,4 +398,33 @@
 @keyframes patient-drawer-shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .patient-drawer__body {
+    padding: 0 var(--spacing-4, 16px) var(--spacing-4, 16px);
+  }
+
+  .patient-drawer__card {
+    padding: 12px;
+  }
+
+  .patient-drawer__card--grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .patient-drawer__list-item {
+    padding: 12px;
+  }
+
+  .patient-drawer__footer {
+    flex-direction: column-reverse; /* Apilar botones y poner la acción principal arriba */
+    padding: 16px;
+  }
+
+  .patient-drawer__footer > * {
+    width: 100%;
+  }
 }
