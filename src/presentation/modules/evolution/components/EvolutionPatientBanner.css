@@ -1,7 +1,4 @@
 .evolution-banner {
-  position: sticky;
-  top: 0;
-  z-index: 20;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -16,14 +13,14 @@
 
 .evolution-banner__row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-4);
   flex-wrap: wrap;
 }
 
 .evolution-banner__patient {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-3);
   flex: 1 1 280px;
   min-width: 0;
@@ -43,12 +40,13 @@
   font-size: var(--font-size-md);
   flex-shrink: 0;
   letter-spacing: 0.5px;
+  margin-top: 2px;
 }
 
 .evolution-banner__patient-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
 }
 
@@ -61,6 +59,16 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+  line-height: 1.2;
+}
+
+.evolution-banner__detail-button {
+  align-self: flex-start;
+  padding: 4px 10px !important;
+  font-size: var(--font-size-xs) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  line-height: 1.2 !important;
 }
 
 .evolution-banner__patient-meta {
@@ -70,35 +78,7 @@
   flex-wrap: wrap;
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
-}
-
-.evolution-banner__detail-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 4px;
-  padding: 0;
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  cursor: pointer;
-  font-family: var(--font-heading);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  text-decoration: none;
-  align-self: flex-start;
-  transition: color var(--transition-fast);
-}
-
-.evolution-banner__detail-link:hover {
-  color: var(--color-primary-hover);
-  text-decoration: underline;
-}
-
-.evolution-banner__detail-link:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
+  margin-top: 2px;
 }
 
 .evolution-banner__chip {
@@ -127,9 +107,10 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   flex-wrap: wrap;
   min-width: 0;
+  align-self: center;
 }
 
 .evolution-banner__divider {
@@ -143,8 +124,22 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   margin-left: auto;
+  align-self: center;
+}
+
+.evolution-banner__action-btn {
+  flex-shrink: 0;
+}
+
+.evolution-banner__autosave-row {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+  min-height: 24px;
 }
 
 .evolution-banner__back {
@@ -226,6 +221,26 @@
   line-height: 1;
 }
 
+@media (max-width: 860px) {
+  .evolution-banner__divider {
+    display: none;
+  }
+
+  .evolution-banner__status {
+    flex: 1 1 100%;
+    order: 3;
+    margin-top: var(--space-2);
+  }
+
+  .evolution-banner__actions {
+    flex: 1 1 100%;
+    order: 4;
+    margin-left: 0;
+    justify-content: flex-end;
+    margin-top: var(--space-2);
+  }
+}
+
 @media (max-width: 640px) {
   .evolution-banner {
     padding: var(--space-3) var(--space-4);
@@ -241,13 +256,21 @@
     font-size: var(--font-size-base);
   }
 
-  .evolution-banner__divider {
+  .evolution-banner__patient-name {
+    font-size: var(--font-size-sm);
+  }
+
+  .evolution-banner__action-label {
     display: none;
   }
 
-  .evolution-banner__actions {
-    width: 100%;
-    margin-left: 0;
-    justify-content: flex-end;
+  .evolution-banner__action-btn {
+    padding: var(--space-2) !important;
+    aspect-ratio: 1;
+    justify-content: center;
+  }
+
+  .evolution-banner__autosave-row {
+    justify-content: flex-start;
   }
 }

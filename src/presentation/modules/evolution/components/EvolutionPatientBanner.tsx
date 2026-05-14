@@ -162,6 +162,16 @@ export function EvolutionPatientBanner({
             <span className="evolution-banner__patient-name" title={fullName}>
               {fullName}
             </span>
+            {patient ? (
+              <WcButton
+                variant="terciary"
+                className="evolution-banner__detail-button"
+                onClick={onOpenPatientDetail}
+              >
+                <Icon name="icon-see-details" size={14} />
+                Ver Información
+              </WcButton>
+            ) : null}
             <div className="evolution-banner__patient-meta">
               {patient ? (
                 <>
@@ -170,25 +180,15 @@ export function EvolutionPatientBanner({
                     {patient.idNumber}
                   </span>
                   <span className="evolution-banner__chip">{formatGender(patient.gender)}</span>
-                  {age !== null ? (
-                    <span className="evolution-banner__chip">{age} a</span>
-                  ) : null}
+                  <span className="evolution-banner__chip">
+                    {age !== null ? `${age} años` : "Edad N/D"}
+                  </span>
                   {patient.bloodType ? (
                     <span className="evolution-banner__chip">{patient.bloodType}</span>
                   ) : null}
                 </>
               ) : null}
             </div>
-            {patient ? (
-              <button
-                type="button"
-                className="evolution-banner__detail-link"
-                onClick={onOpenPatientDetail}
-              >
-                <Icon name="icon-see-details" size={14} />
-                Ver detalle del paciente
-              </button>
-            ) : null}
           </div>
         </div>
 
@@ -204,26 +204,35 @@ export function EvolutionPatientBanner({
               {dateLabel}
             </span>
           ) : null}
-          {!isClosed ? (
-            <WcAutosavePill status={autosaveStatus} lastSavedAt={lastSavedAt} />
-          ) : null}
         </div>
 
         <div className="evolution-banner__actions">
           {!isClosed ? (
             <>
-              <WcButton variant="secondary" onClick={onSaveDraft} disabled={isSavingDraft}>
+              <WcButton
+                variant="secondary"
+                onClick={onSaveDraft}
+                disabled={isSavingDraft}
+                className="evolution-banner__action-btn"
+                title="Guardar borrador"
+              >
                 <Icon name="icon-save" size={16} />
-                {isSavingDraft ? "Guardando…" : "Guardar borrador"}
+                <span className="evolution-banner__action-label">
+                  {isSavingDraft ? "Guardando…" : "Guardar borrador"}
+                </span>
               </WcButton>
               {canCloseEvolution ? (
                 <WcButton
                   variant="primary"
                   onClick={onCloseEvolution}
                   disabled={isClosing || isSavingDraft}
+                  className="evolution-banner__action-btn"
+                  title="Firmar y cerrar"
                 >
                   <Icon name="icon-check" size={16} />
-                  {isClosing ? "Cerrando…" : "Firmar y cerrar"}
+                  <span className="evolution-banner__action-label">
+                    {isClosing ? "Cerrando…" : "Firmar y cerrar"}
+                  </span>
                 </WcButton>
               ) : null}
             </>
@@ -244,6 +253,12 @@ export function EvolutionPatientBanner({
           </div>
         </div>
       </div>
+
+      {!isClosed ? (
+        <div className="evolution-banner__autosave-row">
+          <WcAutosavePill status={autosaveStatus} lastSavedAt={lastSavedAt} />
+        </div>
+      ) : null}
     </header>
   );
 }
