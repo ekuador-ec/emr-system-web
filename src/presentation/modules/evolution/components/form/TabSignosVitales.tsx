@@ -116,7 +116,7 @@ export function TabSignosVitales() {
               )}
             />
           </WcField>
-          <WcField label="SatO\u2082">
+          <WcField label="SatO₂">
             <Controller
               control={control}
               name="oxygenSaturation"
@@ -137,7 +137,7 @@ export function TabSignosVitales() {
                 <WcNumberInput
                   value={field.value ?? null}
                   onChange={(value) => field.onChange(value)}
-                  unit="\u00B0C"
+                  unit="°C"
                   step={0.1}
                   decimals={1}
                 />
