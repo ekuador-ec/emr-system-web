@@ -1,19 +1,105 @@
+/* ========== Shell ========== */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: row;
+}
+
+.app-main-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.app-main-content {
+  flex: 1;
+  padding: var(--space-6);
+  overflow-y: auto;
+}
+
+/* ========== Header (60px, glass + animated accent) ========== */
 .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 60px;
-  padding: var(--space-3) var(--space-6);
-  background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  transition: background-color var(--transition-normal);
+  padding: 0 var(--space-6);
   gap: var(--space-4);
+  background: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  backdrop-filter: saturate(180%) blur(18px);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  transition:
+    background-color var(--transition-normal),
+    border-color var(--transition-normal);
+}
+
+.app-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+      120% 80% at 100% 0%,
+      color-mix(in srgb, var(--color-primary) 9%, transparent) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      80% 60% at 0% 100%,
+      color-mix(in srgb, var(--color-primary-hover) 6%, transparent) 0%,
+      transparent 60%
+    );
+  z-index: 0;
+}
+
+.app-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-primary) 40%, transparent) 30%,
+    color-mix(in srgb, var(--color-primary-hover) 55%, transparent) 50%,
+    color-mix(in srgb, var(--color-primary) 40%, transparent) 70%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: app-header-shine 8s linear infinite;
+  opacity: 0.55;
+}
+
+@keyframes app-header-shine {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.app-header-left,
+.app-header-right {
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .app-header-left {
-  display: flex;
-  align-items: center;
   gap: var(--space-6);
+}
+
+.app-header-right {
+  gap: var(--space-2);
 }
 
 .app-header-nav {
@@ -21,81 +107,277 @@
   gap: var(--space-1);
 }
 
-.app-header-right {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
+.app-header-divider {
+  width: 1px;
+  height: 28px;
+  margin: 0 var(--space-1);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-border) 90%, transparent) 25%,
+    color-mix(in srgb, var(--color-border) 90%, transparent) 75%,
+    transparent 100%
+  );
 }
 
+/* ========== Profile Chip (glassmorphism) ========== */
 .app-header-profile-btn {
-  display: flex;
+  position: relative;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 4px 16px 4px 4px;
-  border-radius: 100px;
+  height: 44px;
+  padding: 4px 14px 4px 4px;
+  border-radius: var(--radius-full);
   cursor: pointer;
-  border: 1px solid color-mix(in srgb, var(--color-primary-light) 60%, transparent);
-  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
   box-shadow:
-    0 2px 10px -2px rgba(0, 0, 0, 0.04),
-    0 4px 6px -4px rgba(0, 0, 0, 0.02);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    inset 0 1px 0 0 color-mix(in srgb, #ffffff 35%, transparent),
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px -14px rgba(15, 23, 42, 0.25);
+  transition:
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.app-header-profile-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 10%, transparent) 0%,
+    transparent 45%,
+    color-mix(in srgb, var(--color-primary-hover) 9%, transparent) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: -1;
+}
+
+.app-header-profile-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    color-mix(in srgb, #ffffff 30%, transparent) 50%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+  transition: left 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .app-header-profile-btn:hover {
   transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
   box-shadow:
-    0 6px 16px -4px rgba(0, 0, 0, 0.08),
-    0 4px 8px -4px rgba(0, 0, 0, 0.04);
-  background: color-mix(in srgb, var(--color-surface) 96%, var(--color-primary) 4%);
+    inset 0 1px 0 0 color-mix(in srgb, #ffffff 45%, transparent),
+    0 2px 6px rgba(15, 23, 42, 0.06),
+    0 14px 32px -14px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+.app-header-profile-btn:hover::before {
+  opacity: 1;
+}
+
+.app-header-profile-btn:hover::after {
+  left: 130%;
+}
+
+.app-header-profile-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.app-header-profile-btn:active {
+  transform: translateY(0);
+}
+
+/* Avatar */
+.app-header-profile-avatar {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 35%, transparent) 0%,
+    color-mix(in srgb, var(--color-primary-hover) 35%, transparent) 100%
+  );
+  padding: 2px;
+}
+
+.app-header-profile-avatar-img,
+.app-header-profile-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
 }
 
 .app-header-profile-avatar-img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-border) 40%, transparent);
 }
 
 .app-header-profile-avatar-fallback {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: var(--color-primary-light);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-light) 0%,
+    color-mix(in srgb, var(--color-primary-light) 65%, var(--color-surface) 35%) 100%
+  );
   color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 1.1rem;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-border) 40%, transparent);
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-extrabold);
+  font-size: 0.95rem;
+  text-transform: uppercase;
 }
 
+.app-header-profile-status {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background-color: var(--color-success);
+  border: 2px solid var(--color-surface);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-success) 50%, transparent),
+    0 0 8px color-mix(in srgb, var(--color-success) 65%, transparent);
+}
+
+/* Text info */
 .app-header-profile-info {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 1px;
-  margin-left: 2px;
+  gap: 2px;
+  line-height: 1;
 }
 
 .app-header-profile-name {
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
-  line-height: 1;
   letter-spacing: -0.01em;
+  line-height: 1.1;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-header-profile-role {
-  font-size: 0.68rem;
-  font-weight: 800;
+  font-family: var(--font-heading);
+  font-size: 0.625rem;
+  font-weight: var(--font-weight-bold);
   color: var(--color-primary);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  background-color: var(--color-primary-light);
-  padding: 2px 8px 1px;
-  border-radius: 4px;
-  line-height: 1.2;
+  letter-spacing: 0.07em;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.app-header-profile-role::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  opacity: 0.6;
+}
+
+/* ========== Sub-header / Quick Actions ========== */
+.app-subheader {
+  position: sticky;
+  top: 60px;
+  z-index: 25;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: var(--space-2) var(--space-6);
+  gap: var(--space-2);
+  background: color-mix(in srgb, var(--color-bg) 75%, transparent);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+  backdrop-filter: saturate(140%) blur(10px);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+}
+
+.app-subheader-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  margin-right: var(--space-4);
+}
+
+.app-subheader-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.app-warning-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0 var(--space-3);
+  }
+
+  .app-subheader {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .app-header-profile-btn {
+    padding: 4px;
+    height: 40px;
+    gap: 0;
+  }
+
+  .app-header-profile-info {
+    display: none;
+  }
+
+  .app-header-divider {
+    display: none;
+  }
+
+  .app-subheader-label {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header-right {
+    gap: var(--space-1);
+  }
 }

@@ -31,8 +31,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const warningRef = useRef<WcWarningHandle | null>(null);
 
   const { setInviteModalOpen, isInviteModalOpen } = useUserStore();
-  // Safe to use here because it's a hook wrapping react-query; calling loadUsers will fetch data
-  // and populate cache, making the management page automatically activate upon navigation.
   const { loadUsers, inviteUser, isInviting, isActivated: isUsersLoaded } = useAdminUsers();
 
   const {
@@ -59,139 +57,53 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     warningRef.current?.open(handleLogout);
   };
 
+  const displayName =
+    user?.firstName && user?.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : user?.firstName || user?.email || "";
+
+  const avatarInitial = (user?.firstName?.charAt(0) || user?.email?.charAt(0) || "").toUpperCase();
+
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "row" }}>
-      {/* Sidebar Navigation */}
+    <div className="app-shell">
       <Sidebar />
 
-      {/* Main Content Area */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        {/* Header */}
-        <header
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            height: "60px",
-            padding: "var(--space-3) var(--space-6)",
-            backgroundColor: "var(--color-surface)",
-            borderBottom: "1px solid var(--color-border)",
-            transition: "background-color var(--transition-normal)",
-            gap: "var(--space-4)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-6)" }}>
-            <nav style={{ display: "flex", gap: "var(--space-1)" }}></nav>
+      <div className="app-main-column">
+        <header className="app-header">
+          <div className="app-header-left">
+            <nav className="app-header-nav" />
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+          <div className="app-header-right">
             {user && (
               <button
                 type="button"
+                className="app-header-profile-btn"
                 onClick={() => setIsProfileModalOpen(true)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "4px 16px 4px 4px",
-                  borderRadius: "100px",
-                  cursor: "pointer",
-                  border:
-                    "1px solid color-mix(in srgb, var(--color-primary-light) 60%, transparent)",
-                  background: "var(--color-surface)",
-                  boxShadow:
-                    "0 2px 10px -2px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.02)",
-                  transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow =
-                    "0 6px 16px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04)";
-                  e.currentTarget.style.background =
-                    "color-mix(in srgb, var(--color-surface) 96%, var(--color-primary) 4%)";
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow =
-                    "0 2px 10px -2px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.02)";
-                  e.currentTarget.style.background = "var(--color-surface)";
-                }}
+                aria-label={`Ver perfil de ${displayName}`}
               >
-                {user.avatarUrl ? (
-                  <img
-                    src={user.avatarUrl}
-                    alt="Avatar"
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      boxShadow:
-                        "0 0 0 1px color-mix(in srgb, var(--color-border) 40%, transparent)",
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      borderRadius: "50%",
-                      backgroundColor: "var(--color-primary-light)",
-                      color: "var(--color-primary)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: "700",
-                      fontSize: "1.1rem",
-                      boxShadow:
-                        "0 0 0 1px color-mix(in srgb, var(--color-border) 40%, transparent)",
-                    }}
-                  >
-                    {user.firstName?.charAt(0) || user.email.charAt(0)}
-                  </div>
-                )}
+                <span className="app-header-profile-avatar">
+                  {user.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt=""
+                      className="app-header-profile-avatar-img"
+                    />
+                  ) : (
+                    <span className="app-header-profile-avatar-fallback">{avatarInitial}</span>
+                  )}
+                  <span className="app-header-profile-status" aria-hidden="true" />
+                </span>
 
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-start",
-                    gap: "1px",
-                    marginLeft: "2px",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "0.95rem",
-                      fontWeight: "700",
-                      color: "var(--color-text)",
-                      lineHeight: "1",
-                      letterSpacing: "-0.01em",
-                    }}
-                  >
-                    {user.firstName && user.lastName
-                      ? `${user.firstName} ${user.lastName}`
-                      : user.firstName || user.email}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "0.5rem",
-                      // fontWeight: "800",
-                      color: "var(--color-primary)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.04em",
-                      backgroundColor: "var(--color-primary-light)",
-                      marginTop: "4px",
-                      padding: "5px 8px ",
-                      borderRadius: "4px",
-                      lineHeight: "1.2",
-                    }}
-                  >
+                <span className="app-header-profile-info">
+                  <span className="app-header-profile-name">{displayName}</span>
+                  <span className="app-header-profile-role">
                     {USER_ROLE_LABELS[user.role] || user.role}
                   </span>
-                </div>
+                </span>
               </button>
             )}
+            <span className="app-header-divider" aria-hidden="true" />
             <NotificationBell userId={user?.id} />
             <ThemeToggle />
             <WcButtonIcon
@@ -206,37 +118,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        {/* Sub-header / Quick Actions */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            padding: "var(--space-2) var(--space-6)",
-            backgroundColor: "var(--color-bg-secondary)",
-            borderBottom: "1px solid var(--color-border)",
-            gap: "var(--space-2)",
-          }}
-          title="Acciones Rápidas"
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--space-2)",
-              color: "var(--color-text-secondary)",
-              fontSize: "var(--font-size-sm)",
-              fontWeight: "var(--font-weight-medium)",
-              whiteSpace: "nowrap",
-              marginRight: "var(--space-4)",
-            }}
-          >
-            <span style={{ display: "inline-block" }} className="quick-actions-title">
-              Acciones Rápidas:
-            </span>
-          </div>
+        <div className="app-subheader" title="Acciones Rápidas">
+          <span className="app-subheader-label">Acciones Rápidas:</span>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+          <div className="app-subheader-actions">
             <QuickActionBar
               module="Pacientes"
               icon="icon-patient"
@@ -295,16 +180,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        {/* Main content */}
-        <main style={{ flex: 1, padding: "var(--space-6)", overflowY: "auto" }}>{children}</main>
+        <main className="app-main-content">{children}</main>
       </div>
 
-      {/* Global Elements */}
       <UserProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
       <ActiveUsersFloat />
       <Toaster />
 
-      {/* Global Modals */}
       {isCreateModalOpen && (
         <PatientCreateModal
           patientId={editingPatientId}
@@ -327,7 +209,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         onClose={() => setInviteModalOpen(false)}
         onInvite={async (payload) => {
           await inviteUser(payload);
-          // If the table was never loaded but we invite, we load it so if they navigate it's there
           if (!isUsersLoaded) loadUsers();
         }}
         isInviting={isInviting}
@@ -338,13 +219,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         title="Cerrar sesión"
         message="¿Estás seguro de que deseas cerrar tu sesión actual?"
         confirmText={
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+          <span className="app-warning-action">
             <Icon name="icon-logout" size={16} />
             Cerrar sesión
           </span>
         }
         cancelText={
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+          <span className="app-warning-action">
             <Icon name="icon-x" size={16} />
             Cancelar
           </span>
