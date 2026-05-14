@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useMemo } from "react";
 import { useParams, useNavigate, useBlocker } from "react-router-dom";
 import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,10 +17,11 @@ import {
 } from "@/infrastructure/core/draftCache";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
-import { WcTabsFolder } from "@/presentation/modules/shared/components/ui/webcomponents/Tabs/wcTabsFolder";
-import type { WcTabsFolderItem } from "@/presentation/modules/shared/components/ui/webcomponents/Tabs/wcTabsFolder";
 import { UnsavedChangesModal } from "../components/UnsavedChangesModal";
 import { EvolutionPatientBanner } from "../components/EvolutionPatientBanner";
+import { EvolutionTabsNav } from "../components/EvolutionTabsNav";
+import type { EvolutionNavTab } from "../components/EvolutionTabsNav";
+import "./EvolutionWorkspacePage.css";
 import { PatientDetailsDrawer } from "@/presentation/modules/patient/components/Patients/PatientDetailsDrawer";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 
@@ -244,6 +245,26 @@ export function EvolutionWorkspacePage() {
   // failed autosave or a brutal browser refresh. Runs at most once per
   // evolution mount.
   const draftRestoreCheckedRef = useRef<string | null>(null);
+
+  const bannerRef = useRef<HTMLDivElement | null>(null);
+
+  // Keep the sidebar's sticky offset in sync with the banner height so that
+  // both can stick to the top without overlapping. The banner height changes
+  // with viewport width, autosave state, etc.
+  useLayoutEffect(() => {
+    const el = bannerRef.current;
+    if (!el) return undefined;
+    const update = () => {
+      const height = el.getBoundingClientRect().height;
+      document.documentElement.style.setProperty("--evolution-banner-height", `${height}px`);
+    };
+    update();
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     if (!evolutionId || !evolution) return;
     if (draftRestoreCheckedRef.current === evolutionId) return;
@@ -553,15 +574,13 @@ export function EvolutionWorkspacePage() {
     <TabAlta key="alta" />,
   ];
 
-  const wcTabs: WcTabsFolderItem[] = visibleTabs.map((tab) => {
-    const globalIndex = TABS.findIndex((t) => t.label === tab.label);
-    return {
-      name: tab.label,
-      icon: <Icon name={tab.icon} size={16} />,
-      hasError: !!validationErrors[tab.name],
-      content: tabComponents[globalIndex],
-    };
-  });
+  const navTabs: EvolutionNavTab[] = visibleTabs.map((tab) => ({
+    label: tab.label,
+    icon: tab.icon,
+    hasError: !!validationErrors[tab.name],
+  }));
+
+  const activeTabMeta = TABS[activeTab];
 
   if (isLoading) {
     return (
@@ -578,8 +597,9 @@ export function EvolutionWorkspacePage() {
   }
 
   return (
-    <div style={{ padding: "var(--space-6) var(--space-8)", maxWidth: "1120px", margin: "0 auto" }}>
-      <EvolutionPatientBanner
+    <div className="evolution-workspace">
+      <div ref={bannerRef} className="evolution-workspace__banner-wrapper">
+        <EvolutionPatientBanner
         patient={patient}
         status={evolution.status}
         attentionDate={evolution.attentionDate}
@@ -595,7 +615,8 @@ export function EvolutionWorkspacePage() {
         }}
         onSaveDraft={() => handleSaveDraft(methods.getValues())}
         onCloseEvolution={handleCloseEvolution}
-      />
+        />
+      </div>
 
       {!canCloseEvolution && !isClosed && (
         <p
@@ -681,69 +702,70 @@ export function EvolutionWorkspacePage() {
       )}
 
       <div
+        className="evolution-workspace__body"
         style={{
           opacity: isClosed ? 0.8 : 1,
           pointerEvents: isClosed ? "none" : "auto",
         }}
       >
-        <FormProvider {...methods}>
-          <form id="evolution-form" onSubmit={(e) => e.preventDefault()}>
-            <WcTabsFolder
-              tabs={wcTabs}
-              activeIndex={currentVisibleTabIndex >= 0 ? currentVisibleTabIndex : 0}
-              onChange={(visibleIndex) => setActiveTab(getActualTabIndex(visibleIndex))}
-            />
-          </form>
-        </FormProvider>
+        <aside className="evolution-workspace__sidebar">
+          <EvolutionTabsNav
+            tabs={navTabs}
+            activeIndex={currentVisibleTabIndex >= 0 ? currentVisibleTabIndex : 0}
+            onChange={(visibleIndex) => setActiveTab(getActualTabIndex(visibleIndex))}
+          />
+        </aside>
 
-        <div
-          style={{
-            marginTop: "var(--space-6)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "var(--space-3)",
-            pointerEvents: "auto",
-          }}
-        >
-          <WcButton
-            variant="secondary"
-            onClick={handlePrevTab}
-            disabled={currentVisibleTabIndex <= 0}
-          >
-            <Icon name="icon-chevron-left" size={16} />
-            Anterior
-          </WcButton>
+        <main className="evolution-workspace__main">
+          {activeTabMeta ? (
+            <div className="evolution-workspace__main-header">
+              <div className="evolution-workspace__main-title">
+                <Icon name={activeTabMeta.icon} size={20} />
+                <h2>{activeTabMeta.label}</h2>
+              </div>
+              <span className="evolution-workspace__step">
+                {`Paso ${Math.max(currentVisibleTabIndex + 1, 1)} de ${visibleTabs.length} · ${progressPercentage}%`}
+              </span>
+            </div>
+          ) : null}
 
-          <span
-            style={{
-              fontSize: "var(--font-size-xs)",
-              color: "var(--color-text-secondary)",
-              fontWeight: 500,
-            }}
-            aria-live="polite"
-          >
-            {`Paso ${Math.max(currentVisibleTabIndex + 1, 1)} de ${visibleTabs.length} · ${progressPercentage}%`}
-          </span>
+          <FormProvider {...methods}>
+            <form id="evolution-form" onSubmit={(e) => e.preventDefault()}>
+              <div className="evolution-workspace__main-body">
+                {tabComponents[activeTab]}
+              </div>
+            </form>
+          </FormProvider>
 
-          {!isLastTab ? (
-            <WcButton variant="primary" onClick={handleNextTab}>
-              Siguiente
-              <Icon name="icon-chevron-right" size={16} />
-            </WcButton>
-          ) : !isClosed && canCloseEvolution ? (
+          <div className="evolution-workspace__footer">
             <WcButton
-              variant="primary"
-              onClick={handleCloseEvolution}
-              disabled={closeEvolution.isPending || updateEvolution.isPending}
+              variant="secondary"
+              onClick={handlePrevTab}
+              disabled={currentVisibleTabIndex <= 0}
             >
-              <Icon name="icon-check" size={16} />
-              Firmar y cerrar
+              <Icon name="icon-chevron-left" size={16} />
+              Anterior
             </WcButton>
-          ) : (
-            <span aria-hidden="true" />
-          )}
-        </div>
+
+            {!isLastTab ? (
+              <WcButton variant="primary" onClick={handleNextTab}>
+                Siguiente
+                <Icon name="icon-chevron-right" size={16} />
+              </WcButton>
+            ) : !isClosed && canCloseEvolution ? (
+              <WcButton
+                variant="primary"
+                onClick={handleCloseEvolution}
+                disabled={closeEvolution.isPending || updateEvolution.isPending}
+              >
+                <Icon name="icon-check" size={16} />
+                Firmar y cerrar
+              </WcButton>
+            ) : (
+              <span aria-hidden="true" />
+            )}
+          </div>
+        </main>
       </div>
 
       {DialogComponent}
