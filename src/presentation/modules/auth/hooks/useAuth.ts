@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { SupabaseAuthRepository } from "@/infrastructure/modules/auth/repositories/SupabaseAuthRepository";
 import { LoginUser } from "@/application/modules/auth/use-cases/loginUser";
 import { LogoutUser } from "@/application/modules/auth/use-cases/logoutUser";
+import { clearAllDrafts } from "@/infrastructure/core/draftCache";
 
 const authRepository = new SupabaseAuthRepository();
 const loginUseCase = new LoginUser(authRepository);
@@ -42,6 +43,7 @@ export function useAuth() {
   const logoutMutation = useMutation({
     mutationFn: () => logoutUseCase.execute(),
     onSuccess: () => {
+      clearAllDrafts();
       queryClient.clear();
     },
   });

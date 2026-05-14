@@ -8,6 +8,8 @@
 
 /* ----- Design Tokens: Light Theme (default) ----- */
 :root {
+  color-scheme: light;
+
   /* — Colores — */
   --color-bg: #f4f7fe;
   --color-surface: #ffffff;
@@ -80,6 +82,8 @@
 
 /* ----- Design Tokens: Dark Theme ----- */
 .dark {
+  color-scheme: dark;
+
   --color-bg: #09090b;
   --color-surface: #18181b;
   --color-primary: #ffffff;

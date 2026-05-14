@@ -38,19 +38,24 @@ export class UpdatePatientUseCase {
       throw new Error(`No se encontro el paciente con id ${id}.`);
     }
 
-    const updateData: UpdatePatientDTO = { ...data };
+    const { idNumber: incomingIdNumber, idNumberType: _ignoredIdNumberType, ...rest } = data;
+    const updateData: UpdatePatientDTO = { ...rest };
 
-    if (data.idNumber && data.idNumber.trim() !== '' && existingPatient.idNumberType === 'temporal') {
-      if (!validateEcCedula(data.idNumber)) {
+    const normalizedIdNumber = typeof incomingIdNumber === 'string' ? incomingIdNumber.trim() : '';
+    const isPromotingTemporalToCedula =
+      existingPatient.idNumberType === 'temporal' && normalizedIdNumber !== '';
+
+    if (isPromotingTemporalToCedula) {
+      if (!validateEcCedula(normalizedIdNumber)) {
         throw new Error('El numero de cedula ingresado no es valido (verificacion Modulo 10 fallida).');
       }
 
-      const duplicate = await this.patientRepository.getPatientByIdNumber(data.idNumber);
+      const duplicate = await this.patientRepository.getPatientByIdNumber(normalizedIdNumber);
       if (duplicate && duplicate.id !== id) {
-        throw new Error(`Ya existe otro paciente registrado con la cedula ${data.idNumber}.`);
+        throw new Error(`Ya existe otro paciente registrado con la cedula ${normalizedIdNumber}.`);
       }
 
-      updateData.idNumber = data.idNumber;
+      updateData.idNumber = normalizedIdNumber;
       updateData.idNumberType = 'cedula';
     }
 

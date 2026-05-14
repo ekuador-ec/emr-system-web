@@ -1,0 +1,57 @@
+.wc-number-input {
+  position: relative;
+  width: 100%;
+}
+
+.wc-number-input__steppers {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: var(--space-1);
+}
+
+.wc-number-input__stepper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 0.625rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast),
+    border-color var(--transition-fast);
+  padding: 0;
+}
+
+.wc-number-input__stepper:hover:not(:disabled) {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.wc-number-input__stepper:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.wc-number-input__unit {
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.wc-number-input input[type="number"]::-webkit-inner-spin-button,
+.wc-number-input input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.wc-number-input input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

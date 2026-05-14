@@ -1,6 +1,37 @@
 import { useEffect } from "react";
-import { useFormContext, useWatch } from "react-hook-form";
+import { Controller, useFormContext, useWatch } from "react-hook-form";
 import type { UpdateEvolutionDraftFormValues } from "../../schemas/evolution.schema";
+import { WcStatusBadge } from "@/presentation/modules/shared/components/ui/webcomponents/Badges";
+import type { WcStatusVariant } from "@/presentation/modules/shared/components/ui/webcomponents/Badges";
+import {
+  WcField,
+  WcFormGrid,
+  WcFormSection,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Forms";
+import {
+  WcInput,
+  WcNumberInput,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Inputs";
+
+interface BadgeInfo {
+  variant: WcStatusVariant;
+  label: string;
+}
+
+function getBmiBadge(bmi: number | null | undefined): BadgeInfo | null {
+  if (bmi === null || bmi === undefined || Number.isNaN(bmi) || bmi <= 0) return null;
+  if (bmi < 18.5) return { variant: "warning", label: "Bajo peso" };
+  if (bmi < 25) return { variant: "success", label: "Normal" };
+  if (bmi < 30) return { variant: "warning", label: "Sobrepeso" };
+  return { variant: "danger", label: "Obesidad" };
+}
+
+function getGlasgowBadge(total: number | null | undefined): BadgeInfo | null {
+  if (total === null || total === undefined || Number.isNaN(total) || total <= 0) return null;
+  if (total >= 13) return { variant: "success", label: "Leve (13-15)" };
+  if (total >= 9) return { variant: "warning", label: "Moderado (9-12)" };
+  return { variant: "danger", label: "Severo (\u22648)" };
+}
 
 export function TabSignosVitales() {
   const { register, control, setValue } = useFormContext<UpdateEvolutionDraftFormValues>();
@@ -12,566 +43,261 @@ export function TabSignosVitales() {
   const glasgowVerbal = useWatch({ control, name: "glasgowVerbal" });
   const glasgowMotor = useWatch({ control, name: "glasgowMotor" });
 
-  // Auto-calculate BMI
   useEffect(() => {
-    if (weight && height && height > 0) {
-      const heightInMeters = height > 3 ? height / 100 : height; // Handle cm vs m
-      const bmi = weight / (heightInMeters * heightInMeters);
+    const w = Number(weight);
+    const h = Number(height);
+    if (Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0) {
+      const heightInMeters = h > 3 ? h / 100 : h;
+      const bmi = w / (heightInMeters * heightInMeters);
       setValue("bmi", parseFloat(bmi.toFixed(2)));
+    } else {
+      setValue("bmi", null);
     }
   }, [weight, height, setValue]);
 
-  // Auto-calculate Glasgow
   useEffect(() => {
-    const o = Number(glasgowOcular) || 0;
-    const v = Number(glasgowVerbal) || 0;
-    const m = Number(glasgowMotor) || 0;
-    if (o > 0 || v > 0 || m > 0) {
-      setValue("glasgowTotal", o + v + m);
+    const o = Number(glasgowOcular);
+    const v = Number(glasgowVerbal);
+    const m = Number(glasgowMotor);
+    const validO = Number.isFinite(o) && o > 0;
+    const validV = Number.isFinite(v) && v > 0;
+    const validM = Number.isFinite(m) && m > 0;
+    if (validO || validV || validM) {
+      setValue("glasgowTotal", (validO ? o : 0) + (validV ? v : 0) + (validM ? m : 0));
+    } else {
+      setValue("glasgowTotal", null);
     }
   }, [glasgowOcular, glasgowVerbal, glasgowMotor, setValue]);
 
   const currentBmi = useWatch({ control, name: "bmi" });
   const currentGlasgow = useWatch({ control, name: "glasgowTotal" });
 
-  const getBmiBadge = (bmi: number | undefined | null) => {
-    if (!bmi) return null;
-    if (bmi < 18.5)
-      return (
-        <span
-          style={{
-            backgroundColor: "var(--color-warning)",
-            color: "var(--color-text)",
-            padding: "2px 8px",
-            borderRadius: "4px",
-            fontSize: "0.75rem",
-            fontWeight: 600,
-          }}
-        >
-          Bajo peso
-        </span>
-      );
-    if (bmi >= 18.5 && bmi < 25)
-      return (
-        <span
-          style={{
-            backgroundColor: "var(--color-success)",
-            color: "white",
-            padding: "2px 8px",
-            borderRadius: "4px",
-            fontSize: "0.75rem",
-            fontWeight: 600,
-          }}
-        >
-          Normal
-        </span>
-      );
-    if (bmi >= 25 && bmi < 30)
-      return (
-        <span
-          style={{
-            backgroundColor: "var(--color-warning)",
-            color: "var(--color-text)",
-            padding: "2px 8px",
-            borderRadius: "4px",
-            fontSize: "0.75rem",
-            fontWeight: 600,
-          }}
-        >
-          Sobrepeso
-        </span>
-      );
-    return (
-      <span
-        style={{
-          backgroundColor: "var(--color-danger)",
-          color: "white",
-          padding: "2px 8px",
-          borderRadius: "4px",
-          fontSize: "0.75rem",
-          fontWeight: 600,
-        }}
-      >
-        Obesidad
-      </span>
-    );
-  };
-
-  const getGlasgowBadge = (total: number | undefined | null) => {
-    if (!total) return null;
-    if (total >= 13)
-      return (
-        <span
-          style={{
-            backgroundColor: "var(--color-success)",
-            color: "white",
-            padding: "2px 8px",
-            borderRadius: "4px",
-            fontSize: "0.75rem",
-            fontWeight: 600,
-          }}
-        >
-          Leve (13-15)
-        </span>
-      );
-    if (total >= 9)
-      return (
-        <span
-          style={{
-            backgroundColor: "var(--color-warning)",
-            color: "var(--color-text)",
-            padding: "2px 8px",
-            borderRadius: "4px",
-            fontSize: "0.75rem",
-            fontWeight: 600,
-          }}
-        >
-          Moderado (9-12)
-        </span>
-      );
-    return (
-      <span
-        style={{
-          backgroundColor: "var(--color-danger)",
-          color: "white",
-          padding: "2px 8px",
-          borderRadius: "4px",
-          fontSize: "0.75rem",
-          fontWeight: 600,
-        }}
-      >
-        Severo (≤8)
-      </span>
-    );
-  };
+  const bmiBadge = getBmiBadge(currentBmi);
+  const glasgowBadge = getGlasgowBadge(currentGlasgow);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
-      {/* S3: Signos Vitales */}
-      <section
-        style={{
-          backgroundColor: "var(--color-surface)",
-          padding: "var(--space-6)",
-          borderRadius: "var(--radius-lg)",
-          border: "1px solid var(--color-border)",
-        }}
+      <WcFormSection title="Presión arterial">
+        <WcFormGrid columns={2}>
+          <WcField label="PA Derecha">
+            <WcInput type="text" placeholder="120/80" {...register("bpRight")} />
+          </WcField>
+          <WcField label="PA Izquierda">
+            <WcInput type="text" placeholder="120/80" {...register("bpLeft")} />
+          </WcField>
+        </WcFormGrid>
+      </WcFormSection>
+
+      <WcFormSection title="Cardiorrespiratorio">
+        <WcFormGrid columns={3} min="180px">
+          <WcField label="FC">
+            <Controller
+              control={control}
+              name="heartRate"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  unit="lpm"
+                />
+              )}
+            />
+          </WcField>
+          <WcField label="FR">
+            <Controller
+              control={control}
+              name="respiratoryRate"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  unit="rpm"
+                />
+              )}
+            />
+          </WcField>
+          <WcField label="SatO\u2082">
+            <Controller
+              control={control}
+              name="oxygenSaturation"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  unit="%"
+                />
+              )}
+            />
+          </WcField>
+          <WcField label="Temperatura">
+            <Controller
+              control={control}
+              name="temperature"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  unit="\u00B0C"
+                  step={0.1}
+                  decimals={1}
+                />
+              )}
+            />
+          </WcField>
+        </WcFormGrid>
+      </WcFormSection>
+
+      <WcFormSection
+        title="Antropometría"
+        actions={
+          bmiBadge ? (
+            <WcStatusBadge variant={bmiBadge.variant} size="sm">
+              IMC: {bmiBadge.label}
+            </WcStatusBadge>
+          ) : null
+        }
       >
-        <h2
-          style={{
-            marginTop: 0,
-            fontSize: "1.125rem",
-            borderBottom: "1px solid var(--color-border)",
-            paddingBottom: "12px",
-            marginBottom: "var(--space-4)",
-          }}
-        >
-          4. Signos Vitales y Mediciones
-        </h2>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "var(--space-4)",
-          }}
-        >
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              PA Derecha
-            </label>
-            <input
-              type="text"
-              {...register("bpRight")}
-              placeholder="120/80"
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+        <WcFormGrid columns={3}>
+          <WcField label="Peso">
+            <Controller
+              control={control}
+              name="weight"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  unit="kg"
+                  step={0.1}
+                  decimals={1}
+                />
+              )}
             />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              PA Izquierda
-            </label>
-            <input
-              type="text"
-              {...register("bpLeft")}
-              placeholder="120/80"
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+          </WcField>
+          <WcField label="Talla">
+            <Controller
+              control={control}
+              name="height"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  unit="cm"
+                  step={0.1}
+                  decimals={1}
+                />
+              )}
             />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Temp. Bucal (°C)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              {...register("temperature", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+          </WcField>
+          <WcField label="IMC">
+            <Controller
+              control={control}
+              name="bmi"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  step={0.01}
+                  decimals={2}
+                  disabled
+                />
+              )}
             />
-          </div>
+          </WcField>
+        </WcFormGrid>
+      </WcFormSection>
 
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Frec. Cardíaca (lpm)
-            </label>
-            <input
-              type="number"
-              {...register("heartRate", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+      <WcFormSection title="Neurológico — Pupilas y llenado capilar">
+        <WcFormGrid columns={3}>
+          <WcField label="Pupila derecha">
+            <WcInput {...register("rightPupilReaction")} placeholder="Normal, midriasis, miosis…" />
+          </WcField>
+          <WcField label="Pupila izquierda">
+            <WcInput {...register("leftPupilReaction")} placeholder="Normal, midriasis, miosis…" />
+          </WcField>
+          <WcField label="Llenado capilar">
+            <Controller
+              control={control}
+              name="capillaryRefillTime"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  unit="s"
+                />
+              )}
             />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Frec. Respiratoria (rpm)
-            </label>
-            <input
-              type="number"
-              {...register("respiratoryRate", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
-            />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Sat. Oxígeno (%)
-            </label>
-            <input
-              type="number"
-              {...register("oxygenSaturation", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
-            />
-          </div>
+          </WcField>
+        </WcFormGrid>
+      </WcFormSection>
 
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Peso (kg)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              {...register("weight", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+      <WcFormSection
+        title="Glasgow"
+        actions={
+          glasgowBadge ? (
+            <WcStatusBadge variant={glasgowBadge.variant} size="sm">
+              {glasgowBadge.label}
+            </WcStatusBadge>
+          ) : null
+        }
+      >
+        <WcFormGrid columns={4} min="160px">
+          <WcField label="Ocular (1-4)">
+            <Controller
+              control={control}
+              name="glasgowOcular"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  min={1}
+                  max={4}
+                />
+              )}
             />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Talla (m)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              {...register("height", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+          </WcField>
+          <WcField label="Verbal (1-5)">
+            <Controller
+              control={control}
+              name="glasgowVerbal"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  min={1}
+                  max={5}
+                />
+              )}
             />
-          </div>
-          <div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "4px",
-              }}
-            >
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500 }}>IMC</label>
-              {getBmiBadge(currentBmi)}
-            </div>
-            <input
-              type="number"
-              step="0.01"
-              {...register("bmi", { valueAsNumber: true })}
-              readOnly
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-                backgroundColor: "var(--color-bg)",
-              }}
+          </WcField>
+          <WcField label="Motor (1-6)">
+            <Controller
+              control={control}
+              name="glasgowMotor"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  min={1}
+                  max={6}
+                />
+              )}
             />
-          </div>
-
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Reacción Pupilar Der.
-            </label>
-            <input
-              type="text"
-              {...register("rightPupilReaction")}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+          </WcField>
+          <WcField label="Total">
+            <Controller
+              control={control}
+              name="glasgowTotal"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  disabled
+                />
+              )}
             />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Reacción Pupilar Izq.
-            </label>
-            <input
-              type="text"
-              {...register("leftPupilReaction")}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
-            />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Llenado Capilar (seg)
-            </label>
-            <input
-              type="number"
-              {...register("capillaryRefillTime", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
-            />
-          </div>
-        </div>
-
-        <h3
-          style={{
-            marginTop: "var(--space-6)",
-            fontSize: "1rem",
-            color: "var(--color-text-secondary)",
-          }}
-        >
-          Escala de Glasgow
-        </h3>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-            gap: "var(--space-4)",
-            marginTop: "var(--space-2)",
-          }}
-        >
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Ocular (1-4)
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="4"
-              {...register("glasgowOcular", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
-            />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Verbal (1-5)
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="5"
-              {...register("glasgowVerbal", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
-            />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Motora (1-6)
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="6"
-              {...register("glasgowMotor", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
-            />
-          </div>
-          <div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "4px",
-              }}
-            >
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500 }}>
-                Total Glasgow
-              </label>
-              {getGlasgowBadge(currentGlasgow)}
-            </div>
-            <input
-              type="number"
-              min="3"
-              max="15"
-              {...register("glasgowTotal", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-                backgroundColor: "var(--color-bg)",
-              }}
-              readOnly
-            />
-          </div>
-        </div>
-      </section>
+          </WcField>
+        </WcFormGrid>
+      </WcFormSection>
     </div>
   );
 }

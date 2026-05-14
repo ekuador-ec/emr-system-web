@@ -1,0 +1,39 @@
+.wc-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.wc-field__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.wc-field__required {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.wc-field__control {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.wc-field__hint {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.wc-field__error {
+  font-size: 0.75rem;
+  color: var(--color-danger);
+  line-height: 1.4;
+}

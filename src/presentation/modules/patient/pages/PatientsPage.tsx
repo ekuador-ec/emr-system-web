@@ -66,9 +66,10 @@ export function PatientsPage() {
     isLoading,
     isError,
     error,
-  } = usePatients(patientFilters, {
-    enabled: hasSearched,
-  });
+  } = usePatients(
+    { ...patientFilters, gender: patientFilters.gender === "" ? undefined : patientFilters.gender },
+    { enabled: hasSearched },
+  );
 
   return (
     <div style={{ padding: "var(--space-8)", maxWidth: "1200px", margin: "0 auto" }}>

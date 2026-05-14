@@ -2,7 +2,6 @@ import {
   WcFilterPopover,
   type WcFilterField,
 } from "@/presentation/modules/shared/components/ui/webcomponents/Filters/wcFilterPopover";
-import type { GenderEnum } from "@/domain/modules/catalog/models/Catalog";
 
 export type PatientQuickFilterState = {
   gender: string;

@@ -1,0 +1,70 @@
+.wc-autosave-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-style: normal;
+  line-height: 1.4;
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.wc-autosave-pill[data-status="dirty"] {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.wc-autosave-pill[data-status="saving"] {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.wc-autosave-pill[data-status="saved"] {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.wc-autosave-pill[data-status="error"] {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.wc-autosave-pill__icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.wc-autosave-pill__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+  animation: wc-autosave-pulse 1.4s ease-in-out infinite;
+}
+
+.wc-autosave-pill__spinner {
+  animation: wc-autosave-spin 1s linear infinite;
+}
+
+@keyframes wc-autosave-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes wc-autosave-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

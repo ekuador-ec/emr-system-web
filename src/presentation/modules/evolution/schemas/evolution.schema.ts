@@ -39,12 +39,8 @@ export const IntoxicationTypeSchema = z.enum([
 ]);
 export const DiagnosisTypeSchema = z.enum(["INGRESO", "ALTA"]);
 export const DiagnosisCertaintySchema = z.enum(["PRESUNTIVO", "DEFINITIVO"]);
-export const SystemReviewConditionSchema = z.enum([
-  "VIA_AEREA_LIBRE",
-  "VIA_AEREA_OBSTRUIDA",
-  "CONDICION_ESTABLE",
-  "CONDICION_INESTABLE",
-]);
+export const AirwayStatusSchema = z.enum(["VIA_AEREA_LIBRE", "VIA_AEREA_OBSTRUIDA"]);
+export const GeneralConditionSchema = z.enum(["CONDICION_ESTABLE", "CONDICION_INESTABLE"]);
 export const PhysicalExamRegionSchema = z.enum([
   "CABEZA",
   "CUELLO",
@@ -86,7 +82,15 @@ export const ArrivalMethodSchema = z.enum(["AMBULATORIO", "AMBULANCIA", "OTRO"])
 
 export const EvolutionSystemReviewSchema = z.object({
   id: z.string().optional(),
-  condition: SystemReviewConditionSchema,
+  airwayStatus: AirwayStatusSchema,
+  generalCondition: GeneralConditionSchema,
+  description: z.string(),
+});
+
+export const EvolutionSystemReviewStrictSchema = z.object({
+  id: z.string().optional(),
+  airwayStatus: AirwayStatusSchema,
+  generalCondition: GeneralConditionSchema,
   description: z.string().min(1, "La descripción es obligatoria"),
 });
 
@@ -104,7 +108,19 @@ export const EvolutionInjurySchema = z.object({
 
 export const EvolutionDiagnosisSchema = z.object({
   id: z.string().optional(),
+  cie10Id: z.string(),
+  cie10Code: z.string().optional(),
+  cie10Name: z.string().optional(),
+  type: DiagnosisTypeSchema,
+  certainty: DiagnosisCertaintySchema,
+  description: z.string(),
+});
+
+export const EvolutionDiagnosisStrictSchema = z.object({
+  id: z.string().optional(),
   cie10Id: z.string().min(1, "Debe seleccionar un diagnóstico CIE-10"),
+  cie10Code: z.string().optional(),
+  cie10Name: z.string().optional(),
   type: DiagnosisTypeSchema,
   certainty: DiagnosisCertaintySchema,
   description: z.string(),
@@ -113,6 +129,20 @@ export const EvolutionDiagnosisSchema = z.object({
 export const EvolutionDischargeSchema = z.object({
   id: z.string().optional(),
   dischargeType: DischargeTypeSchema,
+});
+
+export const EvolutionTreatmentPlanSchema = z.object({
+  id: z.string().optional(),
+  indication: z.string(),
+  medication: z.string(),
+  posology: z.string(),
+});
+
+export const EvolutionTreatmentPlanStrictSchema = z.object({
+  id: z.string().optional(),
+  indication: z.string().min(1, "La indicación es obligatoria"),
+  medication: z.string().min(1, "El medicamento es obligatorio"),
+  posology: z.string().min(1, "La posología es obligatoria"),
 });
 
 // Relaxed schema for drafting/auto-saving
@@ -198,6 +228,7 @@ export const UpdateEvolutionDraftSchema = z.object({
   physicalExams: z.array(EvolutionPhysicalExamSchema).optional(),
   injuries: z.array(EvolutionInjurySchema).optional(),
   diagnoses: z.array(EvolutionDiagnosisSchema).optional(),
+  treatmentPlans: z.array(EvolutionTreatmentPlanSchema).optional(),
   discharges: z.array(EvolutionDischargeSchema).optional(),
 });
 
@@ -243,6 +274,7 @@ export const CloseEvolutionStrictSchema = UpdateEvolutionDraftSchema.extend({
   glasgowMotor: z.number({ message: "Glasgow Motor obligatorio" }).min(1).max(6),
 
   // Relations - required to have at least 1 item for mandatory sections
+  systemsReview: z.array(EvolutionSystemReviewStrictSchema).optional(),
   physicalExams: z
     .array(EvolutionPhysicalExamSchema)
     .min(1, "Debe registrar al menos un examen físico regional"),
@@ -250,8 +282,11 @@ export const CloseEvolutionStrictSchema = UpdateEvolutionDraftSchema.extend({
     .array(EvolutionInjurySchema)
     .min(1, 'Debe registrar la localización de al menos una lesión (o marcar "Ninguna/Otro")'),
   diagnoses: z
-    .array(EvolutionDiagnosisSchema)
+    .array(EvolutionDiagnosisStrictSchema)
     .min(1, "Debe registrar al menos un diagnóstico (Ingreso o Alta)"),
+  treatmentPlans: z
+    .array(EvolutionTreatmentPlanStrictSchema)
+    .min(1, "Debe registrar al menos una fila en el plan de tratamiento"),
   discharges: z
     .array(EvolutionDischargeSchema)
     .min(1, "Debe registrar al menos una condición de alta"),

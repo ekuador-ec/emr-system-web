@@ -1,358 +1,191 @@
-import { useFormContext, useWatch } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import type { UpdateEvolutionDraftFormValues } from "../../schemas/evolution.schema";
 import { WcCheckbox } from "@/presentation/modules/shared/components/ui/webcomponents/Checkbox/WcCheckbox";
+import {
+  WcField,
+  WcFormGrid,
+  WcFormSection,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Forms";
+import {
+  WcInput,
+  WcNumberInput,
+} from "@/presentation/modules/shared/components/ui/webcomponents/Inputs";
 
 export function TabEmergenciaObstetrica() {
-  const { register, control } = useFormContext<UpdateEvolutionDraftFormValues>();
+  const { control, register } = useFormContext<UpdateEvolutionDraftFormValues>();
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
-      <section
-        style={{
-          backgroundColor: "var(--color-surface)",
-          padding: "var(--space-6)",
-          borderRadius: "var(--radius-lg)",
-          border: "1px solid var(--color-border)",
-        }}
-      >
-        <h2
-          style={{
-            marginTop: 0,
-            fontSize: "1.125rem",
-            borderBottom: "1px solid var(--color-border)",
-            paddingBottom: "12px",
-            marginBottom: "var(--space-4)",
-          }}
-        >
-          3. Emergencia Obstétrica
-        </h2>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "var(--space-4)",
-          }}
-        >
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Gestas
-            </label>
-            <input
-              type="number"
-              {...register("gestations", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+      <WcFormSection title="Antecedentes">
+        <WcFormGrid columns={3}>
+          <WcField label="Gestaciones">
+            <Controller
+              control={control}
+              name="gestations"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  min={0}
+                />
+              )}
             />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Partos
-            </label>
-            <input
-              type="number"
-              {...register("parturitions", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+          </WcField>
+          <WcField label="Partos">
+            <Controller
+              control={control}
+              name="parturitions"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  min={0}
+                />
+              )}
             />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Abortos
-            </label>
-            <input
-              type="number"
-              {...register("abortions", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+          </WcField>
+          <WcField label="Abortos">
+            <Controller
+              control={control}
+              name="abortions"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  min={0}
+                />
+              )}
             />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Cesáreas
-            </label>
-            <input
-              type="number"
-              {...register("cesareans", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+          </WcField>
+          <WcField label="Cesáreas">
+            <Controller
+              control={control}
+              name="cesareans"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  min={0}
+                />
+              )}
             />
-          </div>
+          </WcField>
+          <WcField label="FUM">
+            <WcInput type="date" {...register("lastMenstruationDate")} />
+          </WcField>
+          <WcField label="Semanas gestación">
+            <Controller
+              control={control}
+              name="gestationalWeeks"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  min={0}
+                  max={45}
+                />
+              )}
+            />
+          </WcField>
+        </WcFormGrid>
+      </WcFormSection>
 
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Fecha Última Menstruación
-            </label>
-            <input
-              type="date"
-              {...register("lastMenstruationDate")}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
-            />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Semanas Gestación
-            </label>
-            <input
-              type="number"
-              {...register("gestationalWeeks", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
-            />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              marginTop: "16px",
-            }}
-          >
+      <WcFormSection title="Estado fetal">
+        <WcFormGrid columns={2}>
+          <WcField label="Movimiento Fetal">
             <WcCheckbox {...register("fetalMovement")} label="Movimiento Fetal" />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Frec. Cardíaca Fetal
-            </label>
-            <input
-              type="number"
-              {...register("fetalHeartRate", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+          </WcField>
+          <WcField label="FCF">
+            <Controller
+              control={control}
+              name="fetalHeartRate"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  unit="lpm"
+                />
+              )}
             />
-          </div>
-
-          <div
-            style={{
-              gridColumn: "1 / -1",
-              display: "flex",
-              gap: "16px",
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
+          </WcField>
+          <WcField label="Membranas Rotas">
             <WcCheckbox {...register("rupturedMembranes")} label="Membranas Rotas" />
-            <input
+          </WcField>
+          <WcField label="Hora de ruptura">
+            <WcInput
               type="text"
-              {...register("rupturedTime")}
               placeholder="Tiempo de ruptura"
-              style={{
-                flex: 1,
-                minWidth: "200px",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+              {...register("rupturedTime")}
             />
-          </div>
+          </WcField>
+        </WcFormGrid>
+      </WcFormSection>
 
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Altura Uterina
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              {...register("uterineHeight", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+      <WcFormSection title="Examen obstétrico">
+        <WcFormGrid columns={3}>
+          <WcField label="Altura uterina">
+            <Controller
+              control={control}
+              name="uterineHeight"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  unit="cm"
+                  step={0.1}
+                  decimals={1}
+                />
+              )}
             />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Presentación
-            </label>
-            <input
-              type="text"
-              {...register("presentation")}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
+          </WcField>
+          <WcField label="Presentación">
+            <WcInput type="text" {...register("presentation")} />
+          </WcField>
+          <WcField label="Dilatación">
+            <Controller
+              control={control}
+              name="dilation"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  unit="cm"
+                />
+              )}
             />
-          </div>
+          </WcField>
+          <WcField label="Borramiento">
+            <Controller
+              control={control}
+              name="effacement"
+              render={({ field }) => (
+                <WcNumberInput
+                  value={field.value ?? null}
+                  onChange={(value) => field.onChange(value)}
+                  unit="%"
+                />
+              )}
+            />
+          </WcField>
+          <WcField label="Plano">
+            <WcInput type="text" {...register("plane")} />
+          </WcField>
+        </WcFormGrid>
+      </WcFormSection>
 
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Dilatación
-            </label>
-            <input
-              type="number"
-              {...register("dilation", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
-            />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Borramiento
-            </label>
-            <input
-              type="number"
-              {...register("effacement", { valueAsNumber: true })}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
-            />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              Plano
-            </label>
-            <input
-              type="text"
-              {...register("plane")}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid var(--color-border)",
-              }}
-            />
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-              gridColumn: "1 / -1",
-              marginTop: "8px",
-            }}
-          >
-            <div style={{ display: "flex", gap: "var(--space-6)", flexWrap: "wrap" }}>
-              <WcCheckbox {...register("usefulPelvis")} label="Pelvis Útil" />
-              <WcCheckbox {...register("vaginalBleeding")} label="Sangrado Vaginal" />
-              <WcCheckbox {...register("contractions")} label="Contracciones" />
-            </div>
-          </div>
-        </div>
-      </section>
+      <WcFormSection title="Indicadores">
+        <WcFormGrid columns={3}>
+          <WcField label="Pelvis Útil">
+            <WcCheckbox {...register("usefulPelvis")} label="Pelvis Útil" />
+          </WcField>
+          <WcField label="Sangrado Vaginal">
+            <WcCheckbox {...register("vaginalBleeding")} label="Sangrado Vaginal" />
+          </WcField>
+          <WcField label="Contracciones">
+            <WcCheckbox {...register("contractions")} label="Contracciones" />
+          </WcField>
+        </WcFormGrid>
+      </WcFormSection>
     </div>
   );
 }

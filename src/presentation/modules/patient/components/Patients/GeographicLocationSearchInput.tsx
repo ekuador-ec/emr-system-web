@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { useSearchGeographicLocations } from "@/presentation/modules/catalog/hooks/useCatalogs";
-import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 
 interface GeographicLocationSearchInputProps {
   value: string | null | undefined;

@@ -1,11 +1,4 @@
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
@@ -24,8 +17,8 @@ interface WcWarningProps {
   message?: ReactNode;
   description?: ReactNode;
   children?: ReactNode;
-  confirmText?: string;
-  cancelText?: string;
+  confirmText?: ReactNode;
+  cancelText?: ReactNode;
   type?: WcWarningType;
   size?: WcWarningSize;
   icon?: ReactNode;
@@ -54,7 +47,7 @@ const DEFAULT_CONFIRM_TEXT = "Confirmar";
 const DEFAULT_CANCEL_TEXT = "Cancelar";
 const DEFAULT_LOADING_TEXT = "Procesando...";
 const DEFAULT_ICON_BY_TYPE: Record<WcWarningType, string> = {
-  destructive: "icon-trash-solid",
+  destructive: "icon-alert-triangle",
   warning: "icon-warning-solid",
   info: "icon-check-solid",
 };
@@ -207,11 +200,8 @@ const WcWarning = forwardRef<WcWarningHandle, WcWarningProps>((props, ref) => {
             <h2 id="wc-warning-title" className="wc-warning__title">
               {title}
             </h2>
-            {description ? (
-              <p className="wc-warning__description">{description}</p>
-            ) : null}
+            {description ? <p className="wc-warning__description">{description}</p> : null}
           </div>
-
         </header>
 
         <div id="wc-warning-message" className="wc-warning__content">

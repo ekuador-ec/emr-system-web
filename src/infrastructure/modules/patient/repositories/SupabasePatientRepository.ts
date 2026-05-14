@@ -222,7 +222,9 @@ export class SupabasePatientRepository implements PatientRepository {
   async updatePatient(id: string, patient: UpdatePatientDTO): Promise<Patient> {
     const payload: Record<string, any> = {};
 
-    if (patient.idNumber !== undefined) payload.id_number = patient.idNumber;
+    if (typeof patient.idNumber === "string" && patient.idNumber.trim() !== "") {
+      payload.id_number = patient.idNumber.trim();
+    }
     if (patient.idNumberType !== undefined) payload.id_number_type = patient.idNumberType;
     if (patient.firstName !== undefined) payload.first_name = patient.firstName;
     if (patient.middleName !== undefined) payload.middle_name = patient.middleName;
