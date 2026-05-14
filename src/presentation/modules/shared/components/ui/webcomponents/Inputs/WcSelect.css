@@ -2,7 +2,24 @@
   position: relative;
   display: block;
   width: 100%;
+  max-width: 320px;
   min-width: 0;
+}
+
+.wc-select[data-width="sm"] {
+  max-width: 200px;
+}
+
+.wc-select[data-width="md"] {
+  max-width: 280px;
+}
+
+.wc-select[data-width="lg"] {
+  max-width: 360px;
+}
+
+.wc-select[data-width="full"] {
+  max-width: none;
 }
 
 .wc-select__trigger {

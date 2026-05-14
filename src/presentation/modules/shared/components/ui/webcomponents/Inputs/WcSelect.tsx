@@ -30,6 +30,7 @@ export interface WcSelectProps {
   clearable?: boolean;
   className?: string;
   ariaLabel?: string;
+  width?: "sm" | "md" | "lg" | "full";
 }
 
 export function WcSelect({
@@ -45,6 +46,7 @@ export function WcSelect({
   clearable = false,
   className,
   ariaLabel,
+  width,
 }: WcSelectProps) {
   const reactId = useId();
   const triggerId = id ?? `wc-select-${reactId}`;
@@ -212,7 +214,7 @@ export function WcSelect({
       : undefined;
 
   return (
-    <div className={rootClasses.join(" ")} ref={rootRef}>
+    <div className={rootClasses.join(" ")} ref={rootRef} data-width={width}>
       <button
         type="button"
         ref={triggerRef}

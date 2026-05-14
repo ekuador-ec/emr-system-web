@@ -137,6 +137,7 @@ export function TabMotivo() {
                   options={CLINICAL_CAUSE_OPTIONS}
                   placeholder="Seleccione..."
                   error={Boolean(errors.clinicalCause)}
+                  width="lg"
                 />
               )}
             />
