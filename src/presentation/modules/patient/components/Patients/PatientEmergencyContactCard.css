@@ -1,0 +1,117 @@
+.patient-emergency-contact-card {
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.patient-emergency-contact-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background-color: var(--color-primary);
+  pointer-events: none;
+}
+
+.patient-emergency-contact-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background-color: color-mix(in srgb, var(--color-primary-light) 30%, var(--color-surface) 70%);
+}
+
+.patient-emergency-contact-card__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.patient-emergency-contact-card__badge {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  flex-shrink: 0;
+}
+
+.patient-emergency-contact-card__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.patient-emergency-contact-card__title {
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+}
+
+.patient-emergency-contact-card__subtitle {
+  font-size: 0.74rem;
+  color: var(--color-text-secondary);
+  line-height: 1.2;
+}
+
+.patient-emergency-contact-card__remove {
+  color: #ffffff;
+}
+
+.patient-emergency-contact-card__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.patient-emergency-contact-card__toggle.wc-button {
+  height: 28px;
+  padding: 0 10px;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-sm);
+}
+
+.patient-emergency-contact-card__body {
+  padding: var(--space-4);
+}
+
+.dark .patient-emergency-contact-card__header {
+  background-color: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface) 84%);
+}
+
+@media (max-width: 640px) {
+  .patient-emergency-contact-card__header {
+    align-items: flex-start;
+    padding-right: var(--space-3);
+  }
+
+  .patient-emergency-contact-card__body {
+    padding-right: var(--space-3);
+  }
+
+  .patient-emergency-contact-card__actions {
+    flex-shrink: 0;
+  }
+
+  .patient-emergency-contact-card__toggle .wc-button__label {
+    display: none;
+  }
+}
