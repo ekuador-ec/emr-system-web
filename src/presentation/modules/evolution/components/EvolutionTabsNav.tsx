@@ -14,8 +14,8 @@ interface EvolutionTabsNavProps {
   onChange: (index: number) => void;
 }
 
-const MOBILE_QUERY = "(max-width: 600px)";
-const MOBILE_VISIBLE_COUNT = 2;
+const MOBILE_QUERY = "(max-width: 480px)";
+const MOBILE_VISIBLE_COUNT = 3;
 
 export function EvolutionTabsNav({ tabs, activeIndex, onChange }: EvolutionTabsNavProps) {
   const [isMobile, setIsMobile] = useState(false);

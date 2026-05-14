@@ -209,3 +209,24 @@
     height: 3px;
   }
 }
+
+@media (max-width: 480px) {
+  .evol-tabs-nav {
+    gap: var(--space-1);
+  }
+
+  .evol-tabs-nav__item {
+    padding: var(--space-2);
+    min-width: 40px;
+    justify-content: center;
+  }
+
+  .evol-tabs-nav__item .evol-tabs-nav__label {
+    display: none;
+  }
+
+  .evol-tabs-nav__more-trigger {
+    padding: var(--space-2) var(--space-3);
+  }
+}
+
