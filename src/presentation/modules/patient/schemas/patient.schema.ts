@@ -1,12 +1,41 @@
 import { z } from "zod";
 
+const NAME_REGEX = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
+const PHONE_REGEX = /^\d{7,10}$/;
+const MULTI_PHONE_REGEX = /^\d{7,10}(?:-\d{7,10})*$/;
+const PATIENT_PHONE_REGEX = /^\d{10}$/;
+const COMPANY_PHONE_REGEX = /^\d{7,10}(?:-\d{7,10})*$/;
+const BIRTH_PLACE_REGEX = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s,]+$/;
+
+const normalizeOptionalText = (val: unknown): string | null | unknown => {
+  if (typeof val !== "string") {
+    return val;
+  }
+  const trimmed = val.trim();
+  return trimmed === "" ? null : trimmed;
+};
+
+const normalizeRequiredText = (val: unknown): unknown => {
+  if (typeof val !== "string") {
+    return val;
+  }
+  return val.trim();
+};
+
 export const emergencyContactSchema = z
   .object({
     id: z.preprocess(
       (val) => (val === "" ? undefined : val),
       z.string().uuid().optional().nullable(),
     ),
-    name: z.string().min(1, "El nombre es requerido").max(200),
+    name: z.preprocess(
+      normalizeRequiredText,
+      z
+        .string()
+        .min(2, "Nombre requerido")
+        .max(200, "Máx. 200 caracteres")
+        .regex(NAME_REGEX, "Solo letras"),
+    ),
     kinship: z.enum(
       [
         "PADRE",
@@ -28,11 +57,24 @@ export const emergencyContactSchema = z
         "VECINO",
         "OTRO",
       ],
-      { message: "El parentesco es requerido" },
+      { message: "Parentesco requerido" },
     ),
-    kinshipOther: z.string().max(100).nullable().optional(),
-    phone: z.string().min(1, "El telefono es requerido").max(20),
-    address: z.string().nullable().optional(),
+    kinshipOther: z.preprocess(
+      normalizeOptionalText,
+      z.string().max(100, "Máx. 100 caracteres").nullable().optional(),
+    ),
+    phone: z.preprocess(
+      normalizeRequiredText,
+      z
+        .string()
+        .min(1, "Teléfono requerido")
+        .max(50, "Máx. 50 caracteres")
+        .regex(
+          MULTI_PHONE_REGEX,
+          "Solo números y signo \"-\"",
+        ),
+    ),
+    address: z.preprocess(normalizeOptionalText, z.string().max(250).nullable().optional()),
   })
   .refine(
     (data) => {
@@ -42,7 +84,7 @@ export const emergencyContactSchema = z
       return true;
     },
     {
-      message: 'Debe especificar el parentesco cuando selecciona "OTRO"',
+      message: "Especifica el parentesco",
       path: ["kinshipOther"],
     },
   );
@@ -74,11 +116,23 @@ export const clinicalAntecedentSchema = z.object({
   ),
   pathologyId: z.preprocess(
     (val) => (val === "" ? undefined : val),
-    z.string().uuid("Seleccione una patologia valida").nullable().optional(),
+    z.string().uuid("Seleccione una patología válida").nullable().optional(),
   ),
-  description: z.string().nullable().optional(),
-  diagnosisDate: z.string().nullable().optional(),
-  treatment: z.string().nullable().optional(),
+  description: z.preprocess(
+    normalizeOptionalText,
+    z.string().max(1000, "La descripción no puede superar 1000 caracteres").nullable().optional(),
+  ),
+  diagnosisDate: z.preprocess(
+    normalizeRequiredText,
+    z
+      .string()
+      .min(1, "La fecha de diagnóstico es obligatoria")
+      .refine((value) => !value || !Number.isNaN(Date.parse(value)), "La fecha de diagnóstico es inválida")
+  ),
+  treatment: z.preprocess(
+    normalizeOptionalText,
+    z.string().max(1000, "El tratamiento no puede superar 1000 caracteres").nullable().optional(),
+  ),
 });
 
 function validateEcCedulaFormat(cedula: string): boolean {
@@ -102,65 +156,203 @@ export const patientSchema = z
   .object({
     useTemporaryId: z.boolean().default(false),
 
-    idNumber: z.string().max(20).nullable().optional(),
-    firstName: z.string().min(1, "El primer nombre es requerido").max(100),
-    middleName: z.string().max(100).nullable().optional(),
-    lastName: z.string().min(1, "El apellido paterno es requerido").max(100),
-    secondLastName: z.string().max(100).nullable().optional(),
-    email: z.preprocess((val) => (val === "" ? undefined : val), z.string().email("Email invalido").max(255).nullable().optional()),
-    phone: z.string().max(20).nullable().optional(),
-    bloodType: z.preprocess((val) => (val === "" ? undefined : val), z.enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]).nullable().optional()),
+    idNumber: z.preprocess(
+      normalizeOptionalText,
+      z
+        .string()
+        .regex(/^\d+$/, "La cédula solo debe contener números")
+        .length(10, "La cédula debe tener exactamente 10 dígitos")
+        .nullable()
+        .optional(),
+    ),
+    firstName: z.preprocess(
+      normalizeRequiredText,
+      z
+        .string()
+        .min(2, "Mínimo 2 caracteres")
+        .max(50, "Maximo 50 caracteres")
+        .regex(NAME_REGEX, "Solo debe contener letras"),
+    ),
+    middleName: z.preprocess(
+      normalizeOptionalText,
+      z
+        .string()
+        .min(2, "Mínimo 2 caracteres")
+        .max(50, "Maximo 50 caracteres")
+        .regex(NAME_REGEX, "Solo debe contener letras")
+        .nullable()
+        .optional(),
+    ),
+    lastName: z.preprocess(
+      normalizeRequiredText,
+      z
+        .string()
+        .min(2, "Mínimo 2 caracteres")
+        .max(50, "Maximo 50 caracteres")
+        .regex(NAME_REGEX, "Solo debe contener letras"),
+    ),
+    secondLastName: z.preprocess(
+      normalizeOptionalText,
+      z
+        .string()
+        .min(2, "Mínimo 2 caracteres")
+        .max(50, "Maximo 50 caracteres")
+        .regex(NAME_REGEX, "Solo debe contener letras")
+        .nullable()
+        .optional(),
+    ),
+    email: z.preprocess(
+      normalizeOptionalText,
+      z.string().email("Email inválido").max(255).nullable().optional(),
+    ),
+    phone: z.preprocess(
+      normalizeOptionalText,
+      z
+        .string()
+        .regex(PATIENT_PHONE_REGEX, "El teléfono debe tener 10 dígitos")
+        .nullable()
+        .optional(),
+    ),
+    bloodType: z.preprocess(
+      (val) => (val === "" ? undefined : val),
+      z.enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]).nullable().optional(),
+    ),
 
-    birthDate: z.preprocess((val) => (val === "" ? undefined : val), z.string().nullable().optional()),
-    birthPlace: z.string().max(200).nullable().optional(),
-    gender: z.enum(["MASCULINO", "FEMENINO"], { message: "El genero es requerido" }),
-    nationality: z.string().max(100).nullable().optional(),
+    birthDate: z.preprocess(
+      normalizeOptionalText,
+      z
+        .string()
+        .refine((value) => !Number.isNaN(Date.parse(value)), "La fecha de nacimiento inválida")
+        .refine((value) => new Date(value) <= new Date(), "La fecha de nacimiento inválida")
+        .nullable()
+        .optional(),
+    ),
+    birthPlace: z.preprocess(
+      normalizeOptionalText,
+      z
+        .string()
+        .max(100, "Maximo 100 caracteres")
+        .regex(BIRTH_PLACE_REGEX, "Solo debe contener texto")
+        .nullable()
+        .optional(),
+    ),
+    gender: z.preprocess(
+      (val) => (val === "" ? undefined : val),
+      z.enum(["MASCULINO", "FEMENINO"], { message: "El género es requerido" }),
+    ),
+    nationality: z.preprocess(
+      normalizeOptionalText,
+      z
+        .string()
+        .min(2, "Minimo 2 caracteres")
+        .max(100, "Maximo 100 caracteres")
+        .regex(NAME_REGEX, "Solo debe contener letras y espacios")
+        .nullable()
+        .optional(),
+    ),
     culturalGroup: z.preprocess(
       (val) => (val === "" ? undefined : val),
-      z.enum(["MESTIZO", "MONTUBIO", "INDIGENA", "AFROECUATORIANO", "MULATO", "BLANCO", "OTRO"]).nullable().optional()
+      z
+        .enum(["MESTIZO", "MONTUBIO", "INDIGENA", "AFROECUATORIANO", "MULATO", "BLANCO", "OTRO"])
+        .nullable()
+        .optional(),
     ),
-    culturalGroupOther: z.string().max(100).nullable().optional(),
+    culturalGroupOther: z.preprocess(
+      normalizeOptionalText,
+      z
+        .string()
+        .max(100, "Maximo 100 caracteres")
+        .regex(NAME_REGEX, "Solo debe contener letras y espacios")
+        .nullable()
+        .optional(),
+    ),
     maritalStatus: z.preprocess(
       (val) => (val === "" ? undefined : val),
-      z.enum(["SOLTERO", "CASADO", "DIVORCIADO", "VIUDO", "UNION_LIBRE", "SEPARADO"]).nullable().optional()
+      z
+        .enum(["SOLTERO", "CASADO", "DIVORCIADO", "VIUDO", "UNION_LIBRE", "SEPARADO"])
+        .nullable()
+        .optional(),
     ),
     educationLevel: z.preprocess(
       (val) => (val === "" ? undefined : val),
-      z.enum(["NINGUNO", "EDUCACION_BASICA", "BACHILLERATO", "TERCER_NIVEL", "CUARTO_NIVEL"]).nullable().optional()
+      z
+        .enum(["NINGUNO", "EDUCACION_BASICA", "BACHILLERATO", "TERCER_NIVEL", "CUARTO_NIVEL"])
+        .nullable()
+        .optional(),
     ),
-    occupationId: z.string().uuid().nullable().optional(),
+    occupationId: z.preprocess(
+      (val) => (val === "" ? undefined : val),
+      z.string().uuid().nullable().optional(),
+    ),
     currentlyWorks: z.boolean().default(false),
-    healthInsurance: z.preprocess((val) => (val === "" ? undefined : val), z.enum(["PUBLICO", "PRIVADO", "NINGUNO"]).nullable().optional()),
+    healthInsurance: z.preprocess(
+      (val) => (val === "" ? undefined : val),
+      z.enum(["PUBLICO", "PRIVADO", "NINGUNO"]).nullable().optional(),
+    ),
 
-    companyName: z.string().max(200).nullable().optional(),
-    companyPosition: z.string().max(100).nullable().optional(),
-    companyPhone: z.string().max(20).nullable().optional(),
-    companyAddress: z.string().nullable().optional(),
+    companyName: z.preprocess(normalizeOptionalText, z.string().max(200).nullable().optional()),
+    companyPosition: z.preprocess(normalizeOptionalText, z.string().max(100).nullable().optional()),
+    companyPhone: z.preprocess(
+      normalizeOptionalText,
+      z
+        .string()
+        .max(50, "Máximo 50 caracteres")
+        .regex(
+          COMPANY_PHONE_REGEX,
+          "Formato inválido. Usa 7-10 dígitos y separa con '-'",
+        )
+        .nullable()
+        .optional(),
+    ),
+    companyAddress: z.preprocess(normalizeOptionalText, z.string().max(250).nullable().optional()),
 
-    homeAddress: z.preprocess((val) => (val === "" ? undefined : val), z.string().nullable().optional()),
-    neighborhood: z.string().max(150).nullable().optional(),
-    geographicLocationId: z.string().uuid().nullable().optional(),
+    homeAddress: z.preprocess(normalizeOptionalText, z.string().max(250).nullable().optional()),
+    neighborhood: z.preprocess(normalizeOptionalText, z.string().max(150).nullable().optional()),
+    geographicLocationId: z.preprocess(
+      (val) => (val === "" ? undefined : val),
+      z.string().uuid().nullable().optional(),
+    ),
 
-    infoSourceType: z.preprocess((val) => (val === "" ? undefined : val), z.enum([
-      "PACIENTE",
-      "FAMILIAR",
-      "AMIGO",
-      "CUIDADOR",
-      "TUTOR",
-      "REPRESENTANTE_LEGAL",
-      "MEDICO_REFERENTE",
-      "PERSONAL_SALUD",
-      "EMERGENCIA_PREHOSPITALARIA",
-      "HISTORIA_CLINICA",
-      "INFORME_MEDICO",
-      "EXPEDIENTE_PREVIO",
-      "AUTORIDAD",
-      "OTRO",
-    ]).nullable().optional()),
-    infoSourceOther: z.string().max(100).nullable().optional(),
-    infoSourceName: z.string().max(200).nullable().optional(),
-    infoSourcePhone: z.string().max(20).nullable().optional(),
-    infoSourceObservations: z.string().nullable().optional(),
+    infoSourceType: z.preprocess(
+      (val) => (val === "" ? undefined : val),
+      z
+        .enum([
+          "PACIENTE",
+          "FAMILIAR",
+          "AMIGO",
+          "CUIDADOR",
+          "TUTOR",
+          "REPRESENTANTE_LEGAL",
+          "MEDICO_REFERENTE",
+          "PERSONAL_SALUD",
+          "EMERGENCIA_PREHOSPITALARIA",
+          "HISTORIA_CLINICA",
+          "INFORME_MEDICO",
+          "EXPEDIENTE_PREVIO",
+          "AUTORIDAD",
+          "OTRO",
+        ])
+        .nullable()
+        .optional(),
+    ),
+    infoSourceOther: z.preprocess(normalizeOptionalText, z.string().max(100).nullable().optional()),
+    infoSourceName: z.preprocess(normalizeOptionalText, z.string().max(200).nullable().optional()),
+    infoSourcePhone: z.preprocess(
+      normalizeOptionalText,
+      z
+        .string()
+        .max(50, "Máximo 50 caracteres")
+        .regex(
+          COMPANY_PHONE_REGEX,
+          "Formato inválido. Usa 7-10 dígitos y separa con '-'",
+        )
+        .nullable()
+        .optional(),
+    ),
+    infoSourceObservations: z.preprocess(
+      normalizeOptionalText,
+      z.string().max(1000).nullable().optional(),
+    ),
 
     emergencyContacts: z.array(emergencyContactSchema).optional(),
     clinicalAntecedents: z.array(clinicalAntecedentSchema).optional(),
@@ -179,13 +371,13 @@ export const patientSchema = z
   )
   .refine(
     (data) => {
-      if (!data.useTemporaryId && data.idNumber && data.idNumber.trim() !== "") {
+      if (data.idNumber && data.idNumber.trim() !== "") {
         return validateEcCedulaFormat(data.idNumber);
       }
       return true;
     },
     {
-      message: "La cedula ingresada no es valida (verificacion Modulo 10 fallida)",
+      message: "La cédula ingresada no es válida.",
       path: ["idNumber"],
     },
   )
@@ -226,7 +418,7 @@ export const registerCedulaSchema = z.object({
     .min(10, "La cedula debe tener 10 digitos")
     .max(10, "La cedula debe tener 10 digitos")
     .refine(validateEcCedulaFormat, {
-      message: "La cedula ingresada no es valida (verificacion Modulo 10 fallida)",
+      message: "La cédula ingresada no es válida.",
     }),
 });
 
