@@ -135,7 +135,7 @@ export function InviteUserModal({
             />
             {errors.firstName ? (
               <span className="invite-user-modal__error-icon">
-                <Icon name="icon-alert-circle" size={18} />
+                <Icon name="icon-alert-circle" size={16} />
               </span>
             ) : null}
           </div>
@@ -165,7 +165,7 @@ export function InviteUserModal({
             />
             {errors.lastName ? (
               <span className="invite-user-modal__error-icon">
-                <Icon name="icon-alert-circle" size={18} />
+                <Icon name="icon-alert-circle" size={16} />
               </span>
             ) : null}
           </div>
@@ -197,7 +197,7 @@ export function InviteUserModal({
           />
           {errors.email ? (
             <span className="invite-user-modal__error-icon">
-              <Icon name="icon-alert-circle" size={18} />
+              <Icon name="icon-alert-circle" size={16} />
             </span>
           ) : null}
         </div>
@@ -228,7 +228,7 @@ export function InviteUserModal({
           </select>
           {errors.role ? (
             <span className="invite-user-modal__error-icon">
-              <Icon name="icon-alert-circle" size={18} />
+              <Icon name="icon-alert-circle" size={16} />
             </span>
           ) : null}
         </div>
