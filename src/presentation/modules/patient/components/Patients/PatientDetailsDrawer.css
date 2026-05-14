@@ -407,6 +407,33 @@
 }
 
 /* ── Responsive ── */
+@media (max-width: 640px) {
+  .patient-drawer__panel {
+    max-width: 100%;
+  }
+
+  .patient-drawer__body {
+    padding: 0 var(--spacing-4, 16px) var(--spacing-4, 16px);
+  }
+
+  .patient-drawer__section-header {
+    padding-top: 10px;
+  }
+
+  .patient-drawer__list-header {
+    flex-wrap: wrap;
+  }
+
+  .patient-drawer__footer {
+    flex-direction: column-reverse;
+    padding: 14px 16px;
+  }
+
+  .patient-drawer__footer > * {
+    width: 100%;
+  }
+}
+
 @media (max-width: 480px) {
   .patient-drawer__body {
     padding: 0 var(--spacing-4, 16px) var(--spacing-4, 16px);

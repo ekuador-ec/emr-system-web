@@ -232,11 +232,12 @@ export function PatientDetailsDrawer() {
                             {ant.description}
                           </div>
                         )}
-                        {ant.treatment && (
-                          <div className="patient-drawer__field-value patient-drawer__field-value--muted">
-                            Tratamiento: {ant.treatment}
-                          </div>
-                        )}
+                        {ant.treatment &&
+                          ant.treatment !== ant.description && (
+                            <div className="patient-drawer__field-value patient-drawer__field-value--muted">
+                              Tratamiento: {ant.treatment}
+                            </div>
+                          )}
                       </div>
                     ))}
                   </div>
