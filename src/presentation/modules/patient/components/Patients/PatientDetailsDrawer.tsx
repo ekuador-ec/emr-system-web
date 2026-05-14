@@ -1,117 +1,206 @@
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePatient } from "@/presentation/modules/patient/hooks/usePatients";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
+import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
+import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
 import "./PatientDetailsDrawer.css";
 
 export function PatientDetailsDrawer() {
   const navigate = useNavigate();
   const { selectedPatientId, setSelectedPatientId, setEditingPatientId } = usePatientStore();
   const { data: patient, isLoading, isError } = usePatient(selectedPatientId || "");
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!selectedPatientId) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedPatientId(null);
+        return;
+      }
+      
+      if (e.key === 'Tab') {
+        if (!drawerRef.current) return;
+        const focusableElements = drawerRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            lastElement?.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            firstElement?.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    
+    // Auto-focus drawer to trap focus inside initially
+    if (drawerRef.current) {
+      drawerRef.current.focus();
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedPatientId, setSelectedPatientId]);
 
   if (!selectedPatientId) return null;
 
   return (
     <div
-      className="drawer-overlay"
+      className="patient-drawer__overlay"
       onClick={() => setSelectedPatientId(null)}
+      role="dialog"
+      aria-label="Detalle del paciente"
+      aria-labelledby="patient-drawer-title"
+      aria-busy={isLoading}
     >
       <div
-        className="drawer-panel"
+        className="patient-drawer__panel"
         onClick={(e) => e.stopPropagation()}
+        ref={drawerRef}
+        tabIndex={-1}
       >
-        <div className="drawer-header">
-          <h2 style={{ margin: 0, fontSize: "var(--font-size-lg)" }}>
-            Detalles del Paciente
-          </h2>
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={() => setSelectedPatientId(null)}
-            style={{ padding: "var(--space-2)" }}
-          >
-            <Icon name="icon-x" size={20} />
-          </button>
+        <div className="patient-drawer__header">
+          <div className="patient-drawer__header-actions">
+            <WcButtonIcon
+              variant="ghost"
+              shape="circle"
+              size="sm"
+              icon="icon-x-solid"
+              className="drawer-header__close"
+              onClick={() => setSelectedPatientId(null)}
+              aria-label="Cerrar detalle del paciente"
+            />
+          </div>
         </div>
 
-        <div className="drawer-body">
+        <div className="patient-drawer__body">
           {isLoading ? (
-            <div className="drawer-loading">
-              <Icon name="icon-loader" size={24} className="spin" />
-              <p>Cargando informacion...</p>
+            <div className="patient-drawer__loading">
+              <div className="patient-drawer__skeleton patient-drawer__skeleton--avatar"></div>
+              <div className="patient-drawer__skeleton patient-drawer__skeleton--title"></div>
+              <div className="patient-drawer__skeleton patient-drawer__skeleton--subtitle"></div>
+              <div className="patient-drawer__skeleton patient-drawer__skeleton--card"></div>
+              <div className="patient-drawer__skeleton patient-drawer__skeleton--card"></div>
             </div>
           ) : isError || !patient ? (
-            <div className="drawer-error">
-              <p>Error al cargar la informacion del paciente.</p>
+            <div className="patient-drawer__error">
+              <Icon name="icon-warning-solid" size={24} className="patient-drawer__error-icon" />
+              <p className="patient-drawer__error-msg">Error al cargar la información del paciente.</p>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
-
-              <section>
-                <div className="drawer-patient-info">
-                  <div className="drawer-patient-avatar">
-                    {patient.firstName.charAt(0)}{patient.lastName.charAt(0)}
+            <div className="patient-drawer__content">
+              {/* Hero Section */}
+              <section className="patient-drawer__hero">
+                <div className="patient-drawer__avatar">
+                  {patient.firstName.charAt(0)}{patient.lastName.charAt(0)}
+                </div>
+                <div className="patient-drawer__hero-info">
+                  <h2 id="patient-drawer-title" className="patient-drawer__name">
+                    {patient.firstName} {patient.middleName || ""} {patient.lastName} {patient.secondLastName || ""}
+                  </h2>
+                  <div className="patient-drawer__meta">
+                    {patient.idNumberType === 'temporal' ? (
+                      <span className="patient-drawer__badge patient-drawer__badge--warning">ID Pendiente</span>
+                    ) : (
+                      <span className="patient-drawer__meta-text">Cédula: {patient.idNumber}</span>
+                    )}
+                    <span className="patient-drawer__meta-separator">·</span>
+                    <span className="patient-drawer__meta-text">{patient.gender}</span>
+                    <span className="patient-drawer__meta-separator">·</span>
+                    <span className="patient-drawer__meta-text">{patient.bloodType || "Sangre N/R"}</span>
                   </div>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap', marginBottom: 'var(--space-1)' }}>
-                      <h3 className="drawer-patient-name" style={{ margin: 0 }}>
-                        {patient.firstName} {patient.middleName || ""} {patient.lastName} {patient.secondLastName || ""}
-                      </h3>
-                      {patient.idNumberType === 'temporal' && (
-                        <span
-                          style={{
-                            fontSize: "var(--font-size-xs)",
-                            fontWeight: "var(--font-weight-semibold)",
-                            color: "var(--color-warning)",
-                            backgroundColor: "var(--color-warning-light)",
-                            border: "1px solid var(--color-warning)",
-                            borderRadius: "var(--radius-sm)",
-                            padding: "2px 8px",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          ID Pendiente
-                        </span>
-                      )}
+                </div>
+              </section>
+
+              {/* Cards / Sections */}
+              <section className="patient-drawer__section">
+                <div className="patient-drawer__section-header">
+                  <h3 className="patient-drawer__section-title">Contacto</h3>
+                  <div className="patient-drawer__section-line"></div>
+                </div>
+                <div className="patient-drawer__card">
+                  <div className="patient-drawer__field">
+                    <Icon name="icon-email-solid" size={14} className="patient-drawer__field-icon" />
+                    <div className="patient-drawer__field-content">
+                      <span className="patient-drawer__field-label">Email</span>
+                      <span className="patient-drawer__field-value">{patient.email || "N/A"}</span>
                     </div>
-                    <div className="drawer-patient-meta">
-                      {patient.idNumberType === 'temporal'
-                        ? 'Sin cedula registrada'
-                        : `Cedula/ID: ${patient.idNumber}`
-                      } | {patient.gender} | Grupo Sanguineo: {patient.bloodType || "No registrado"}
+                  </div>
+                  <div className="patient-drawer__field">
+                    <Icon name="icon-phone-solid" size={14} className="patient-drawer__field-icon" />
+                    <div className="patient-drawer__field-content">
+                      <span className="patient-drawer__field-label">Teléfono</span>
+                      <span className="patient-drawer__field-value">{patient.phone || "N/A"}</span>
+                    </div>
+                  </div>
+                  <div className="patient-drawer__field">
+                    <Icon name="icon-location-solid" size={14} className="patient-drawer__field-icon" />
+                    <div className="patient-drawer__field-content">
+                      <span className="patient-drawer__field-label">Dirección</span>
+                      <span className="patient-drawer__field-value">{patient.homeAddress}</span>
                     </div>
                   </div>
                 </div>
               </section>
 
-              <div className="drawer-card-grid">
-                <section className="card" style={{ padding: "var(--space-4)" }}>
-                  <h4 className="drawer-section-title">Contacto</h4>
-                  <div className="drawer-detail-list">
-                    <div><strong>Email:</strong> {patient.email || "N/A"}</div>
-                    <div><strong>Telefono:</strong> {patient.phone || "N/A"}</div>
-                    <div><strong>Direccion:</strong> {patient.homeAddress}</div>
+              <section className="patient-drawer__section">
+                <div className="patient-drawer__section-header">
+                  <h3 className="patient-drawer__section-title">Información Personal</h3>
+                  <div className="patient-drawer__section-line"></div>
+                </div>
+                <div className="patient-drawer__card patient-drawer__card--grid">
+                  <div className="patient-drawer__field">
+                    <div className="patient-drawer__field-content">
+                      <span className="patient-drawer__field-label">Nacimiento</span>
+                      <span className="patient-drawer__field-value">{patient.birthDate}</span>
+                    </div>
                   </div>
-                </section>
-
-                <section className="card" style={{ padding: "var(--space-4)" }}>
-                  <h4 className="drawer-section-title">Demografia</h4>
-                  <div className="drawer-detail-list">
-                    <div><strong>Nacimiento:</strong> {patient.birthDate}</div>
-                    <div><strong>Nacionalidad:</strong> {patient.nationality || "N/A"}</div>
-                    <div><strong>Estado Civil:</strong> {patient.maritalStatus || "N/A"}</div>
+                  <div className="patient-drawer__field">
+                    <div className="patient-drawer__field-content">
+                      <span className="patient-drawer__field-label">Nacionalidad</span>
+                      <span className="patient-drawer__field-value">{patient.nationality || "N/A"}</span>
+                    </div>
                   </div>
-                </section>
-              </div>
+                  <div className="patient-drawer__field">
+                    <div className="patient-drawer__field-content">
+                      <span className="patient-drawer__field-label">Estado Civil</span>
+                      <span className="patient-drawer__field-value">{patient.maritalStatus || "N/A"}</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
 
               {patient.emergencyContacts && patient.emergencyContacts.length > 0 && (
-                <section>
-                  <h4 className="drawer-subsection-title">Contactos de Emergencia</h4>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+                <section className="patient-drawer__section">
+                  <div className="patient-drawer__section-header">
+                    <h3 className="patient-drawer__section-title">Contactos de Emergencia</h3>
+                    <div className="patient-drawer__section-line"></div>
+                  </div>
+                  <div className="patient-drawer__list">
                     {patient.emergencyContacts.map((contact, idx) => (
-                      <div key={idx} className="drawer-contact-item">
-                        <div className="drawer-contact-name">{contact.name} ({contact.kinship})</div>
-                        <div className="drawer-contact-phone"><Icon name="icon-phone" size={12} /> {contact.phone}</div>
+                      <div key={idx} className="patient-drawer__list-item">
+                        <div className="patient-drawer__list-header">
+                          <span className="patient-drawer__field-value patient-drawer__field-value--bold">{contact.name}</span>
+                          <span className="patient-drawer__field-label">{contact.kinship}</span>
+                        </div>
+                        <div className="patient-drawer__field-inline">
+                          <Icon name="icon-phone-solid" size={12} className="patient-drawer__field-icon" />
+                          <span className="patient-drawer__field-value">{contact.phone}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -119,47 +208,73 @@ export function PatientDetailsDrawer() {
               )}
 
               {patient.clinicalAntecedents && patient.clinicalAntecedents.length > 0 && (
-                <section>
-                  <h4 className="drawer-subsection-title">Antecedentes Clinicos</h4>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+                <section className="patient-drawer__section">
+                  <div className="patient-drawer__section-header">
+                    <h3 className="patient-drawer__section-title">Antecedentes Clínicos</h3>
+                    <div className="patient-drawer__section-line"></div>
+                  </div>
+                  <div className="patient-drawer__list">
                     {patient.clinicalAntecedents.map((ant, idx) => (
-                      <div key={idx} className="drawer-antecedent-item">
-                        <div className="drawer-antecedent-header">
-                          <strong className="drawer-antecedent-type">{ant.antecedentType}</strong>
-                          <span className="drawer-antecedent-date">{ant.diagnosisDate}</span>
+                      <div key={idx} className="patient-drawer__list-item">
+                        <div className="patient-drawer__list-header">
+                          <span className="patient-drawer__field-value patient-drawer__field-value--bold" style={{ textTransform: 'capitalize' }}>
+                            {ant.antecedentType}
+                          </span>
+                          <span className="patient-drawer__field-label">{ant.diagnosisDate}</span>
                         </div>
-                        {ant.description && <div className="drawer-antecedent-desc">{ant.description}</div>}
-                        {ant.treatment && <div className="drawer-antecedent-treatment">Tratamiento: {ant.treatment}</div>}
+                        {ant.pathology && (
+                          <div className="patient-drawer__field-value patient-drawer__field-value--bold" style={{ color: 'var(--drawer-name-color)', marginTop: '4px' }}>
+                            [{ant.pathology.code}] {ant.pathology.description}
+                          </div>
+                        )}
+                        {ant.description && (
+                          <div className="patient-drawer__field-value patient-drawer__field-value--multiline">
+                            {ant.description}
+                          </div>
+                        )}
+                        {ant.treatment && (
+                          <div className="patient-drawer__field-value patient-drawer__field-value--muted">
+                            Tratamiento: {ant.treatment}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 </section>
               )}
-
             </div>
           )}
         </div>
 
         {patient && (
-          <div className="drawer-footer" style={{ flexDirection: 'row', gap: 'var(--space-2)' }}>
-             <button 
-              type="button" 
-              className="btn-primary" 
-              style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#312e81', borderColor: '#312e81' }}
+          <div className="patient-drawer__footer">
+            <WcButton
+              variant="terciary"
+              className="drawer-footer__btn-history"
               onClick={() => {
                 navigate(`/pacientes/${patient.id}/historia`);
                 setSelectedPatientId(null);
               }}
-             >
-                <Icon name="icon-folder" size={18} />
-                Ir a Historia Clínica
-             </button>
-             <button type="button" className="btn-secondary" style={{ width: '100%' }} onClick={() => {
+            >
+              <div className="patient-drawer__btn-inner">
+                <Icon name="icon-open-folder" size={16} />
+                <span>Ver HCI</span>
+              </div>
+            </WcButton>
+
+            <WcButton
+              variant="primary"
+              className="drawer-footer__btn-edit"
+              onClick={() => {
                 setEditingPatientId(patient.id);
                 setSelectedPatientId(null);
-             }}>
-                Editar Paciente
-             </button>
+              }}
+            >
+              <div className="patient-drawer__btn-inner">
+                <Icon name="icon-edit" size={16} />
+                <span>Editar</span>
+              </div>
+            </WcButton>
           </div>
         )}
       </div>
