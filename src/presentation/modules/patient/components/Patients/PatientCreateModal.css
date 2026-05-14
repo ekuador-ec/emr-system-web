@@ -1,0 +1,665 @@
+.patient-create-form .form-label {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.82rem;
+  color: var(--color-text);
+  font-weight: var(--font-weight-normal);
+}
+
+.patient-create-modal__content {
+  overflow-x: hidden;
+}
+
+.patient-tab-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.patient-tab-header__main {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.patient-tab-header__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.patient-tab-header__info {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+}
+
+.patient-tab-header__info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.patient-tab-header__info-popover {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  width: 280px;
+  max-width: 70vw;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-lg);
+  z-index: 20;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.patient-tab-header__info-popover p {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.patient-tab-header__info:hover .patient-tab-header__info-popover,
+.patient-tab-header__info:focus-within .patient-tab-header__info-popover {
+  opacity: 1;
+  visibility: visible;
+}
+
+.patient-tab-header__action {
+  display: inline-flex;
+  align-items: center;
+}
+
+.patient-field-label-with-help {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: 6px;
+}
+
+.patient-field-label-with-help .form-label {
+  margin-bottom: 0;
+}
+
+.patient-field-help {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.patient-field-help__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.patient-field-help__popover {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  width: 320px;
+  max-width: min(80vw, 320px);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-lg);
+  z-index: 20;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.patient-field-help--compact .patient-field-help__popover {
+  left: auto;
+  right: 0;
+  width: 220px;
+  max-width: min(65vw, 220px);
+}
+
+.patient-field-help__popover p {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.patient-field-help:hover .patient-field-help__popover,
+.patient-field-help:focus-within .patient-field-help__popover {
+  opacity: 1;
+  visibility: visible;
+}
+
+.patient-field-help__btn:hover,
+.patient-field-help__btn:focus-visible {
+  color: var(--color-text-secondary);
+  background: transparent;
+  outline: none;
+}
+
+.patient-create-form .input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+}
+
+.patient-create-form .input-field {
+  width: 100%;
+  border-radius: 5px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  -webkit-text-fill-color: var(--color-text);
+  caret-color: var(--color-text);
+  padding: 6px 10px;
+  min-height: 34px;
+  font-size: 0.82rem;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.patient-create-form .input-field::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.patient-create-form textarea.input-field {
+  resize: none;
+}
+
+.patient-create-form input[type="date"].input-field {
+  color-scheme: light;
+}
+
+.patient-create-form input[type="date"].input-field::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.8;
+  filter: brightness(0) saturate(100%) invert(22%) sepia(13%) saturate(640%) hue-rotate(184deg) brightness(96%) contrast(92%);
+}
+
+.dark .patient-create-form input[type="date"].input-field {
+  color-scheme: dark;
+}
+
+.dark .patient-create-form input[type="date"].input-field::-webkit-calendar-picker-indicator {
+  opacity: 0.95;
+  filter: brightness(0) saturate(100%) invert(95%) sepia(8%) saturate(211%) hue-rotate(188deg) brightness(102%) contrast(92%);
+}
+
+.patient-create-form select.input-field {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 14px 14px;
+  background-position: right 10px center;
+  padding-right: 34px;
+}
+
+.patient-create-form .input-field:focus,
+.patient-create-form .input-field:focus-visible {
+  outline: none;
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.patient-create-form .input-field.error {
+  border-color: var(--color-danger);
+  padding-right: 32px;
+}
+
+.patient-create-form select.input-field.error {
+  padding-right: 56px;
+  background-position: right 34px center;
+}
+
+.patient-create-form .input-field.error:focus,
+.patient-create-form .input-field.error:focus-visible {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 20%, transparent);
+}
+
+.patient-create-form .input-field.is-temporary-mode {
+  border-color: var(--color-border);
+  background-color: color-mix(in srgb, var(--color-primary-light) 45%, var(--color-surface) 55%);
+  color: var(--color-text);
+  font-weight: 500;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.patient-create-form .input-field.is-temporary-mode::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.patient-create-form .input-error-icon {
+  position: absolute;
+  right: 8px;
+  color: var(--color-danger);
+  display: inline-flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.patient-create-form .form-error {
+  color: var(--color-danger);
+  font-size: 0.75rem;
+  display: block;
+  margin-top: 4px;
+}
+
+.patient-temporary-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-warning);
+  border-radius: 6px;
+  background-color: var(--color-warning-light);
+}
+
+.patient-temporary-note__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-warning);
+  flex-shrink: 0;
+}
+
+.patient-temporary-note__text {
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+  color: var(--color-warning);
+}
+
+.patient-cedula-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.patient-cedula-control__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  min-height: 22px;
+  white-space: nowrap;
+}
+
+.patient-cedula-control__checkbox {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+  margin: 0;
+}
+
+.patient-cedula-control__toggle-text {
+  font-size: 0.82rem;
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.patient-cedula-control__info {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+}
+
+.patient-cedula-control__info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.patient-cedula-control__info-popover {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  width: 280px;
+  max-width: 70vw;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-lg);
+  z-index: 20;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.patient-cedula-control__info-popover p {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.patient-cedula-control__info:hover .patient-cedula-control__info-popover,
+.patient-cedula-control__info:focus-within .patient-cedula-control__info-popover {
+  opacity: 1;
+  visibility: visible;
+}
+
+.patient-cedula-control__info-btn:hover,
+.patient-cedula-control__info-btn:focus-visible {
+  color: var(--color-text-secondary);
+  background: transparent;
+  outline: none;
+}
+
+.patient-choice-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.patient-choice-option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 22px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.patient-choice-checkbox {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.patient-work-question {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+
+.patient-work-question__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.patient-work-question__label {
+  margin: 0;
+  font-size: 0.89rem;
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+.patient-work-question__indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: fit-content;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-primary-light) 45%, var(--color-surface) 55%);
+  color: var(--color-primary);
+  font-size: 0.74rem;
+  font-weight: var(--font-weight-semibold);
+  padding: 2px 8px;
+}
+
+.patient-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.patient-empty-state__title {
+  margin: 0;
+  font-size: 0.94rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.patient-empty-state__description {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.patient-contact-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.patient-contact-card-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.patient-contact-card-fields-grid__full {
+  grid-column: 1 / -1;
+}
+
+.patient-antecedent-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.patient-antecedent-card-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.patient-antecedent-card-fields-grid__full {
+  grid-column: 1 / -1;
+}
+
+.patient-info-source-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.patient-info-source-grid__full {
+  grid-column: 1 / -1;
+}
+
+.patient-create-form textarea.patient-antecedent-summary-field {
+  resize: vertical;
+  min-height: 76px;
+}
+
+.patient-create-form textarea.patient-info-source-observations-field {
+  resize: vertical;
+  min-height: 76px;
+}
+
+.patient-create-tabs .wc-tabs-folder__body {
+  overflow-x: hidden;
+}
+
+.patient-submit-button {
+  position: relative;
+}
+
+.patient-submit-button__loader {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.patient-submit-button__text {
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (max-width: 960px) {
+  .patient-contact-card-fields-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .patient-tab-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+  }
+
+  .patient-tab-header__main {
+    width: 100%;
+  }
+
+  .patient-tab-header__action {
+    width: 100%;
+  }
+
+  .patient-tab-header__action .wc-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .patient-choice-group {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+
+  .patient-info-source-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-contact-card-fields-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-antecedent-card-fields-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .patient-tab-header__main {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .patient-field-label-with-help {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .patient-tab-header__info,
+  .patient-field-help,
+  .patient-cedula-control__info {
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .patient-tab-header__info,
+  .patient-field-help,
+  .patient-cedula-control__info {
+    position: static;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: 100%;
+  }
+
+  .patient-cedula-control {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .patient-cedula-control__info {
+    width: auto;
+    flex-basis: auto;
+  }
+
+  .patient-tab-header__info-popover,
+  .patient-field-help__popover,
+  .patient-cedula-control__info-popover,
+  .patient-field-help--compact .patient-field-help__popover {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    width: min(100%, 320px);
+    max-width: calc(100vw - 56px);
+    margin-top: var(--space-2);
+    box-sizing: border-box;
+    display: none;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    overflow-wrap: anywhere;
+  }
+
+  .patient-tab-header__info-popover,
+  .patient-field-help__popover,
+  .patient-cedula-control__info-popover {
+    align-self: flex-start;
+  }
+
+  .patient-tab-header__info:hover .patient-tab-header__info-popover,
+  .patient-tab-header__info:focus-within .patient-tab-header__info-popover,
+  .patient-field-help:hover .patient-field-help__popover,
+  .patient-field-help:focus-within .patient-field-help__popover,
+  .patient-cedula-control__info:hover .patient-cedula-control__info-popover,
+  .patient-cedula-control__info:focus-within .patient-cedula-control__info-popover {
+    display: block;
+  }
+}

@@ -8,10 +8,14 @@ interface WcModalProps {
   onClose: () => void;
   onCloseAttempt?: () => void;
   title: string;
+  subtitle?: string;
   children: ReactNode;
   footer?: ReactNode;
   maxWidth?: string;
   disableBackdropClick?: boolean;
+  showHeaderDivider?: boolean;
+  showFooterDivider?: boolean;
+  contentClassName?: string;
 }
 
 export function WcModal({
@@ -19,10 +23,14 @@ export function WcModal({
   onClose,
   onCloseAttempt,
   title,
+  subtitle,
   children,
   footer,
   maxWidth = "600px",
   disableBackdropClick = false,
+  showHeaderDivider = true,
+  showFooterDivider = true,
+  contentClassName,
 }: WcModalProps) {
   const handleCloseRequest = onCloseAttempt ?? onClose;
   useEffect(() => {
@@ -60,10 +68,13 @@ export function WcModal({
         style={{ maxWidth }}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="wc-modal-header">
-          <h2 id="wc-modal-title" className="wc-modal-title">
-            {title}
-          </h2>
+        <div className={`wc-modal-header ${showHeaderDivider ? "" : "wc-modal-header--no-divider"}`}>
+          <div className="wc-modal-title-wrap">
+            <h2 id="wc-modal-title" className="wc-modal-title">
+              {title}
+            </h2>
+            {subtitle ? <p className="wc-modal-subtitle">{subtitle}</p> : null}
+          </div>
           <div className="wc-modal-close">
             <WcButtonIcon
               variant="ghost"
@@ -75,11 +86,15 @@ export function WcModal({
           </div>
         </div>
 
-        <div className="wc-modal-content">
+        <div className={["wc-modal-content", contentClassName].filter(Boolean).join(" ")}>
           {children}
         </div>
 
-        {footer ? <div className="wc-modal-footer">{footer}</div> : null}
+        {footer ? (
+          <div className={`wc-modal-footer ${showFooterDivider ? "" : "wc-modal-footer--no-divider"}`}>
+            {footer}
+          </div>
+        ) : null}
       </div>
     </div>
   );

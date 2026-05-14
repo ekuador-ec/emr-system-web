@@ -176,7 +176,7 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
       <p style={{ marginTop: 0, marginBottom: "var(--space-4)", fontSize: "0.8125rem", color: "var(--color-text-secondary)" }}>
         Gestiona tu información personal y foto de perfil.
       </p>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form className="user-profile-form" onSubmit={handleSubmit(onSubmit)}>
         <div
           style={{
             display: "flex",
@@ -262,144 +262,156 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
           <div>
-            <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-1)", fontSize: "0.875rem" }}>
-              <span style={{ color: "var(--color-text-secondary)", display: "flex" }}>
+            <label className="form-label">
+              <span className="form-label-icon">
                 <Icon name="icon-user" size={16} />
               </span>
               Nombre
             </label>
-            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+            <div className="input-wrapper">
               <input
                 {...register("firstName")}
                 disabled={isPending}
                 placeholder="Ej: Erick"
-                style={{ width: "100%", padding: "8px", paddingRight: errors.firstName ? "32px" : "8px", borderRadius: "6px", border: errors.firstName ? "1px solid var(--color-danger)" : "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)" }}
+                spellCheck={false}
+                className={`input-field ${errors.firstName ? "error" : ""}`}
               />
               {errors.firstName && (
-                <span style={{ position: "absolute", right: "8px", color: "var(--color-danger)", display: "flex", alignItems: "center" }}>
-                  <Icon name="icon-alert-circle" size={18} />
+                <span className="input-error-icon">
+                  <Icon name="icon-alert-circle" size={16} />
                 </span>
               )}
             </div>
-            {errors.firstName && <span style={{ color: "var(--color-danger)", fontSize: "0.75rem" }}>{errors.firstName.message}</span>}
+            {errors.firstName && <span className="form-error">{errors.firstName.message}</span>}
           </div>
           <div>
-            <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-1)", fontSize: "0.875rem" }}>
-              <span style={{ color: "var(--color-text-secondary)", display: "flex" }}>
+            <label className="form-label">
+              <span className="form-label-icon">
                 <Icon name="icon-user" size={16} />
               </span>
               Apellido
             </label>
-            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+            <div className="input-wrapper">
               <input
                 {...register("lastName")}
                 placeholder="Ej: Nuñez"
                 disabled={isPending}
-                style={{ width: "100%", padding: "8px", paddingRight: errors.lastName ? "32px" : "8px", borderRadius: "6px", border: errors.lastName ? "1px solid var(--color-danger)" : "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)" }}
+                spellCheck={false}
+                className={`input-field ${errors.lastName ? "error" : ""}`}
               />
               {errors.lastName && (
-                <span style={{ position: "absolute", right: "8px", color: "var(--color-danger)", display: "flex", alignItems: "center" }}>
-                  <Icon name="icon-alert-circle" size={18} />
+                <span className="input-error-icon">
+                  <Icon name="icon-alert-circle" size={16} />
                 </span>
               )}
             </div>
-            {errors.lastName && <span style={{ color: "var(--color-danger)", fontSize: "0.75rem" }}>{errors.lastName.message}</span>}
+            {errors.lastName && <span className="form-error">{errors.lastName.message}</span>}
           </div>
         </div>
 
         <div style={{ marginTop: "var(--space-4)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
           <div>
-            <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-1)", fontSize: "0.875rem" }}>
-              <span style={{ color: "var(--color-text-secondary)", display: "flex" }}>
+            <label className="form-label">
+              <span className="form-label-icon">
                 <Icon name="icon-phone" size={16} />
               </span>
               Teléfono
             </label>
-            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+            <div className="input-wrapper">
               <input
                 {...register("phone")}
                 disabled={isPending}
                 placeholder="Ej: 0998619379"
-                style={{ width: "100%", padding: "8px", paddingRight: errors.phone ? "32px" : "8px", borderRadius: "6px", border: errors.phone ? "1px solid var(--color-danger)" : "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)" }}
+                spellCheck={false}
+                className={`input-field ${errors.phone ? "error" : ""}`}
               />
               {errors.phone && (
-                <span style={{ position: "absolute", right: "8px", color: "var(--color-danger)", display: "flex", alignItems: "center" }}>
-                  <Icon name="icon-alert-circle" size={18} />
+                <span className="input-error-icon">
+                  <Icon name="icon-alert-circle" size={16} />
                 </span>
               )}
             </div>
-            {errors.phone && <span style={{ color: "var(--color-danger)", fontSize: "0.75rem" }}>{errors.phone.message}</span>}
+            {errors.phone && <span className="form-error">{errors.phone.message}</span>}
           </div>
           <div>
-            <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-1)", fontSize: "0.875rem" }}>
-              <span style={{ color: "var(--color-text-secondary)", display: "flex" }}>
+            <label className="form-label">
+              <span className="form-label-icon">
                 <Icon name="icon-id-card" size={16} />
               </span>
               Cédula/Nro. Identificación
             </label>
-            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+            <div className="input-wrapper">
               <input
                 {...register("identificationNumber")}
                 disabled={isPending}
                 placeholder="Ej: 1754303699"
-                style={{ width: "100%", padding: "8px", paddingRight: errors.identificationNumber ? "32px" : "8px", borderRadius: "6px", border: errors.identificationNumber ? "1px solid var(--color-danger)" : "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)" }}
+                spellCheck={false}
+                className={`input-field ${errors.identificationNumber ? "error" : ""}`}
               />
               {errors.identificationNumber && (
-                <span style={{ position: "absolute", right: "8px", color: "var(--color-danger)", display: "flex", alignItems: "center" }}>
-                  <Icon name="icon-alert-circle" size={18} />
+                <span className="input-error-icon">
+                  <Icon name="icon-alert-circle" size={16} />
                 </span>
               )}
             </div>
-            {errors.identificationNumber && <span style={{ color: "var(--color-danger)", fontSize: "0.75rem" }}>{errors.identificationNumber.message}</span>}
+            {errors.identificationNumber && (
+              <span className="form-error">{errors.identificationNumber.message}</span>
+            )}
           </div>
         </div>
 
         {(user.role === "admin" || user.role === "doctor" || user.role === "nurse") && (
           <div style={{ marginTop: "var(--space-4)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
             <div>
-              <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-1)", fontSize: "0.875rem" }}>
-                <span style={{ color: "var(--color-text-secondary)", display: "flex" }}>
+              <label className="form-label">
+                <span className="form-label-icon">
                   <Icon name="icon-stethoscope" size={16} />
                 </span>
                 Especialidad
               </label>
-              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+              <div className="input-wrapper">
                 <input
                   {...register("medicalSpecialty")}
                   disabled={isPending}
                   placeholder="Ej: Pediatría"
-                  style={{ width: "100%", padding: "8px", paddingRight: errors.medicalSpecialty ? "32px" : "8px", borderRadius: "6px", border: errors.medicalSpecialty ? "1px solid var(--color-danger)" : "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)" }}
+                  spellCheck={false}
+                  className={`input-field ${errors.medicalSpecialty ? "error" : ""}`}
                 />
                 {errors.medicalSpecialty && (
-                  <span style={{ position: "absolute", right: "8px", color: "var(--color-danger)", display: "flex", alignItems: "center" }}>
-                    <Icon name="icon-alert-circle" size={18} />
+                  <span className="input-error-icon">
+                    <Icon name="icon-alert-circle" size={16} />
                   </span>
                 )}
               </div>
-              {errors.medicalSpecialty && <span style={{ color: "var(--color-danger)", fontSize: "0.75rem", display: "block", marginTop: "4px" }}>{errors.medicalSpecialty.message}</span>}
+              {errors.medicalSpecialty && (
+                <span className="form-error">{errors.medicalSpecialty.message}</span>
+              )}
             </div>
 
             <div>
-              <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-1)", fontSize: "0.875rem" }}>
-                <span style={{ color: "var(--color-text-secondary)", display: "flex" }}>
+              <label className="form-label">
+                <span className="form-label-icon">
                   <Icon name="icon-briefcase" size={16} />
                 </span>
                 Código profesional
               </label>
-              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+              <div className="input-wrapper">
                 <input
                   {...register("professionalCode")}
                   disabled={isPending}
                   placeholder="Ej: MSP-12345"
-                  style={{ width: "100%", padding: "8px", paddingRight: errors.professionalCode ? "32px" : "8px", borderRadius: "6px", border: errors.professionalCode ? "1px solid var(--color-danger)" : "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)" }}
+                  spellCheck={false}
+                  className={`input-field ${errors.professionalCode ? "error" : ""}`}
                 />
                 {errors.professionalCode && (
-                  <span style={{ position: "absolute", right: "8px", color: "var(--color-danger)", display: "flex", alignItems: "center" }}>
-                    <Icon name="icon-alert-circle" size={18} />
+                  <span className="input-error-icon">
+                    <Icon name="icon-alert-circle" size={16} />
                   </span>
                 )}
               </div>
-              {errors.professionalCode && <span style={{ color: "var(--color-danger)", fontSize: "0.75rem", display: "block", marginTop: "4px" }}>{errors.professionalCode.message}</span>}
+              {errors.professionalCode && (
+                <span className="form-error">{errors.professionalCode.message}</span>
+              )}
             </div>
           </div>
         )}
@@ -521,6 +533,79 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
             backdrop-filter: blur(4px);
           }
 
+          .user-profile-modal .form-label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-1);
+            font-size: 0.875rem;
+          }
+
+          .user-profile-modal .form-label-icon {
+            color: var(--color-text-secondary);
+            display: flex;
+          }
+
+          .user-profile-form .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            border-radius: var(--radius-sm);
+          }
+
+          .user-profile-form .input-field {
+            width: 100%;
+            border-radius: 6px;
+            border: 1px solid var(--color-border);
+            background-color: var(--color-surface);
+            color: var(--color-text);
+            -webkit-text-fill-color: var(--color-text);
+            caret-color: var(--color-text);
+            padding: 8px;
+            font-size: var(--font-size-base);
+            transition:
+              border-color var(--transition-fast),
+              box-shadow var(--transition-fast);
+          }
+
+          .user-profile-form .input-field::placeholder {
+            color: var(--color-text-secondary);
+          }
+
+          .user-profile-form .input-field:focus,
+          .user-profile-form .input-field:focus-visible {
+            outline: none;
+            border-color: var(--color-primary-light);
+            box-shadow: 0 0 0 3px var(--color-primary-light);
+          }
+
+          .user-profile-form .input-field.error {
+            border-color: var(--color-danger);
+            padding-right: 32px;
+          }
+
+          .user-profile-form .input-field.error:focus,
+          .user-profile-form .input-field.error:focus-visible {
+            border-color: var(--color-danger);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 20%, transparent);
+          }
+
+          .user-profile-form .input-error-icon {
+            position: absolute;
+            right: 8px;
+            color: var(--color-danger);
+            display: inline-flex;
+            align-items: center;
+            pointer-events: none;
+          }
+
+          .user-profile-form .form-error {
+            color: var(--color-danger);
+            font-size: 0.75rem;
+            display: block;
+            margin-top: 4px;
+          }
+
           @media (max-height: 860px) {
             .user-profile-modal {
               margin: 8px auto;
@@ -613,15 +698,6 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
               gap: var(--space-3) !important;
             }
 
-            input, textarea {
-              font-size: 16px;
-              padding: 10px;
-              border-radius: 6px;
-            }
-
-            label {
-              font-size: 0.8rem;
-            }
           }
 
           /* Small mobile */
@@ -648,16 +724,6 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
             p {
               font-size: 0.8rem;
               line-height: 1.4;
-            }
-
-            input, textarea {
-              font-size: 16px;
-              padding: 8px;
-            }
-
-            label {
-              font-size: 0.75rem;
-              margin-bottom: 4px;
             }
 
             /* Avatar smaller */

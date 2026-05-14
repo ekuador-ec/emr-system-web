@@ -20,6 +20,14 @@ export function GeographicLocationSearchInput({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: results, isLoading } = useSearchGeographicLocations(query);
+  const normalizedQuery = query.trim();
+  const hasNoResults =
+    isOpen &&
+    normalizedQuery.length >= 3 &&
+    !isLoading &&
+    Array.isArray(results) &&
+    results.length === 0;
+  const inputHasError = Boolean(error) || hasNoResults;
 
   useEffect(() => {
     // Sincronizar tab initialLabel si cambia (ej en edición)
@@ -49,7 +57,7 @@ export function GeographicLocationSearchInput({
       <div style={{ position: "relative" }}>
         <input
           type="text"
-          className={`input-field ${error ? "error" : ""}`}
+          className={`input-field ${inputHasError ? "error" : ""}`}
           placeholder="Buscar provincia, cantón o parroquia..."
           value={query}
           onChange={(e) => {
@@ -142,6 +150,8 @@ export function GeographicLocationSearchInput({
           })}
         </div>
       )}
+
+      {hasNoResults && <span className="form-error">Esa ubicación geográfica no existe.</span>}
     </div>
   );
 }

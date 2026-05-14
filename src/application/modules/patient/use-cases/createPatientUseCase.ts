@@ -35,7 +35,7 @@ export class CreatePatientUseCase {
   async execute(data: CreatePatientDTO): Promise<Patient> {
     if (data.idNumber && data.idNumber.trim() !== '') {
       if (!validateEcCedula(data.idNumber)) {
-        throw new Error('El numero de cedula ingresado no es valido (verificacion Modulo 10 fallida).');
+        throw new Error("La cédula ingresada no es válida.");
       }
 
       const existingPatient = await this.patientRepository.getPatientByIdNumber(data.idNumber);

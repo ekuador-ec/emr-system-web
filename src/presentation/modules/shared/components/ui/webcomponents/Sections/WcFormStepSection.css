@@ -1,0 +1,55 @@
+.wc-form-step-section {
+  border: none;
+  border-radius: 0;
+  padding: var(--space-2);
+  background-color: transparent;
+}
+
+.wc-form-step-section__header {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.wc-form-step-section__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid var(--color-primary);
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.wc-form-step-section__title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wc-form-step-section__title {
+  margin: 0;
+  font-size: 0.94rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+
+.wc-form-step-section__description {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+.wc-form-step-section__content {
+  padding-left: var(--space-2);
+}
+
