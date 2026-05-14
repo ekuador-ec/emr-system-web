@@ -1,4 +1,5 @@
 import { useAuth } from "@/presentation/modules/auth/hooks/useAuth";
+import { USER_ROLE_LABELS } from "@/domain/modules/users/models/User";
 import { usePresenceTracker } from "@/presentation/modules/users/hooks/usePresenceTracker";
 import { useUserStore } from "@/presentation/modules/users/stores/useUserStore";
 import { useAdminUsers } from "@/presentation/modules/users/hooks/useAdminUsers";
@@ -18,8 +19,10 @@ import { PatientCreateModal } from "@/presentation/modules/patient/components/Pa
 import { PatientQuickSearchModal } from "@/presentation/modules/patient/components/Patients/PatientQuickSearchModal";
 import { QuickActionBar } from "@/presentation/modules/shared/components/QuickActionBar";
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
+import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import WcWarning from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
 import type { WcWarningHandle } from "@/presentation/modules/shared/components/ui/webcomponents/Warnings/wcWarning";
+import "./AppLayout.css";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, isLoggingOut } = useAuth();
@@ -85,17 +88,33 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {user && (
               <button
                 type="button"
-                className="btn-ghost"
                 onClick={() => setIsProfileModalOpen(true)}
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "var(--space-2)",
-                  padding: "var(--space-1) var(--space-2)",
-                  borderRadius: "var(--radius-md)",
+                  gap: "10px",
+                  padding: "4px 16px 4px 4px",
+                  borderRadius: "100px",
                   cursor: "pointer",
-                  border: "none",
-                  background: "transparent",
+                  border:
+                    "1px solid color-mix(in srgb, var(--color-primary-light) 60%, transparent)",
+                  background: "var(--color-surface)",
+                  boxShadow:
+                    "0 2px 10px -2px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.02)",
+                  transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 6px 16px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04)";
+                  e.currentTarget.style.background =
+                    "color-mix(in srgb, var(--color-surface) 96%, var(--color-primary) 4%)";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 2px 10px -2px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.02)";
+                  e.currentTarget.style.background = "var(--color-surface)";
                 }}
               >
                 {user.avatarUrl ? (
@@ -103,38 +122,74 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     src={user.avatarUrl}
                     alt="Avatar"
                     style={{
-                      width: "32px",
-                      height: "32px",
+                      width: "40px",
+                      height: "40px",
                       borderRadius: "50%",
                       objectFit: "cover",
+                      boxShadow:
+                        "0 0 0 1px color-mix(in srgb, var(--color-border) 40%, transparent)",
                     }}
                   />
                 ) : (
                   <div
                     style={{
-                      width: "32px",
-                      height: "32px",
+                      width: "40px",
+                      height: "40px",
                       borderRadius: "50%",
                       backgroundColor: "var(--color-primary-light)",
                       color: "var(--color-primary)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontWeight: "bold",
-                      fontSize: "0.875rem",
+                      fontWeight: "700",
+                      fontSize: "1.1rem",
+                      boxShadow:
+                        "0 0 0 1px color-mix(in srgb, var(--color-border) 40%, transparent)",
                     }}
                   >
                     {user.firstName?.charAt(0) || user.email.charAt(0)}
                   </div>
                 )}
-                <span
+
+                <div
                   style={{
-                    fontSize: "var(--font-size-sm)",
-                    color: "var(--color-text-secondary)",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    gap: "1px",
+                    marginLeft: "2px",
                   }}
                 >
-                  {user.firstName || user.email}
-                </span>
+                  <span
+                    style={{
+                      fontSize: "0.95rem",
+                      fontWeight: "700",
+                      color: "var(--color-text)",
+                      lineHeight: "1",
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {user.firstName && user.lastName
+                      ? `${user.firstName} ${user.lastName}`
+                      : user.firstName || user.email}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "0.5rem",
+                      // fontWeight: "800",
+                      color: "var(--color-primary)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                      backgroundColor: "var(--color-primary-light)",
+                      marginTop: "4px",
+                      padding: "5px 8px ",
+                      borderRadius: "4px",
+                      lineHeight: "1.2",
+                    }}
+                  >
+                    {USER_ROLE_LABELS[user.role] || user.role}
+                  </span>
+                </div>
               </button>
             )}
             <NotificationBell userId={user?.id} />
@@ -282,9 +337,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         ref={warningRef}
         title="Cerrar sesión"
         message="¿Estás seguro de que deseas cerrar tu sesión actual?"
-        confirmText="Cerrar sesión"
-        cancelText="Cancelar"
-        type="warning"
+        confirmText={
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+            <Icon name="icon-logout" size={16} />
+            Cerrar sesión
+          </span>
+        }
+        cancelText={
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+            <Icon name="icon-x" size={16} />
+            Cancelar
+          </span>
+        }
+        type="destructive"
       />
     </div>
   );
