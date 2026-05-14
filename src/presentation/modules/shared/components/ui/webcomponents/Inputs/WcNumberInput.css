@@ -1,6 +1,19 @@
 .wc-number-input {
   position: relative;
   width: 100%;
+  max-width: 180px;
+}
+
+.wc-number-input[data-width="md"] {
+  max-width: 240px;
+}
+
+.wc-number-input[data-width="lg"] {
+  max-width: 320px;
+}
+
+.wc-number-input[data-width="full"] {
+  max-width: none;
 }
 
 .wc-number-input__steppers {
