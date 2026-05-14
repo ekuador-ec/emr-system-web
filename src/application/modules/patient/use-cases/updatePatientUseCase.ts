@@ -38,7 +38,11 @@ export class UpdatePatientUseCase {
       throw new Error(`No se encontro el paciente con id ${id}.`);
     }
 
-    const { idNumber: incomingIdNumber, idNumberType: _ignoredIdNumberType, ...rest } = data;
+    const {
+      idNumber: incomingIdNumber,
+      idNumberType: _ignoredIdNumberType,
+      ...rest
+    } = data;
     const updateData: UpdatePatientDTO = { ...rest };
 
     const normalizedIdNumber = typeof incomingIdNumber === 'string' ? incomingIdNumber.trim() : '';
