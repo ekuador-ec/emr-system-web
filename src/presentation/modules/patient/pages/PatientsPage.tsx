@@ -85,9 +85,8 @@ export function PatientsPage() {
             setCreateSuccessHandler(null);
             setCreateModalOpen(true);
           }}
-          style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}
         >
-          <Icon name="icon-user-plus" size={20} />
+          <Icon name="icon-user-plus" size={14} />
           Nuevo Paciente
         </WcButton>
       </WcModuleHeader>
