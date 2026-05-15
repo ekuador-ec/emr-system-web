@@ -1,8 +1,10 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEvolutionsByMedicalRecord, useCreateEvolution } from '@/presentation/modules/evolution/hooks/useEvolutions';
+import { useEvolutionUIStore } from '@/presentation/modules/evolution/stores/useEvolutionUIStore';
 import type { CreateEvolutionPayload } from '@/domain/modules/evolution/models/Evolution';
 import { Icon } from '@/presentation/modules/shared/components/Sidebar/icons/Icon';
 import WcButton from '@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton';
+import WcButtonIcon from '@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon';
 import { useToastStore } from '@/presentation/modules/shared/components/Toaster';
 import { useConfirmDialog } from '@/presentation/modules/shared/components/ui/useConfirmDialog';
 
@@ -13,11 +15,14 @@ interface MedicalRecordEvolutionsListProps {
 export function MedicalRecordEvolutionsList({ medicalRecordId }: MedicalRecordEvolutionsListProps) {
   const navigate = useNavigate();
   const { patientId } = useParams();
-  
+
   const { data: evolutions, isLoading } = useEvolutionsByMedicalRecord(medicalRecordId);
   const createEvolution = useCreateEvolution();
   const { addToast } = useToastStore();
   const { confirm, DialogComponent } = useConfirmDialog();
+  const openReadOnlyEvolution = useEvolutionUIStore(
+    (state) => state.openReadOnlyEvolution,
+  );
 
   const handleNewEvolution = async () => {
     const isConfirmed = await confirm({
@@ -156,7 +161,22 @@ export function MedicalRecordEvolutionsList({ medicalRecordId }: MedicalRecordEv
                     {ev.clinicalCause && ` • ${ev.clinicalCause}`}
                   </div>
                 </div>
-                <Icon name="icon-chevron-right" size={20} style={{ color: 'var(--color-text-tertiary)' }} />
+                <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+                  <WcButtonIcon
+                    variant="terciary"
+                    shape="square"
+                    size="sm"
+                    icon="icon-eye"
+                    title="Ver detalle (solo lectura)"
+                    aria-label="Ver detalle (solo lectura)"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      if (!patientId) return;
+                      openReadOnlyEvolution({ patientId, evolutionId: ev.id });
+                    }}
+                  />
+                  <Icon name="icon-chevron-right" size={20} style={{ color: 'var(--color-text-tertiary)' }} />
+                </div>
               </div>
             ))}
           </div>

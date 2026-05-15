@@ -5,6 +5,7 @@ import type {
 } from "@/domain/modules/evolution/models/Evolution";
 import type { UserRole } from "@/domain/modules/users/models/User";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
+import { useEvolutionUIStore } from "@/presentation/modules/evolution/stores/useEvolutionUIStore";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import {
   WcTables,
@@ -63,6 +64,9 @@ export function EvolutionResultsTable({
 }: EvolutionResultsTableProps) {
   const navigate = useNavigate();
   const { setSelectedPatientId } = usePatientStore();
+  const openReadOnlyEvolution = useEvolutionUIStore(
+    (state) => state.openReadOnlyEvolution,
+  );
 
   if (!result) {
     return null;
@@ -191,9 +195,11 @@ export function EvolutionResultsTable({
               shape="square"
               size="sm"
               icon="icon-eye"
-              title="Vista de solo lectura (próximamente)"
-              aria-label="Vista de solo lectura (próximamente)"
-              disabled
+              title="Ver detalle (solo lectura)"
+              aria-label="Ver detalle (solo lectura)"
+              onClick={() =>
+                openReadOnlyEvolution({ patientId, evolutionId })
+              }
             />
             <WcButtonIcon
               variant="terciary"

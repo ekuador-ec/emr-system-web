@@ -15,6 +15,8 @@ import { ActiveUsersFloat } from "@/presentation/modules/users/components/Active
 import { useNotificationSubscription } from "@/presentation/modules/notifications/hooks/useNotificationSubscription";
 import { usePatientSubscription } from "@/presentation/modules/patient/hooks/usePatientSubscription";
 import { useEvolutionSubscription } from "@/presentation/modules/evolution/hooks/useEvolutionSubscription";
+import { useEvolutionUIStore } from "@/presentation/modules/evolution/stores/useEvolutionUIStore";
+import { EvolutionReadOnlyModal } from "@/presentation/modules/evolution/components/read-only/EvolutionReadOnlyModal";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import { PatientCreateModal } from "@/presentation/modules/patient/components/Patients/PatientCreateModal";
 import { PatientQuickSearchModal } from "@/presentation/modules/patient/components/Patients/PatientQuickSearchModal";
@@ -44,6 +46,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     onCreateSuccess,
     setCreateSuccessHandler,
   } = usePatientStore();
+
+  const { readOnlyTarget, closeReadOnlyEvolution } = useEvolutionUIStore();
 
   usePresenceTracker(user?.id);
   useNotificationSubscription(user?.id);
@@ -204,6 +208,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <PatientQuickSearchModal
         isOpen={isQuickSearchModalOpen}
         onClose={() => setQuickSearchModalOpen(false)}
+      />
+
+      <EvolutionReadOnlyModal
+        isOpen={readOnlyTarget !== null}
+        patientId={readOnlyTarget?.patientId ?? null}
+        evolutionId={readOnlyTarget?.evolutionId ?? null}
+        onClose={closeReadOnlyEvolution}
       />
 
       <InviteUserModal

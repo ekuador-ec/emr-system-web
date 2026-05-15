@@ -1,0 +1,870 @@
+/* ───────────── Record rows (Secciones 4 y 5 — formato tipo tabla compacto) ───────────── */
+.em-pdf-record-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.em-pdf-record-empty {
+  padding: 10px 14px;
+  font-size: 0.7rem;
+  font-style: italic;
+  color: var(--em-text-mute);
+  text-align: center;
+}
+
+.em-pdf-record-row {
+  display: grid;
+  align-items: stretch;
+  border-bottom: 1px solid var(--em-border);
+}
+
+.em-pdf-record-row:last-child {
+  border-bottom: none;
+}
+
+.em-pdf-record-row--with-cie {
+  grid-template-columns: 22px minmax(0, 0.85fr) minmax(0, 1.4fr) minmax(0, 1.8fr);
+}
+
+.em-pdf-record-row--systems {
+  grid-template-columns: 22px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.8fr);
+}
+
+.em-pdf-record-row--diagnoses {
+  grid-template-columns: 22px minmax(0, 1.1fr) minmax(0, 0.55fr) minmax(0, 2.4fr);
+}
+
+.em-pdf-record-row--plans {
+  grid-template-columns: 22px auto minmax(0, 1fr);
+}
+
+.em-pdf-record-row--plans > .em-pdf-record-row__index {
+  grid-row: 1 / span 3;
+}
+
+.em-pdf-plan-label {
+  display: flex;
+  align-items: center;
+  padding: 3px 10px;
+  background-color: var(--em-bg-softer);
+  border-right: 1px solid var(--em-border);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--em-text-strong);
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.em-pdf-plan-value {
+  display: flex;
+  align-items: center;
+  padding: 3px 10px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--em-data);
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.em-pdf-plan-value--empty {
+  font-weight: 400;
+  font-style: italic;
+  color: var(--em-text-mute);
+}
+
+.em-pdf-record-row__index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--em-bg-soft);
+  border-right: 1px solid var(--em-border);
+  font-weight: 800;
+  font-size: 0.72rem;
+  color: var(--em-text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.em-pdf-record-row__field {
+  display: flex;
+  flex-direction: column;
+  padding: 3px 8px 4px;
+  border-right: 1px solid var(--em-border);
+  min-width: 0;
+}
+
+.em-pdf-record-row__field:last-child,
+.em-pdf-record-row--with-cie .em-pdf-record-row__field:nth-last-of-type(1) {
+  border-right: none;
+}
+
+.em-pdf-record-row__label {
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--em-text-strong);
+  line-height: 1.2;
+  margin-bottom: 1px;
+}
+
+.em-pdf-record-row__value {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--em-data);
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.em-pdf-record-row__value--type {
+  font-weight: 700;
+}
+
+.em-pdf-record-row__value--empty {
+  font-weight: 400;
+  font-style: italic;
+  color: var(--em-text-mute);
+}
+
+.em-pdf-record-row__code {
+  display: inline-block;
+  font-family: "Courier New", monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--em-accent);
+  background-color: var(--em-accent-soft);
+  padding: 1px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.03em;
+  margin-right: 5px;
+}
+
+.em-pdf-record-row__hint {
+  font-size: 0.58rem;
+  color: var(--em-text-mute);
+  margin-top: 1px;
+  letter-spacing: 0.02em;
+}
+
+.em-pdf-record-row__addendum {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 8px 4px 30px;
+  background-color: var(--em-bg-softer);
+  border-top: 1px dashed var(--em-border);
+  line-height: 1.3;
+}
+
+.em-pdf-record-row__addendum-label {
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--em-text-strong);
+  flex-shrink: 0;
+}
+
+.em-pdf-record-row__addendum-value {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--em-text-strong);
+  word-break: break-word;
+}
+
+/* ───────────── List item content (exams) ───────────── */
+.em-pdf-exam {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+}
+
+.em-pdf-exam__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.em-pdf-exam__description {
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: var(--em-text);
+}
+
+.em-pdf-exam__region {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--em-text);
+}
+
+.em-pdf-exam__flag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 2px;
+  margin-left: auto;
+}
+
+.em-pdf-exam__flag--pathology {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.em-pdf-exam__flag--normal {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.em-pdf-injury {
+  display: flex;
+  align-items: center;
+  font-size: 0.72rem;
+}
+
+.em-pdf-injury__type {
+  font-weight: 600;
+  color: var(--em-text);
+}
+
+/* ───────────── Discharge checkbox grid ───────────── */
+.em-pdf-discharge-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px 14px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--em-border);
+}
+
+@media (max-width: 900px) {
+  .em-pdf-discharge-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ============================================================
+ * MSP HCU-005 read-only rendering
+ * Goal: faithfully reproduce the printed paper form (cell-based)
+ * regardless of the active theme. Light look is forced on the
+ * sheet so the document always reads like printed paper.
+ * ============================================================ */
+
+.em-pdf-view {
+  --em-paper: #ffffff;
+  --em-bg-soft: #e0f2fe;
+  --em-bg-softer: #f0f9ff;
+  --em-border: #93c5fd;
+  --em-border-strong: #1d4ed8;
+  --em-text: #0c4a6e;
+  --em-text-strong: #1e3a8a;
+  --em-text-soft: #1e40af;
+  --em-text-mute: #64748b;
+  --em-accent: #0284c7;
+  --em-accent-soft: #bae6fd;
+  --em-data: #1e40af;
+  --em-paper-shadow: 0 24px 48px -24px rgba(15, 23, 42, 0.35);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 24px 0;
+  background-color: var(--color-bg, #f8fafc);
+  color: var(--em-text);
+}
+
+.em-pdf-view * {
+  box-sizing: border-box;
+}
+
+/* ───────────── Page (A4 sheet) ───────────── */
+.em-pdf-page {
+  position: relative;
+  width: 100%;
+  max-width: 21cm;
+  min-height: 29.7cm;
+  background-color: var(--em-paper);
+  border: 1px solid var(--em-border);
+  box-shadow: var(--em-paper-shadow);
+  display: flex;
+  flex-direction: column;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  color: var(--em-text);
+}
+
+.em-pdf-page__content {
+  flex: 1;
+  padding: 14mm 12mm 16mm;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.em-pdf-page__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4mm 12mm 6mm;
+  border-top: 1px solid var(--em-border);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--em-text-mute);
+}
+
+.em-pdf-page__footer-label {
+  font-weight: 700;
+}
+
+.em-pdf-page__footer-pagination {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ───────────── Section ───────────── */
+.em-pdf-section {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--em-border-strong);
+  border-top: none;
+}
+
+.em-pdf-section:first-of-type {
+  border-top: 1px solid var(--em-border-strong);
+}
+
+.em-pdf-section__header {
+  display: flex;
+  align-items: stretch;
+  background-color: var(--em-border-strong);
+  color: var(--em-paper);
+}
+
+.em-pdf-section__number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  padding: 4px 8px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  background-color: var(--em-text-strong);
+  font-variant-numeric: tabular-nums;
+  color: var(--em-paper);
+}
+
+.em-pdf-section__titles {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4px 10px;
+  flex: 1;
+}
+
+.em-pdf-section__title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.em-pdf-section__subtitle {
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 2px;
+}
+
+.em-pdf-section__body {
+  display: flex;
+  flex-direction: column;
+}
+
+.em-pdf-section__body--empty {
+  padding: 12px 14px;
+  font-size: 0.7rem;
+  color: var(--em-text-mute);
+  font-style: italic;
+}
+
+/* ───────────── Grid + Cell ───────────── */
+.em-pdf-grid {
+  display: grid;
+  gap: 0;
+}
+
+.em-pdf-grid + .em-pdf-grid {
+  border-top: 1px solid var(--em-border);
+}
+
+.em-pdf-cell {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--em-border);
+  border-bottom: 1px solid var(--em-border);
+  background-color: var(--em-paper);
+  min-height: 36px;
+}
+
+.em-pdf-cell:last-child {
+  border-right: none;
+}
+
+.em-pdf-grid > .em-pdf-cell:nth-last-child(-n + 12) {
+  /* let the section box handle the outer border */
+}
+
+.em-pdf-cell__label {
+  display: block;
+  padding: 3px 6px 2px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--em-text-strong);
+  background-color: var(--em-bg-soft);
+  border-bottom: 1px solid var(--em-border);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.em-pdf-cell__value {
+  display: block;
+  padding: 6px 7px 7px;
+  font-size: 0.78rem;
+  color: var(--em-data);
+  font-weight: 600;
+  line-height: 1.3;
+  word-break: break-word;
+  flex: 1;
+  text-align: center;
+}
+
+.em-pdf-cell__value--strong {
+  font-weight: 800;
+  color: var(--em-data);
+}
+
+.em-pdf-cell__value--muted {
+  color: var(--em-text-mute);
+  font-weight: 400;
+}
+
+.em-pdf-cell--empty .em-pdf-cell__value {
+  color: var(--em-text-mute);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.em-pdf-cell--multiline .em-pdf-cell__value {
+  white-space: pre-wrap;
+  min-height: 48px;
+  text-align: left;
+}
+
+.em-pdf-cell--align-center .em-pdf-cell__value {
+  text-align: center;
+}
+
+.em-pdf-cell--align-right .em-pdf-cell__value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.em-pdf-cell--align-left .em-pdf-cell__value {
+  text-align: left;
+}
+
+/* ───────────── Compound cell (label arriba + sub-celdas en fila) ───────────── */
+.em-pdf-cell--compound {
+  /* hereda dims/borders de em-pdf-cell */
+}
+
+.em-pdf-compound-row {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+}
+
+.em-pdf-mini-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  padding: 4px 6px;
+  border-right: 1px solid var(--em-border);
+  min-width: 0;
+}
+
+.em-pdf-mini-cell:last-child {
+  border-right: none;
+}
+
+.em-pdf-mini-cell__label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--em-text-strong);
+  flex-shrink: 0;
+}
+
+.em-pdf-mini-cell__value {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--em-data);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  word-break: break-word;
+}
+
+.em-pdf-mini-cell--total {
+  background-color: var(--em-bg-softer);
+}
+
+.em-pdf-mini-cell--total .em-pdf-mini-cell__value {
+  color: var(--em-text-strong);
+  font-weight: 800;
+}
+
+.em-pdf-mini-cell--empty .em-pdf-mini-cell__value {
+  color: var(--em-text-mute);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* ───────────── Checkbox ───────────── */
+.em-pdf-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--em-text);
+}
+
+.em-pdf-checkbox--inline {
+  margin-right: 10px;
+}
+
+.em-pdf-checkbox__box {
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: -0.05em;
+  color: var(--em-text);
+}
+
+.em-pdf-checkbox--checked .em-pdf-checkbox__box {
+  color: var(--em-accent);
+}
+
+.em-pdf-checkbox__label {
+  font-weight: 500;
+}
+
+/* ───────────── List ───────────── */
+.em-pdf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+}
+
+.em-pdf-list__title {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--em-text-soft);
+}
+
+.em-pdf-list__items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.em-pdf-list__item {
+  font-size: 0.74rem;
+  line-height: 1.4;
+  padding: 4px 6px;
+  border-left: 2px solid var(--em-border);
+  background-color: var(--em-paper);
+}
+
+.em-pdf-list__empty {
+  font-size: 0.7rem;
+  font-style: italic;
+  color: var(--em-text-mute);
+}
+
+.em-pdf-list--empty {
+  padding: 8px 10px;
+}
+
+/* ───────────── Header (institution + HCI cabecera) ───────────── */
+.em-pdf-header {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--em-border-strong);
+  margin-bottom: -1px;
+}
+
+.em-pdf-header__top {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--em-border);
+  background-color: var(--em-paper);
+}
+
+.em-pdf-header__logo {
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* border: 1px solid var(--em-border); */
+  /* background-color: var(--em-bg-softer); */
+  color: var(--em-accent);
+  /* border-radius: 100%; */
+  overflow: hidden;
+  padding: 2px;
+}
+
+.em-pdf-header__logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.em-pdf-header__identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.em-pdf-header__institution-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--em-text-strong);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.em-pdf-header__institution-name--missing {
+  color: var(--em-text-mute);
+  font-style: italic;
+  font-weight: 600;
+}
+
+.em-pdf-header__form-id {
+  font-size: 0.66rem;
+  color: var(--em-text-soft);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.em-pdf-header__doc-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 0.6rem;
+  color: var(--em-text-mute);
+  text-align: right;
+}
+
+.em-pdf-header__doc-info strong {
+  font-size: 0.72rem;
+  color: var(--em-text-strong);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.em-pdf-header__hci {
+  display: grid;
+  border-top: 1px solid var(--em-border);
+}
+
+.em-pdf-header__hci-cell {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border-right: 1px solid var(--em-border);
+  min-height: 44px;
+}
+
+.em-pdf-header__hci-cell:last-child {
+  border-right: none;
+}
+
+.em-pdf-header__hci-cell--featured {
+  background-color: var(--em-bg-softer);
+}
+
+.em-pdf-header__hci-label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--em-text-strong);
+  background-color: var(--em-bg-soft);
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--em-border);
+  text-align: center;
+}
+
+.em-pdf-header__hci-value {
+  padding: 5px 7px 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--em-data);
+  font-variant-numeric: tabular-nums;
+  flex: 1;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.em-pdf-header__hci-value--mono {
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.em-pdf-header__hci-value--upper {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.74rem;
+}
+
+.em-pdf-header__hci-value--hci {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--em-text-strong);
+}
+
+/* ───────────── Inline rows (used inside section bodies) ───────────── */
+.em-pdf-inline-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--em-border);
+}
+
+.em-pdf-inline-row:last-child {
+  border-bottom: none;
+}
+
+.em-pdf-inline-row__label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--em-text-soft);
+}
+
+/* ───────────── Section helpers ───────────── */
+.em-pdf-divider {
+  border-top: 1px solid var(--em-border);
+}
+
+.em-pdf-row-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 10px;
+  background-color: var(--em-bg-soft);
+  border-bottom: 1px solid var(--em-border);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--em-text-soft);
+}
+
+/* ───────────── Print rules (window.print → A4) ───────────── */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  body,
+  html {
+    background: #ffffff !important;
+  }
+
+  .em-pdf-view {
+    padding: 0;
+    gap: 0;
+    background: #ffffff;
+  }
+
+  .em-pdf-page {
+    box-shadow: none;
+    border: none;
+    width: 21cm;
+    min-height: 29.7cm;
+    page-break-after: always;
+  }
+
+  .em-pdf-page:last-of-type {
+    page-break-after: auto;
+  }
+
+  .em-pdf-page__footer {
+    border-top: 1px solid var(--em-border);
+  }
+}
+
+/* ───────────── Responsive (modal-mode only — print stays A4) ───────────── */
+@media (max-width: 900px) {
+  .em-pdf-page {
+    max-width: 100%;
+    min-height: 0;
+  }
+
+  .em-pdf-page__content {
+    padding: 10mm 6mm 12mm;
+  }
+
+  .em-pdf-header__top {
+    grid-template-columns: 56px 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .em-pdf-header__doc-info {
+    grid-column: 1 / -1;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .em-pdf-header__hci {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
