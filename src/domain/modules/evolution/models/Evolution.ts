@@ -1,3 +1,5 @@
+import type { UserRole } from "@/domain/modules/users/models/User";
+
 export type EvolutionStatus = "ABIERTA" | "EN_PROCESO" | "CERRADA";
 export type ArrivalMethod = "AMBULATORIO" | "AMBULANCIA" | "OTRO";
 export type ClinicalCause =
@@ -214,8 +216,12 @@ export interface MedicalEvolutionListItem {
   attentionDate: string | null;
   attentionTime: string | null;
   openedByName: string | null;
+  openedByRole: UserRole | null;
   closedByName: string | null;
+  closedByRole: UserRole | null;
   closedAt: string | null;
+  updatedByName: string | null;
+  updatedByRole: UserRole | null;
   createdAt: string;
   updatedAt: string;
   clinicalCause: ClinicalCause | null;

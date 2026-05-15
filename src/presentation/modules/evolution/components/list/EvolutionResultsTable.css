@@ -1,0 +1,140 @@
+/* ───────────── Patient cell (avatar pushed left, action pinned right) ───────────── */
+.evolution-patient-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  width: 100%;
+  min-width: 0;
+}
+
+.evolution-patient-cell .wc-tables__avatar-cell {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.evolution-patient-cell__action {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ───────────── Attention cell (date + time stacked, centered) ───────────── */
+.evolution-attention-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.evolution-attention-cell__icon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.evolution-attention-cell__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.evolution-attention-cell__date {
+  font-size: var(--font-size-sm, 0.85rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.evolution-attention-cell__time {
+  font-size: var(--font-size-xs, 0.78rem);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.evolution-attention-cell__empty {
+  color: var(--color-text-secondary);
+  font-style: italic;
+  font-size: var(--font-size-xs, 0.78rem);
+}
+
+/* ───────────── Audit cell (name / role / date · time) ───────────── */
+.evolution-audit-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.evolution-audit-cell__row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-xs, 0.78rem);
+  color: var(--color-text-secondary);
+  min-width: 0;
+}
+
+.evolution-audit-cell__icon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.evolution-audit-cell__row--name {
+  font-size: var(--font-size-sm, 0.85rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-text);
+}
+
+.evolution-audit-cell__row--name .evolution-audit-cell__icon {
+  color: var(--color-primary);
+  opacity: 1;
+}
+
+.evolution-audit-cell__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.evolution-audit-cell__row--role .evolution-audit-cell__icon {
+  color: color-mix(in srgb, var(--color-primary) 70%, var(--color-text-secondary));
+}
+
+.evolution-audit-cell__role {
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--color-text);
+  opacity: 0.85;
+}
+
+.evolution-audit-cell__date,
+.evolution-audit-cell__time {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.evolution-audit-cell__sep {
+  opacity: 0.5;
+}
+
+.evolution-audit-cell__empty {
+  color: var(--color-text-secondary);
+  font-style: italic;
+  font-size: var(--font-size-xs, 0.78rem);
+}
+
+@media (max-width: 960px) {
+  .evolution-audit-cell__row {
+    font-size: 0.72rem;
+  }
+
+  .evolution-audit-cell__row--name {
+    font-size: 0.8rem;
+  }
+}

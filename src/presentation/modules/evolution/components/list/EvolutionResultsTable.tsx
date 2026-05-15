@@ -3,6 +3,7 @@ import type {
   PaginatedResult,
   MedicalEvolutionListItem,
 } from "@/domain/modules/evolution/models/Evolution";
+import type { UserRole } from "@/domain/modules/users/models/User";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import {
@@ -17,6 +18,8 @@ import type {
 } from "@/presentation/modules/shared/components/ui/webcomponents/Tables/wcTables";
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
+import { EvolutionAuditCell } from "./EvolutionAuditCell";
+import "./EvolutionResultsTable.css";
 
 interface EvolutionResultsTableProps {
   result?: PaginatedResult<MedicalEvolutionListItem>;
@@ -25,24 +28,32 @@ interface EvolutionResultsTableProps {
   onPageChange: (page: number) => void;
 }
 
-function formatDateTime(dateValue: string, timeValue?: string | null): string {
-  const formattedDate = new Date(dateValue).toLocaleDateString("es-EC");
-  return timeValue ? `${formattedDate} ${timeValue}` : formattedDate;
-}
-
 function getStatusBadge(status: MedicalEvolutionListItem["status"]) {
   if (status === "CERRADA") {
     return { label: "Cerrada", color: "success" as const };
   }
 
   if (status === "EN_PROCESO") {
-    return { label: "En proceso", color: "info" as const }; 
+    return { label: "En proceso", color: "info" as const };
   }
 
   return { label: "Abierta", color: "warning" as const };
 }
 
+function formatAttentionDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("es-EC", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
 
+function formatAttentionTime(value: string | null): string | null {
+  if (!value) return null;
+  return value.slice(0, 5);
+}
 
 export function EvolutionResultsTable({
   result,
@@ -67,6 +78,7 @@ export function EvolutionResultsTable({
       key: "status",
       name: "Estado",
       align: "center",
+      width: "120px",
       render: (row) => {
         const badge = getStatusBadge(row.status as MedicalEvolutionListItem["status"]);
 
@@ -76,54 +88,95 @@ export function EvolutionResultsTable({
     {
       key: "patient",
       name: "Paciente",
-      render: (row) => (
-        <TableAvatarCell
-          title={String(row.patientName ?? "")}
-          subtitle={`Cédula: ${String(row.patientIdNumber ?? "")}`}
-        />
-      ),
+      render: (row) => {
+        const patientId = String(row.patientId ?? "");
+
+        return (
+          <div className="evolution-patient-cell">
+            <TableAvatarCell
+              title={String(row.patientName ?? "")}
+              subtitle={`Cédula: ${String(row.patientIdNumber ?? "")}`}
+            />
+            <WcButtonIcon
+              variant="terciary"
+              shape="square"
+              size="sm"
+              icon="icon-card-info"
+              title="Ver detalle del paciente"
+              aria-label="Ver detalle del paciente"
+              className="evolution-patient-cell__action"
+              onClick={() => setSelectedPatientId(patientId)}
+            />
+          </div>
+        );
+      },
     },
     {
       key: "attention",
       name: "Atención",
       align: "center",
-      render: (row) =>
-        formatDateTime(
-          String(row.attentionDate ?? row.updatedAt),
-          row.attentionTime as string | null,
-        ),
+      width: "180px",
+      render: (row) => {
+        const dateValue = row.attentionDate as string | null;
+        const timeValue = row.attentionTime as string | null;
+
+        if (!dateValue) {
+          return <span className="evolution-attention-cell__empty">—</span>;
+        }
+
+        const dateLabel = formatAttentionDate(dateValue);
+        const timeLabel = formatAttentionTime(timeValue);
+
+        return (
+          <div className="evolution-attention-cell">
+            <Icon
+              name="icon-calendar-solid"
+              size={14}
+              className="evolution-attention-cell__icon"
+            />
+            <div className="evolution-attention-cell__text">
+              <span className="evolution-attention-cell__date">{dateLabel}</span>
+              {timeLabel ? (
+                <span className="evolution-attention-cell__time">{timeLabel}</span>
+              ) : null}
+            </div>
+          </div>
+        );
+      },
     },
     {
-      key: "openedByName",
-      name: "Abierta por",
-      align: "center",
-      render: (row) => String(row.openedByName ?? "No disponible"),
+      key: "openedBy",
+      name: "Abierta",
+      render: (row) => (
+        <EvolutionAuditCell
+          name={(row.openedByName as string | null) ?? null}
+          role={(row.openedByRole as UserRole | null) ?? null}
+          timestamp={(row.createdAt as string | null) ?? null}
+        />
+      ),
     },
     {
-      key: "updatedAt",
-      name: "Última modificación",
-      align: "center",
-      render: (row) => new Date(String(row.updatedAt)).toLocaleString("es-EC"),
+      key: "updatedBy",
+      name: "Última edición",
+      render: (row) => (
+        <EvolutionAuditCell
+          name={(row.updatedByName as string | null) ?? null}
+          role={(row.updatedByRole as UserRole | null) ?? null}
+          timestamp={(row.updatedAt as string | null) ?? null}
+        />
+      ),
     },
     {
       key: "actions",
       name: "Acciones",
       align: "center",
+      width: "184px",
       render: (row) => {
         const patientId = String(row.patientId ?? "");
         const evolutionId = String(row.id ?? "");
 
         return (
           <TableActionCell>
-            <WcButtonIcon
-              variant="terciary"
-              shape="square"
-              size="sm"
-              icon="icon-card-info"
-              title="Ver paciente"
-              aria-label="Ver paciente"
-              onClick={() => setSelectedPatientId(patientId)}
-            />
             <WcButtonIcon
               variant="terciary"
               shape="square"
@@ -138,8 +191,17 @@ export function EvolutionResultsTable({
               shape="square"
               size="sm"
               icon="icon-eye"
-              title="Ver detalle completo"
-              aria-label="Ver detalle completo"
+              title="Vista de solo lectura (próximamente)"
+              aria-label="Vista de solo lectura (próximamente)"
+              disabled
+            />
+            <WcButtonIcon
+              variant="terciary"
+              shape="square"
+              size="sm"
+              icon="icon-edit"
+              title="Editar evolución"
+              aria-label="Editar evolución"
               onClick={() =>
                 navigate(`/pacientes/${patientId}/historia/evoluciones/${evolutionId}`)
               }
@@ -164,11 +226,15 @@ export function EvolutionResultsTable({
     status: evolution.status,
     patientName: evolution.patientName,
     patientIdNumber: evolution.patientIdNumber,
-    attentionDate: evolution.attentionDate ?? evolution.updatedAt,
-    attentionTime: evolution.attentionTime,
-    openedByName: evolution.openedByName ?? "No disponible",
-    updatedAt: evolution.updatedAt,
     patientId: evolution.patientId,
+    attentionDate: evolution.attentionDate,
+    attentionTime: evolution.attentionTime,
+    openedByName: evolution.openedByName,
+    openedByRole: evolution.openedByRole,
+    updatedByName: evolution.updatedByName,
+    updatedByRole: evolution.updatedByRole,
+    createdAt: evolution.createdAt,
+    updatedAt: evolution.updatedAt,
   }));
 
   return (

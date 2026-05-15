@@ -7,6 +7,7 @@ import type {
   PaginatedResult,
   UpdateEvolutionPayload,
 } from "@/domain/modules/evolution/models/Evolution";
+import type { UserRole } from "@/domain/modules/users/models/User";
 import { EvolutionMapper } from "../mappers/EvolutionMapper";
 import { supabase } from "@/infrastructure/core/supabaseClient";
 import {
@@ -21,14 +22,16 @@ interface EvolutionListRow {
   opened_by: string;
   closed_by: string | null;
   closed_at: string | null;
+  updated_by: string | null;
   created_at: string;
   updated_at: string;
   attention_date: string | null;
   attention_time: string | null;
   clinical_cause: MedicalEvolution["clinicalCause"];
   event_observations: string | null;
-  opener: { first_name: string; last_name: string } | null;
-  closer: { first_name: string; last_name: string } | null;
+  opener: { first_name: string; last_name: string; role: UserRole | null } | null;
+  closer: { first_name: string; last_name: string; role: UserRole | null } | null;
+  editor: { first_name: string; last_name: string; role: UserRole | null } | null;
   medical_record: {
     id: string;
     patient_id: string;
@@ -392,14 +395,16 @@ export class SupabaseEvolutionRepository implements EvolutionRepository {
           opened_by,
           closed_by,
           closed_at,
+          updated_by,
           created_at,
           updated_at,
           attention_date,
           attention_time,
           clinical_cause,
           event_observations,
-          opener:profiles!medical_evolutions_opened_by_fkey(first_name, last_name),
-          closer:profiles!medical_evolutions_closed_by_fkey(first_name, last_name),
+          opener:profiles!medical_evolutions_opened_by_fkey(first_name, last_name, role),
+          closer:profiles!medical_evolutions_closed_by_fkey(first_name, last_name, role),
+          editor:profiles!medical_evolutions_updated_by_fkey(first_name, last_name, role),
           medical_record:medical_records!inner(
             id,
             patient_id,
@@ -481,10 +486,16 @@ export class SupabaseEvolutionRepository implements EvolutionRepository {
           openedByName: row.opener
             ? buildFullName(row.opener.first_name, row.opener.last_name)
             : null,
+          openedByRole: row.opener?.role ?? null,
           closedByName: row.closer
             ? buildFullName(row.closer.first_name, row.closer.last_name)
             : null,
+          closedByRole: row.closer?.role ?? null,
           closedAt: row.closed_at,
+          updatedByName: row.editor
+            ? buildFullName(row.editor.first_name, row.editor.last_name)
+            : null,
+          updatedByRole: row.editor?.role ?? null,
           createdAt: row.created_at,
           updatedAt: row.updated_at,
           clinicalCause: row.clinical_cause,

@@ -14,6 +14,7 @@ import { NotificationBell } from "@/presentation/modules/notifications/component
 import { ActiveUsersFloat } from "@/presentation/modules/users/components/ActiveUsersFloat";
 import { useNotificationSubscription } from "@/presentation/modules/notifications/hooks/useNotificationSubscription";
 import { usePatientSubscription } from "@/presentation/modules/patient/hooks/usePatientSubscription";
+import { useEvolutionSubscription } from "@/presentation/modules/evolution/hooks/useEvolutionSubscription";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import { PatientCreateModal } from "@/presentation/modules/patient/components/Patients/PatientCreateModal";
 import { PatientQuickSearchModal } from "@/presentation/modules/patient/components/Patients/PatientQuickSearchModal";
@@ -47,6 +48,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   usePresenceTracker(user?.id);
   useNotificationSubscription(user?.id);
   usePatientSubscription();
+  useEvolutionSubscription();
 
   const handleLogout = async () => {
     await logout();
