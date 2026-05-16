@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useParams, useNavigate, useBlocker } from "react-router-dom";
 import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -247,23 +247,6 @@ export function EvolutionWorkspacePage() {
   const draftRestoreCheckedRef = useRef<string | null>(null);
 
   const bannerRef = useRef<HTMLDivElement | null>(null);
-
-  // Keep the sidebar's sticky offset in sync with the banner height so that
-  // both can stick to the top without overlapping. The banner height changes
-  // with viewport width, autosave state, etc.
-  useLayoutEffect(() => {
-    const el = bannerRef.current;
-    if (!el) return undefined;
-    const update = () => {
-      const height = el.getBoundingClientRect().height;
-      document.documentElement.style.setProperty("--evolution-banner-height", `${height}px`);
-    };
-    update();
-    if (typeof ResizeObserver === "undefined") return undefined;
-    const observer = new ResizeObserver(update);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if (!evolutionId || !evolution) return;

@@ -2,16 +2,11 @@
   padding: var(--space-6) var(--space-8);
   max-width: 1120px;
   margin: 0 auto;
-  --evolution-banner-height: 140px;
+  --evolution-app-header-offset: 0px;
 }
 
 .evolution-workspace__banner-wrapper {
-  position: sticky;
-  top: 0;
-  z-index: 20;
   background-color: var(--color-bg);
-  padding-top: var(--space-2);
-  margin-top: calc(var(--space-2) * -1);
 }
 
 .evolution-workspace__body {
@@ -23,14 +18,14 @@
 
 .evolution-workspace__sidebar {
   position: sticky;
-  top: calc(var(--evolution-banner-height) + var(--space-3));
+  top: calc(var(--evolution-app-header-offset) + var(--space-2));
   align-self: start;
   z-index: 15;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-3);
-  max-height: calc(100vh - var(--evolution-banner-height) - var(--space-6));
+  max-height: calc(100vh - var(--evolution-app-header-offset) - var(--space-4));
   overflow-y: auto;
   scrollbar-width: thin;
   box-shadow: var(--shadow-sm);
@@ -103,8 +98,8 @@
 
   .evolution-workspace__sidebar {
     position: sticky;
-    top: calc(var(--evolution-banner-height) + var(--space-2));
-    z-index: 10;
+    top: calc(var(--evolution-app-header-offset) + var(--space-1));
+    z-index: 15;
     max-height: none;
     padding: var(--space-2);
     overflow: visible;
