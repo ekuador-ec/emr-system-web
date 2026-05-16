@@ -179,8 +179,9 @@ export function PatientSearchFilters() {
                 display: "flex",
                 alignItems: "center",
                 gap: "var(--space-1)",
-                fontSize: "var(--font-size-sm)",
-                padding: "var(--space-2) var(--space-3)",
+                height: "34px",
+                minHeight: "34px",
+                padding: "0 12px",
               }}
               title="Limpia la búsqueda actual y reinicia todos los filtros"
             >
