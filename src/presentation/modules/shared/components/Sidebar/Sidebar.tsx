@@ -159,7 +159,7 @@ export function Sidebar() {
     setIsHovering(false)
   }
 
-  const showFlyout = isHovering && !isPinned
+  const isExpanded = isPinned || isHovering || isMobileOpen
 
   return (
     <>
@@ -173,15 +173,9 @@ export function Sidebar() {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <aside className={`sidebar ${isPinned ? 'pinned' : 'collapsed'} ${isMobileOpen ? 'mobile-open' : ''}`}>
-          <SidebarContent isExpanded={isPinned || isMobileOpen} />
+        <aside className={`sidebar ${isExpanded ? 'pinned' : 'collapsed'} ${isMobileOpen ? 'mobile-open' : ''}`}>
+          <SidebarContent isExpanded={isExpanded} />
         </aside>
-
-        {showFlyout && (
-          <aside className="sidebar-flyout" aria-hidden="true">
-            <SidebarContent isExpanded={true} />
-          </aside>
-        )}
 
         <button
           className="sidebar-toggle-btn"
