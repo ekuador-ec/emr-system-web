@@ -153,6 +153,27 @@ const NOTIFICATION_REGISTRY: Record<string, NotificationDescriptor> = {
     },
   },
 
+  NEW_MESSAGE: {
+    icon: 'icon-messages',
+    toastVariant: 'info',
+    getContent: (n, uid) => {
+      const sender = actorLabel(n, 'Otro usuario');
+      const preview = asString(n.metadata.preview);
+      const description = isSelfActor(n, uid)
+        ? 'Te enviaste un mensaje:'
+        : `${sender} te envio un mensaje:`;
+      return {
+        title: 'Nuevo mensaje',
+        description: preview ? description : null,
+        primary: preview ?? `${sender} te envio un mensaje.`,
+      };
+    },
+    getRoute: (n) => {
+      const conversationId = asString(n.metadata.conversationId);
+      return conversationId ? `/mensajes?c=${conversationId}` : '/mensajes';
+    },
+  },
+
   TASK_ASSIGNED: {
     icon: 'icon-user-voice',
     toastVariant: 'info',

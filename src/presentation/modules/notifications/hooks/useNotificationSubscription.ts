@@ -5,6 +5,17 @@ import { useToastStore } from '@/presentation/modules/shared/components/Toaster'
 import { NOTIFICATIONS_QUERY_KEY } from './useNotifications';
 import { describeNotification, notificationToastMessage } from '@/presentation/modules/notifications/registry/notificationRegistry';
 import type { Notification } from '@/domain/modules/notifications/models/Notification';
+import { isConversationOpenSomewhere } from '@/presentation/modules/messaging/stores/useMessagingUIStore';
+
+function shouldSuppressToast(notification: Notification): boolean {
+  if (notification.type !== 'NEW_MESSAGE') return false;
+  const conversationId =
+    typeof notification.metadata.conversationId === 'string'
+      ? notification.metadata.conversationId
+      : null;
+  if (!conversationId) return false;
+  return isConversationOpenSomewhere(conversationId);
+}
 
 export function useNotificationSubscription(userId: string | undefined | null) {
   const queryClient = useQueryClient();
@@ -44,6 +55,8 @@ export function useNotificationSubscription(userId: string | undefined | null) {
           };
 
           queryClient.invalidateQueries({ queryKey: [...NOTIFICATIONS_QUERY_KEY, userId] });
+
+          if (shouldSuppressToast(newNotification)) return;
 
           const descriptor = describeNotification(newNotification.type);
           const content = descriptor.getContent(newNotification, userId);

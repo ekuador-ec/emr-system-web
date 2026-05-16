@@ -6,7 +6,9 @@ import { useAuth } from "@/presentation/modules/auth/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Toaster } from "@/presentation/modules/shared/components/Toaster";
 import { Sidebar } from "@/presentation/modules/shared/components/Sidebar";
-import { ActiveUsersFloat } from "@/presentation/modules/users/components/ActiveUsersFloat";
+import { FloatingChatHub } from "@/presentation/modules/messaging/components/FloatingChatHub";
+import { FloatingChatBubbles } from "@/presentation/modules/messaging/components/FloatingChatBubbles";
+import { useMessagingSubscription } from "@/presentation/modules/messaging/hooks/useMessagingSubscription";
 import { FloatingProfileHub } from "@/presentation/modules/shared/components/FloatingProfileHub";
 import {
   FloatingQuickActions,
@@ -46,6 +48,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   useNotificationSubscription(user?.id);
   usePatientSubscription();
   useEvolutionSubscription();
+  useMessagingSubscription(user?.id);
 
   const quickActionsModules: QuickActionsModule[] = [
     {
@@ -112,7 +115,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       <FloatingProfileHub />
       <FloatingQuickActions modules={quickActionsModules} />
-      <ActiveUsersFloat />
+      <FloatingChatHub />
+      <FloatingChatBubbles />
       <Toaster />
 
       {isCreateModalOpen && (

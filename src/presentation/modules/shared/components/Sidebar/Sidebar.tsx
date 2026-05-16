@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/presentation/modules/auth/hooks/useAuth'
+import { useUnreadMessagesTotal } from '@/presentation/modules/messaging/hooks/useUnreadMessagesTotal'
 import './Sidebar.css'
 import { Icon } from './icons/Icon'
 
@@ -8,6 +9,7 @@ interface MenuItem {
   path: string
   label: string
   icon: string
+  badge?: number
 }
 
 interface MenuGroup {
@@ -16,13 +18,14 @@ interface MenuGroup {
 }
 
 function useMenuGroups(): MenuGroup[] {
-  const { isAdmin } = useAuth()
+  const { isAdmin, user } = useAuth()
+  const unreadMessages = useUnreadMessagesTotal(user?.id)
   return [
     {
       label: 'Principal',
       items: [
         { path: '/', label: 'Dashboard', icon: 'icon-dashboard' },
-        { path: '/mensajes', label: 'Mensajes', icon: 'icon-messages' },
+        { path: '/mensajes', label: 'Mensajes', icon: 'icon-messages', badge: unreadMessages },
       ]
     },
     {
@@ -104,8 +107,18 @@ function SidebarContent({ isExpanded }: { isExpanded: boolean }) {
                 >
                   <div className="sidebar-item-icon">
                     <Icon name={item.icon} size={20} />
+                    {!isExpanded && typeof item.badge === 'number' && item.badge > 0 && (
+                      <span className="sidebar-item-badge collapsed-badge">
+                        {item.badge > 9 ? '9+' : item.badge}
+                      </span>
+                    )}
                   </div>
                   <span className="sidebar-item-label">{item.label}</span>
+                  {isExpanded && typeof item.badge === 'number' && item.badge > 0 && (
+                    <span className="sidebar-item-badge">
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                  )}
                 </Link>
               ))}
             </div>

@@ -16,12 +16,24 @@
  * this cache only when the network or the server call fails, and
  * wipes the entry the moment the server-side autosave acknowledges
  * the change.
+ *
+ * The low-level primitives (encryptedSet/Get/clearByPrefix) are also
+ * consumed by the messaging module for its in-flight composer drafts.
+ * Every new prefix must be registered via registerDraftPrefix() so
+ * the logout flow can wipe it from a single call.
  */
 
 import { supabase } from "@/infrastructure/core/supabaseClient";
 
-const STORAGE_PREFIX = "emr:draft:";
+const EVOLUTION_PREFIX = "emr:draft:";
 const HKDF_INFO = "emr-draft-cache-v1";
+
+const REGISTERED_PREFIXES = new Set<string>([EVOLUTION_PREFIX]);
+
+export function registerDraftPrefix(prefix: string): void {
+  if (!prefix) return;
+  REGISTERED_PREFIXES.add(prefix);
+}
 
 export interface DraftCacheEntry<T> {
   payload: T;
@@ -29,7 +41,7 @@ export interface DraftCacheEntry<T> {
 }
 
 function buildKey(evolutionId: string): string {
-  return `${STORAGE_PREFIX}${evolutionId}`;
+  return `${EVOLUTION_PREFIX}${evolutionId}`;
 }
 
 function isBrowserCapable(): boolean {
@@ -96,8 +108,8 @@ function fromBase64(value: string): Uint8Array {
   return bytes;
 }
 
-export async function saveDraft<T>(evolutionId: string, payload: T): Promise<void> {
-  if (!isBrowserCapable() || !evolutionId) return;
+export async function encryptedSet<T>(storageKey: string, payload: T): Promise<void> {
+  if (!isBrowserCapable() || !storageKey) return;
 
   try {
     const key = await deriveKeyFromSession();
@@ -119,19 +131,19 @@ export async function saveDraft<T>(evolutionId: string, payload: T): Promise<voi
       ct: toBase64(ciphertext),
     });
 
-    window.localStorage.setItem(buildKey(evolutionId), blob);
+    window.localStorage.setItem(storageKey, blob);
   } catch {
     /* Cache is best-effort; silently ignore failures. */
   }
 }
 
-export async function loadDraft<T>(
-  evolutionId: string,
+export async function encryptedGet<T>(
+  storageKey: string,
 ): Promise<DraftCacheEntry<T> | null> {
-  if (!isBrowserCapable() || !evolutionId) return null;
+  if (!isBrowserCapable() || !storageKey) return null;
 
   try {
-    const raw = window.localStorage.getItem(buildKey(evolutionId));
+    const raw = window.localStorage.getItem(storageKey);
     if (!raw) return null;
 
     const parsed = JSON.parse(raw) as { v: number; iv: string; ct: string };
@@ -156,22 +168,22 @@ export async function loadDraft<T>(
   }
 }
 
-export function clearDraft(evolutionId: string): void {
-  if (!isBrowserCapable() || !evolutionId) return;
+export function encryptedRemove(storageKey: string): void {
+  if (!isBrowserCapable() || !storageKey) return;
   try {
-    window.localStorage.removeItem(buildKey(evolutionId));
+    window.localStorage.removeItem(storageKey);
   } catch {
     /* Ignore quota / serialization errors. */
   }
 }
 
-export function clearAllDrafts(): void {
-  if (!isBrowserCapable()) return;
+export function clearByPrefix(prefix: string): void {
+  if (!isBrowserCapable() || !prefix) return;
   try {
     const keysToRemove: string[] = [];
     for (let i = 0; i < window.localStorage.length; i++) {
       const key = window.localStorage.key(i);
-      if (key && key.startsWith(STORAGE_PREFIX)) {
+      if (key && key.startsWith(prefix)) {
         keysToRemove.push(key);
       }
     }
@@ -179,4 +191,25 @@ export function clearAllDrafts(): void {
   } catch {
     /* Ignore */
   }
+}
+
+export async function saveDraft<T>(evolutionId: string, payload: T): Promise<void> {
+  if (!evolutionId) return;
+  await encryptedSet(buildKey(evolutionId), payload);
+}
+
+export async function loadDraft<T>(
+  evolutionId: string,
+): Promise<DraftCacheEntry<T> | null> {
+  if (!evolutionId) return null;
+  return encryptedGet<T>(buildKey(evolutionId));
+}
+
+export function clearDraft(evolutionId: string): void {
+  if (!evolutionId) return;
+  encryptedRemove(buildKey(evolutionId));
+}
+
+export function clearAllDrafts(): void {
+  REGISTERED_PREFIXES.forEach((prefix) => clearByPrefix(prefix));
 }

@@ -8,6 +8,7 @@ import { MedicalRecordPage } from "@/presentation/modules/medical-record/pages/M
 import { MedicalRecordsPage } from "@/presentation/modules/medical-record/pages/MedicalRecordsPage";
 import { EvolutionWorkspacePage } from "@/presentation/modules/evolution/pages/EvolutionWorkspacePage";
 import { EvolutionsPage } from "@/presentation/modules/evolution/pages/EvolutionsPage";
+import { MessagesPage } from "@/presentation/modules/messaging/pages/MessagesPage";
 import { ProtectedRoute } from "@/presentation/modules/auth/components/ProtectedRoute";
 import { AppLayout } from "@/presentation/modules/shared/layouts/AppLayout";
 
@@ -76,6 +77,16 @@ const router = createBrowserRouter([
       <ProtectedRoute>
         <AppLayout>
           <EvolutionsPage />
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/mensajes",
+    element: (
+      <ProtectedRoute>
+        <AppLayout>
+          <MessagesPage />
         </AppLayout>
       </ProtectedRoute>
     ),

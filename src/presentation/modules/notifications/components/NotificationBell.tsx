@@ -73,6 +73,7 @@ const TYPE_COLORS: Record<string, { base: string, glow: string }> = {
   NEW_MEDICAL_RECORD: { base: '#10b981', glow: 'rgba(16, 185, 129, 0.4)' }, // Emerald/Teal
   NEW_EVOLUTION: { base: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.4)' }, // Violet
   NEW_USER: { base: '#64748b', glow: 'rgba(100, 116, 139, 0.4)' }, // Slate
+  NEW_MESSAGE: { base: '#06b6d4', glow: 'rgba(6, 182, 212, 0.4)' }, // Cyan
   TASK_ASSIGNED: { base: '#0ea5e9', glow: 'rgba(14, 165, 233, 0.4)' }, // Sky Blue
   SYSTEM_ALERT: { base: '#ef4444', glow: 'rgba(239, 68, 68, 0.4)' }, // Red
 };
