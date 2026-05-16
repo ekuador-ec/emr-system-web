@@ -694,4 +694,40 @@
     <path fill="currentColor" stroke="none" fill-rule="evenodd" clip-rule="evenodd"
       d="M11.54 22.351l.07.04l.028.016a.76.76 0 0 0 .723 0l.028-.015l.071-.041a16.975 16.975 0 0 0 1.144-.742a19.58 19.58 0 0 0 2.683-2.282c1.944-2.083 3.546-5.097 3.082-8.72a8.55 8.55 0 0 0-8.374-7.573a8.55 8.55 0 0 0-8.374 7.573c-.464 3.623 1.138 6.637 3.082 8.72a19.579 19.579 0 0 0 2.683 2.282a16.974 16.974 0 0 0 1.144.742zM12 13.5a3 3 0 1 0 0-6a3 3 0 0 0 0 6z" />
   </symbol>
+
+  <symbol id="icon-send" viewBox="0 0 24 24" stroke="none">
+    <path fill="currentColor" stroke="none"
+      d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404z" />
+  </symbol>
+
+  <symbol id="icon-minimize" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </symbol>
+
+  <symbol id="icon-bell-off" viewBox="0 0 24 24" stroke="none">
+    <path fill="currentColor" stroke="none" fill-rule="evenodd" clip-rule="evenodd"
+      d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l4.012 4.013A6.732 6.732 0 0 0 5.25 9.75v3.443c0 .825-.27 1.628-.77 2.286L3.235 17.16a1.875 1.875 0 0 0 1.493 3.022h5.34a3 3 0 0 0 5.864 0h2.108L20.47 21.53a.75.75 0 1 0 1.06-1.06L3.53 2.47zM12 5.25c-.91 0-1.79.18-2.59.508l11.16 11.16c.1-.292.155-.605.155-.93v-3.444a6.75 6.75 0 0 0-6.75-6.75z" />
+  </symbol>
+
+  <symbol id="icon-message-plus" viewBox="0 0 24 24" stroke="none">
+    <path fill="currentColor" stroke="none" fill-rule="evenodd" clip-rule="evenodd"
+      d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.862 3.405 3.727a4.4 4.4 0 0 0-1.032-.213A21.4 21.4 0 0 0 15.75 6c-1.418 0-2.822.059-4.21.174-2.36.196-4.04 2.19-4.04 4.434v4.286c0 1.69.954 3.239 2.432 3.984l-2.65 2.65a.75.75 0 0 1-1.282-.53V16.97c-.364-.038-.726-.082-1.087-.129-2.008-.26-3.413-2.008-3.413-3.979V6.637c0-1.97 1.405-3.718 3.413-3.979zm7.087 7.342a.75.75 0 0 1 .75.75v1.5h1.5a.75.75 0 0 1 0 1.5h-1.5v1.5a.75.75 0 0 1-1.5 0v-1.5h-1.5a.75.75 0 0 1 0-1.5h1.5v-1.5a.75.75 0 0 1 .75-.75z" />
+  </symbol>
+
+  <symbol id="icon-check-double" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 6 7 17l-5-5" />
+    <path d="m22 10-7.5 7.5L13 16" />
+  </symbol>
+
+  <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <polyline points="12 7 12 12 15 14" />
+  </symbol>
+
+  <symbol id="icon-smile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+    <line x1="9" y1="9" x2="9.01" y2="9" />
+    <line x1="15" y1="9" x2="15.01" y2="9" />
+  </symbol>
 </svg>
