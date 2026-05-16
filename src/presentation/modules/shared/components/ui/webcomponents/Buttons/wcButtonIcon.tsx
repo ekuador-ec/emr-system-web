@@ -1,7 +1,14 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon.css";
 
-type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger" | "terciary";
+type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "outline"
+  | "ghost"
+  | "danger"
+  | "terciary"
+  | "success";
 type ButtonShape = "square" | "circle";
 type ButtonSize = "sm" | "md" | "lg";
 
