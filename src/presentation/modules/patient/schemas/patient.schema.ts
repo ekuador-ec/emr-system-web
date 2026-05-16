@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const NAME_REGEX = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
-const PHONE_REGEX = /^\d{7,10}$/;
 const MULTI_PHONE_REGEX = /^\d{7,10}(?:-\d{7,10})*$/;
 const PATIENT_PHONE_REGEX = /^\d{10}$/;
 const COMPANY_PHONE_REGEX = /^\d{7,10}(?:-\d{7,10})*$/;
