@@ -113,19 +113,19 @@
 
 .evolution-table-action-cell {
   justify-content: center;
-  min-height: var(--space-6);
+  min-height: var(--space-8);
 }
 
 .evolution-table-action-icon.wc-button-icon {
-  width: var(--space-6);
-  height: var(--space-6);
-  min-width: var(--space-6);
-  min-height: var(--space-6);
+  width: var(--space-8);
+  height: var(--space-8);
+  min-width: var(--space-8);
+  min-height: var(--space-8);
 }
 
 .evolution-table-action-icon.wc-button-icon svg {
-  width: var(--font-size-sm);
-  height: var(--font-size-sm);
+  width: var(--font-size-base);
+  height: var(--font-size-base);
 }
 
 .evolution-results-table-card__footer {
