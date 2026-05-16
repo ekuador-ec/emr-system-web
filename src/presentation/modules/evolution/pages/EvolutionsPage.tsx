@@ -15,7 +15,12 @@ import {
   getRecentEvolutionDateRange,
   type EvolutionDateRange,
 } from "@/presentation/modules/evolution/utils/dateRange";
-import { type EvolutionFilters } from "@/domain/modules/evolution/models/Evolution";
+import type {
+  EvolutionFilters,
+  EvolutionStatus,
+  PaginatedResult,
+  MedicalEvolutionListItem,
+} from "@/domain/modules/evolution/models/Evolution";
 import { useEvolutionsListStore } from "@/presentation/modules/evolution/stores/useEvolutionsListStore";
 import "@/presentation/modules/evolution/pages/EvolutionsPage.css";
 
@@ -83,6 +88,9 @@ export function EvolutionsPage() {
   const { addToast } = useToastStore();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [recentPage, setRecentPage] = useState(1);
+  const [recentStatusFilter, setRecentStatusFilter] = useState<EvolutionStatus | "ALL">("ALL");
+  const [recentLocalSearchInput, setRecentLocalSearchInput] = useState("");
+  const [recentLocalSearchApplied, setRecentLocalSearchApplied] = useState("");
 
   const {
     activeTab,
@@ -131,16 +139,6 @@ export function EvolutionsPage() {
   );
   const advancedQuery = useEvolutions(advancedFilters, { enabled: advancedQueryEnabled });
 
-  const recentStats = useMemo(() => {
-    const items = recentQuery.data?.data ?? [];
-    return {
-      total: recentQuery.data?.total ?? 0,
-      abiertas: items.filter((item) => item.status === "ABIERTA").length,
-      enProceso: items.filter((item) => item.status === "EN_PROCESO").length,
-      cerradas: items.filter((item) => item.status === "CERRADA").length,
-    };
-  }, [recentQuery.data?.data, recentQuery.data?.total]);
-
   const activeSearchLabel = appliedSearch.trim()
     ? `Búsqueda: ${appliedSearch.trim()}`
     : "Sin búsqueda textual";
@@ -178,60 +176,159 @@ export function EvolutionsPage() {
     applyFilters(searchInput.trim(), range.startDate, range.endDate);
   };
 
+  const recentStatCards = [
+    {
+      status: "ALL" as const,
+      icon: "icon-table-solid",
+      label: "Todas",
+      caption: "Sin filtro",
+    },
+    {
+      status: "ABIERTA" as const,
+      icon: "icon-note-solid",
+      label: "Abiertas",
+      caption: "Registros activos",
+    },
+    {
+      status: "EN_PROCESO" as const,
+      icon: "icon-calendar-solid",
+      label: "En proceso",
+      caption: "Atención en curso",
+    },
+    {
+      status: "CERRADA" as const,
+      icon: "icon-lock-solid",
+      label: "Cerradas",
+      caption: "Proceso finalizado",
+    },
+  ] as const;
+
+  const activeRecentStatusCard = useMemo(
+    () => recentStatCards.find((card) => card.status === recentStatusFilter) ?? recentStatCards[0],
+    [recentStatCards, recentStatusFilter],
+  );
+
+  const applyRecentLocalSearch = () => {
+    setRecentLocalSearchApplied(recentLocalSearchInput.trim());
+  };
+
+  const recentFilteredResult = useMemo<PaginatedResult<MedicalEvolutionListItem> | undefined>(() => {
+    if (!recentQuery.data) {
+      return undefined;
+    }
+
+    const normalizedSearch = recentLocalSearchApplied.toLowerCase();
+
+    if (recentStatusFilter === "ALL" && !normalizedSearch) {
+      return recentQuery.data;
+    }
+
+    const statusFilteredItems = recentQuery.data.data.filter((item) => {
+      if (recentStatusFilter === "ALL") {
+        return true;
+      }
+      return item.status === recentStatusFilter;
+    });
+
+    const filteredItems = statusFilteredItems.filter((item) => {
+      if (!normalizedSearch) {
+        return true;
+      }
+
+      const searchable = [
+        item.patientName,
+        item.patientIdNumber,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return searchable.includes(normalizedSearch);
+    });
+
+    return {
+      data: filteredItems,
+      total: filteredItems.length,
+      page: 1,
+      limit: Math.max(filteredItems.length, 1),
+    };
+  }, [recentLocalSearchApplied, recentQuery.data, recentStatusFilter]);
+
+  const recentEmptyMessage = useMemo(() => {
+    if (recentStatusFilter === "ABIERTA") {
+      return "No se encontraron evoluciones abiertas en los registros cargados.";
+    }
+
+    if (recentStatusFilter === "EN_PROCESO") {
+      return "No se encontraron evoluciones en proceso en los registros cargados.";
+    }
+
+    if (recentStatusFilter === "CERRADA") {
+      return "No se encontraron evoluciones cerradas en los registros cargados.";
+    }
+
+    if (recentLocalSearchApplied) {
+      return "No hay coincidencias en los registros cargados para esta búsqueda.";
+    }
+
+    return "No se encontraron evoluciones médicas recientes.";
+  }, [recentLocalSearchApplied, recentStatusFilter]);
+
+  const activeRecentFilterTotal = recentFilteredResult?.total ?? 0;
+
   const recentTab = (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-5)" }}>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: "var(--space-3)",
-        }}
-      >
-        <div
-          className="card"
-          style={{ padding: "var(--space-4)", borderLeft: "4px solid var(--color-warning)" }}
-        >
-          <div style={{ fontSize: "var(--font-size-xs)", color: "var(--color-text-secondary)" }}>
-            Abiertas
+    <div className="evolutions-recent">
+      <div className="evolutions-recent-filter-layout">
+        <section className="card evolutions-recent-filter-panel">
+          <div className="evolutions-recent-filter-panel__header">
+            <h4 className="evolutions-recent-filter-panel__title">Filtrar resultados por estado</h4>
           </div>
-          <div
-            style={{ fontSize: "var(--font-size-2xl)", fontWeight: "var(--font-weight-semibold)" }}
-          >
-            {recentStats.abiertas}
+          <div className="evolutions-recent-filter-panel__controls">
+            <div className="evolutions-recent-filter-panel__actions">
+              {recentStatCards.map((card) => (
+                <WcButton
+                  key={card.status}
+                  variant={recentStatusFilter === card.status ? "primary" : "terciary"}
+                  className="evolutions-recent-filter-panel__button"
+                  onClick={() => setRecentStatusFilter(card.status)}
+                  aria-pressed={recentStatusFilter === card.status}
+                >
+                  <span className="evolutions-recent-filter-panel__button-content">
+                    <Icon name={card.icon} size={14} />
+                    <span className="evolutions-recent-filter-panel__button-label">{card.label}</span>
+                  </span>
+                </WcButton>
+              ))}
+            </div>
+            <WcSearchInput
+              value={recentLocalSearchInput}
+              onValueChange={setRecentLocalSearchInput}
+              placeholder="Buscar paciente"
+              wrapperClassName="evolutions-recent-filter-panel__search"
+              aria-label="Buscar en resultados cargados"
+              showSubmitButton
+              submitButtonLabel="Buscar"
+              onSubmit={applyRecentLocalSearch}
+              onClear={() => {
+                setRecentLocalSearchInput("");
+                setRecentLocalSearchApplied("");
+              }}
+              submitButtonDisabled={recentLocalSearchInput.trim() === recentLocalSearchApplied}
+            />
           </div>
-        </div>
-        <div
-          className="card"
-          style={{ padding: "var(--space-4)", borderLeft: "4px solid var(--color-primary)" }}
-        >
-          <div style={{ fontSize: "var(--font-size-xs)", color: "var(--color-text-secondary)" }}>
-            En proceso
-          </div>
-          <div
-            style={{ fontSize: "var(--font-size-2xl)", fontWeight: "var(--font-weight-semibold)" }}
-          >
-            {recentStats.enProceso}
-          </div>
-        </div>
-        <div
-          className="card"
-          style={{ padding: "var(--space-4)", borderLeft: "4px solid var(--color-success)" }}
-        >
-          <div style={{ fontSize: "var(--font-size-xs)", color: "var(--color-text-secondary)" }}>
-            Cerradas
-          </div>
-          <div
-            style={{ fontSize: "var(--font-size-2xl)", fontWeight: "var(--font-weight-semibold)" }}
-          >
-            {recentStats.cerradas}
-          </div>
-        </div>
+        </section>
+
+        <aside className="evolutions-recent-status-card" aria-live="polite">
+          <p className="evolutions-recent-status-card__title">Total</p>
+          <div className="evolutions-recent-status-card__value">{activeRecentFilterTotal}</div>
+          <p className="evolutions-recent-status-card__state">{activeRecentStatusCard.label}</p>
+        </aside>
       </div>
 
       <EvolutionResultsTable
-        result={recentQuery.data}
+        result={recentFilteredResult}
         isLoading={recentQuery.isFetching}
-        emptyMessage="No se encontraron evoluciones médicas recientes."
+        emptyMessage={recentEmptyMessage}
         onPageChange={setRecentPage}
       />
     </div>
@@ -252,7 +349,8 @@ export function EvolutionsPage() {
           display: "flex",
           flexDirection: "column",
           gap: "var(--space-4)",
-          background: "linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(15, 23, 42, 0.02))",
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 10%, transparent), color-mix(in srgb, var(--color-bg) 18%, var(--color-surface)))",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3)", flexWrap: "wrap" }}>
@@ -280,7 +378,7 @@ export function EvolutionsPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) 260px",
+            gridTemplateColumns: "minmax(0, 1fr) calc(var(--space-10) * 6.5)",
             gap: "var(--space-3)",
             alignItems: "end",
           }}
@@ -367,7 +465,7 @@ export function EvolutionsPage() {
             <span
               style={{
                 padding: "var(--space-1) var(--space-2)",
-                borderRadius: "999px",
+                borderRadius: "var(--radius-full)",
                 border: "1px solid var(--color-border)",
               }}
             >
@@ -376,7 +474,7 @@ export function EvolutionsPage() {
             <span
               style={{
                 padding: "var(--space-1) var(--space-2)",
-                borderRadius: "999px",
+                borderRadius: "var(--radius-full)",
                 border: "1px solid var(--color-border)",
               }}
             >
@@ -436,19 +534,25 @@ export function EvolutionsPage() {
   ];
 
   return (
-    <div style={{ padding: "var(--space-8)", maxWidth: "1300px", margin: "0 auto" }}>
+    <div
+      style={{
+        padding: "var(--space-8)",
+        maxWidth: "calc(var(--space-10) * 32.5)",
+        margin: "0 auto",
+      }}
+    >
       <WcModuleHeader
         moduleName="Módulo clínico"
         moduleIcon="icon-medical-evolution"
         title="Evoluciones Médicas"
         description="Supervisa las evoluciones creadas o modificadas recientemente, filtra por paciente o historia clínica y abre nuevas evoluciones sin salir del flujo operativo."
       >
-        <WcButton variant="secondary" onClick={() => navigate("/historias-clinicas")}>
-          <Icon name="icon-clinical-history" size={16} />
+        <WcButton variant="primary" onClick={() => navigate("/historias-clinicas")}>
+          <Icon name="icon-clinical-history" size={14} />
           Historias Clínicas
         </WcButton>
-        <WcButton variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-          <Icon name="icon-add-file" size={16} />
+        <WcButton variant="terciary" onClick={() => setIsCreateModalOpen(true)}>
+          <Icon name="icon-add-file" size={14} />
           Nueva Evolución
         </WcButton>
       </WcModuleHeader>
