@@ -67,13 +67,6 @@
   white-space: nowrap;
 }
 
-.patients-contact-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
 .patients-name-cell {
   display: flex;
   flex-direction: column;

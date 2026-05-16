@@ -113,7 +113,7 @@ export function MedicalRecordsPage() {
               icon: <Icon name="icon-clinical-history" size={16} />,
               content: isLoading ? (
                 <div className="card" style={{ padding: "var(--space-8)", textAlign: "center" }}>
-                  Cargando historias clinicas...
+                  Cargando historias clínicas...
                 </div>
               ) : isError && validationMessage ? (
                 <div

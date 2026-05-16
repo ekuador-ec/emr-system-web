@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PatientDetailsDrawer } from "@/presentation/modules/patient/components/Patients/PatientDetailsDrawer";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
@@ -25,6 +25,8 @@ import { useEvolutionsListStore } from "@/presentation/modules/evolution/stores/
 import "@/presentation/modules/evolution/pages/EvolutionsPage.css";
 
 const defaultRange = getRecentEvolutionDateRange();
+const RECENT_PAGE_SIZE = 8;
+const RECENT_FETCH_LIMIT = 1000;
 
 function isDateRangeValid(startDate: string, endDate: string, searchInput: string) {
   if (!startDate && !endDate) {
@@ -115,10 +117,10 @@ export function EvolutionsPage() {
       buildFilters({
         startDate: defaultRange.startDate,
         endDate: undefined,
-        page: recentPage,
-        limit: 8,
+        page: 1,
+        limit: RECENT_FETCH_LIMIT,
       }),
-    [recentPage],
+    [],
   );
 
   const advancedFilters = useMemo(
@@ -128,7 +130,6 @@ export function EvolutionsPage() {
         startDate: appliedStartDate,
         endDate: appliedEndDate,
         page: advancedPage,
-        limit: 10,
       }),
     [advancedPage, appliedEndDate, appliedSearch, appliedStartDate],
   );
@@ -209,20 +210,16 @@ export function EvolutionsPage() {
   );
 
   const applyRecentLocalSearch = () => {
+    setRecentPage(1);
     setRecentLocalSearchApplied(recentLocalSearchInput.trim());
   };
 
-  const recentFilteredResult = useMemo<PaginatedResult<MedicalEvolutionListItem> | undefined>(() => {
+  const recentFilteredItems = useMemo<MedicalEvolutionListItem[]>(() => {
     if (!recentQuery.data) {
-      return undefined;
+      return [];
     }
 
     const normalizedSearch = recentLocalSearchApplied.toLowerCase();
-
-    if (recentStatusFilter === "ALL" && !normalizedSearch) {
-      return recentQuery.data;
-    }
-
     const statusFilteredItems = recentQuery.data.data.filter((item) => {
       if (recentStatusFilter === "ALL") {
         return true;
@@ -246,13 +243,33 @@ export function EvolutionsPage() {
       return searchable.includes(normalizedSearch);
     });
 
-    return {
-      data: filteredItems,
-      total: filteredItems.length,
-      page: 1,
-      limit: Math.max(filteredItems.length, 1),
-    };
+    return filteredItems;
   }, [recentLocalSearchApplied, recentQuery.data, recentStatusFilter]);
+
+  const recentFilteredTotal = recentFilteredItems.length;
+  const recentTotalPages = Math.max(1, Math.ceil(recentFilteredTotal / RECENT_PAGE_SIZE));
+
+  useEffect(() => {
+    if (recentPage > recentTotalPages) {
+      setRecentPage(recentTotalPages);
+    }
+  }, [recentPage, recentTotalPages]);
+
+  const recentFilteredResult = useMemo<PaginatedResult<MedicalEvolutionListItem> | undefined>(() => {
+    if (!recentQuery.data) {
+      return undefined;
+    }
+
+    const pageStart = (recentPage - 1) * RECENT_PAGE_SIZE;
+    const paginatedItems = recentFilteredItems.slice(pageStart, pageStart + RECENT_PAGE_SIZE);
+
+    return {
+      data: paginatedItems,
+      total: recentFilteredTotal,
+      page: recentPage,
+      limit: RECENT_PAGE_SIZE,
+    };
+  }, [recentFilteredItems, recentFilteredTotal, recentPage, recentQuery.data]);
 
   const recentEmptyMessage = useMemo(() => {
     if (recentStatusFilter === "ABIERTA") {
@@ -274,7 +291,7 @@ export function EvolutionsPage() {
     return "No se encontraron evoluciones médicas recientes.";
   }, [recentLocalSearchApplied, recentStatusFilter]);
 
-  const activeRecentFilterTotal = recentFilteredResult?.total ?? 0;
+  const activeRecentFilterTotal = recentFilteredTotal;
 
   const recentTab = (
     <div className="evolutions-recent">
@@ -290,7 +307,10 @@ export function EvolutionsPage() {
                   key={card.status}
                   variant={recentStatusFilter === card.status ? "primary" : "terciary"}
                   className="evolutions-recent-filter-panel__button"
-                  onClick={() => setRecentStatusFilter(card.status)}
+                  onClick={() => {
+                    setRecentPage(1);
+                    setRecentStatusFilter(card.status);
+                  }}
                   aria-pressed={recentStatusFilter === card.status}
                 >
                   <span className="evolutions-recent-filter-panel__button-content">
@@ -310,6 +330,7 @@ export function EvolutionsPage() {
               submitButtonLabel="Buscar"
               onSubmit={applyRecentLocalSearch}
               onClear={() => {
+                setRecentPage(1);
                 setRecentLocalSearchInput("");
                 setRecentLocalSearchApplied("");
               }}
