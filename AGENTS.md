@@ -114,7 +114,7 @@ src/
         utils/             Helpers locales del módulo
 ```
 
-Módulos activos: `auth`, `catalog`, `dashboard`, `evolution`, `medical-record`, `notifications`, `patient`, `shared`, `users`.
+Módulos activos: `auth`, `catalog`, `dashboard`, `evolution`, `medical-record`, `messaging`, `notifications`, `patient`, `shared`, `users`.
 
 ## Mapa de Rutas (`src/App.tsx`)
 
@@ -128,6 +128,7 @@ Módulos activos: `auth`, `catalog`, `dashboard`, `evolution`, `medical-record`,
 | `/pacientes/:patientId/historia/evoluciones/:evolutionId` | `EvolutionWorkspacePage` | Autenticado |
 | `/historias-clinicas` | `MedicalRecordsPage` | Autenticado |
 | `/evoluciones` | `EvolutionsPage` | Autenticado |
+| `/mensajes` | `MessagesPage` | Autenticado |
 | `/admin/users` | `UsersManagementPage` | `admin` |
 | `*` | Redirección a `/` | - |
 
@@ -226,7 +227,7 @@ Atenciones / notas evolutivas asociadas a una historia clínica. Incluye flujo e
 ### 7. Notifications (`notifications`)
 Centro de notificaciones in-app con conteo de no leídas, marcar como leída individual o masivamente, y actualización en tiempo real.
 
-- Domain: `Notification` (incluye `metadata: NotificationMetadata`), `KnownNotificationType` (`NEW_USER` | `NEW_PATIENT` | `NEW_MEDICAL_RECORD` | `NEW_EVOLUTION` | `TASK_ASSIGNED` | `SYSTEM_ALERT`), `NotificationType` (unión abierta).
+- Domain: `Notification` (incluye `metadata: NotificationMetadata`), `KnownNotificationType` (`NEW_USER` | `NEW_PATIENT` | `NEW_MEDICAL_RECORD` | `NEW_EVOLUTION` | `NEW_MESSAGE` | `TASK_ASSIGNED` | `SYSTEM_ALERT`), `NotificationType` (unión abierta).
 - Application: `NotificationService` (servicio agrupado: `getNotifications`, `markAsRead`, `markAllAsRead`).
 - Infrastructure: `SupabaseNotificationRepository` lee `metadata` desde la fila y deriva `actorName` desde `metadata.actorName`. Ya **no** consulta `profiles` (lo cual fallaba con RLS para no-admins).
 - Backend (`supabase/migrations/`, repo separado):
@@ -260,12 +261,34 @@ Administración de usuarios solo para `admin`: invitación (Edge Function), edic
 - Infrastructure: `SupabaseUserRepository` (RPCs de admin, edge function `invite-user`, presence channel `online-users`).
 - Presentation:
   - Pages: `UsersManagementPage` (tabla / cards, filtros, acciones).
-  - Components: `InviteUserModal`, `UserProfileModal`, `UserUpdatePasswordModal`, `UsersQuickFilterPopover`, `ActiveUsersFloat`, `wcUserCard`.
+  - Components: `InviteUserModal`, `UserProfileModal`, `UserUpdatePasswordModal`, `UsersQuickFilterPopover`, `wcUserCard`. (El antiguo `ActiveUsersFloat` fue reemplazado por `FloatingChatHub` del módulo `messaging`, que ahora muestra usuarios en línea a todos los roles, no solo a admin.)
   - Hooks: `useAdminUsers`, `useUpdateProfile`, `usePresenceTracker`, `usePresenceSubscription`, `useProfilesSubscription`.
   - Store: `useUserStore`.
   - Schemas: `user.schema.ts`, `admin.schema.ts`.
 
-### 9. Shared (`shared`)
+### 9. Messaging (`messaging`)
+Mensajería 1:1 en tiempo real entre usuarios autenticados. Página dedicada `/mensajes` (lista + chat) y sistema de burbujas flotantes estilo Messenger disponible globalmente. Soporta envío con Enter, indicador "escribiendo", presencia online reutilizada del módulo users, conteo de no leídos, silenciar conversaciones y borradores cifrados en localStorage. Los mensajes y conversaciones inactivas se eliminan automáticamente a los 30 días vía `pg_cron`.
+
+- Domain: `Conversation`, `ConversationParticipantSummary`, `ConversationType` (`direct` | `group`), `MessagingContact`, `Message`, `MessagePage`, `ConversationRepository`, `MessageRepository` (+ `ListMessagesOptions`).
+- Application: `ListConversationsUseCase`, `GetConversationUseCase`, `OpenDirectConversationUseCase`, `ListMessagesUseCase` (paginación cursor `before` + límite 50), `SendMessageUseCase` (valida 1–4000 chars, trim), `MarkConversationReadUseCase`, `ToggleConversationMuteUseCase`, `ListMessagingContactsUseCase`.
+- Infrastructure: `SupabaseConversationRepository` (combina `listForUser` con RPC `get_unread_counts` y ordena por `last_message_at`; usa RPC `get_or_create_direct_conversation`, `mark_conversation_read`, `list_messaging_contacts`), `SupabaseMessageRepository` (`listByConversation` con cursor descendente, `send` con `sender_id = auth.uid()`).
+- Backend (`supabase/migrations/`):
+  - `40_conversations_schema.sql`: tablas `conversations` y `conversation_participants` con RLS (solo participantes), RPC `get_or_create_direct_conversation` (SECURITY DEFINER).
+  - `41_messages_schema.sql`: tabla `messages` con RLS, trigger `touch_conversation_on_message` que actualiza `last_message_*` del padre, RPCs `mark_conversation_read` y `get_unread_counts`.
+  - `42_messages_realtime_and_notify.sql`: añade `conversations`, `conversation_participants` y `messages` a la publication `supabase_realtime`. Trigger `notify_new_message` que **deduplica** notificaciones `NEW_MESSAGE` por destinatario y conversación (refresca la existente no leída en vez de crear una nueva) — esto evita inundar la campana durante envíos rápidos.
+  - `43_messages_cleanup_30d.sql`: helper `public.run_messaging_cleanup()` + job `pg_cron` diario a las 03:15 UTC.
+  - `44_list_messaging_contacts.sql`: RPC `list_messaging_contacts()` (SECURITY DEFINER, accesible a `authenticated`) que devuelve el subset mínimo de profiles + presencia para alimentar el selector de contactos sin exponer email/identification_number.
+- Presentation:
+  - Pages: `MessagesPage` (layout 2-paneles + soporte deep-link `?c=<conversationId>`).
+  - Components: `ConversationList`, `ConversationListItem`, `ChatWindow` (header + lista + composer; reusable en página y burbuja vía prop `compact`), `MessageList` (agrupa por día y por sender), `MessageBubble`, `MessageComposer` (`Enter` envía, `Shift+Enter` salto), `NewChatPicker` (modal con `WcModal` + `WcSearchInput`), `UserAvatar`, `FloatingChatHub` (botón flotante + popover con tabs Chats/Usuarios), `FloatingChatBubbles` (stack de mini-ventanas estilo Messenger, máx 3 en desktop).
+  - Hooks: `useConversations`, `useConversation`, `useMessagingContacts`, `useOpenDirectConversation`, `useMarkConversationRead`, `useToggleConversationMute`, `useMessages` (`useInfiniteQuery`), `useSendMessage`, `useMessagingSubscription` (Realtime: INSERT/UPDATE en messages, conversations y conversation_participants — auto-pop burbuja minimizada en mensajes entrantes con conversación cerrada), `useTypingChannel` (Broadcast Realtime en `messaging:typing:<convId>`), `useMessageDraft` (debounce 500ms), `useUnreadMessagesTotal` (badge sidebar).
+  - Store: `useMessagingUIStore` (Zustand: `activeConversationId`, `bubbles`, `isHubOpen`, `hubTab`, `isNewChatPickerOpen`; **sin `persist`**). Export auxiliar `isConversationOpenSomewhere(id)` para suprimir toasts cuando la conv. ya está visible.
+  - Schemas: `message.schema.ts` (Zod: trim, 1–4000 chars).
+  - Utils: `formatMessageTime.ts` (`formatMessageTime`, `formatRelativeShort`, `formatDayHeading`, `isSameDay`, `fullName`, `userInitials`), `messageDraftCache.ts` (envoltorio sobre `infrastructure/core/draftCache` para borradores cifrados con prefijo `emr:msg-draft:`).
+- Borradores cifrados: el módulo añade el prefijo `emr:msg-draft:` al registro global de `draftCache`. La función `clearAllDrafts()` (invocada desde `useAuth` al hacer logout) borra automáticamente tanto los borradores de EM como los de mensajería. Cumple la excepción autorizada en AGENTS.md (cifrado AES-GCM con clave derivada del `access_token` vía HKDF).
+- Notificaciones: el tipo `NEW_MESSAGE` está registrado en `notificationRegistry.ts`. La metadata incluye `actorName`, `conversationId` y `preview`. `useNotificationSubscription` suprime el toast si `isConversationOpenSomewhere(conversationId)` devuelve `true`.
+
+### 10. Shared (`shared`)
 Capa transversal con utilidades, validadores, storage y la librería de UI (`Wc*`).
 
 - Domain: `StorageRepository` (avatares), `validateEcCedula` (algoritmo Módulo 10 ecuatoriano: 10 dígitos, provincia 01-24, tercer dígito 0-5).
