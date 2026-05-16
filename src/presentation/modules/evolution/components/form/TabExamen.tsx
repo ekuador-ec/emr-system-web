@@ -1,5 +1,6 @@
 import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { ChangeEvent } from "react";
 import type { UpdateEvolutionDraftFormValues } from "../../schemas/evolution.schema";
 import type {
@@ -12,17 +13,8 @@ import type {
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
-import { WcCheckbox } from "@/presentation/modules/shared/components/ui/webcomponents/Checkbox/WcCheckbox";
-import {
-  WcField,
-  WcFormGrid,
-  WcFormSection,
-} from "@/presentation/modules/shared/components/ui/webcomponents/Forms";
-import {
-  WcInput,
-  WcSelect,
-} from "@/presentation/modules/shared/components/ui/webcomponents/Inputs";
-import { WcTextareaExpand } from "@/presentation/modules/shared/components/ui/webcomponents/Inputs/wcTextareaExpand";
+import { WcFormSection } from "@/presentation/modules/shared/components/ui/webcomponents/Forms";
+import { WcSelect } from "@/presentation/modules/shared/components/ui/webcomponents/Inputs";
 import { BodyDiagramEditor } from "@/presentation/modules/evolution/components/body-diagram/BodyDiagram";
 import "./TabExamen.css";
 
@@ -74,76 +66,134 @@ const INJURY_OPTIONS = [
   { value: "OTRO", label: "Otro" },
 ];
 
-const ROW_CARD_STYLE = {
-  backgroundColor: "var(--color-bg)",
-  border: "1px solid var(--color-border)",
-  borderRadius: "var(--radius-md)",
-  padding: "var(--space-3)",
+const ROW_CONTAINER_STYLE = {
   display: "flex",
   flexDirection: "column" as const,
-  gap: "var(--space-3)",
-};
-
-const ROW_HEADER_STYLE = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: "var(--space-2)",
-  paddingBottom: "var(--space-2)",
-  borderBottom: "1px dashed var(--color-border)",
-};
-
-const ROW_TITLE_STYLE = {
-  margin: 0,
-  fontFamily: "var(--font-heading)",
-  fontSize: "var(--font-size-xs)",
-  fontWeight: 600,
-  color: "var(--color-text-secondary)",
-  textTransform: "uppercase" as const,
-  letterSpacing: "0.04em",
-};
-
-const EMPTY_STATE_STYLE = {
-  color: "var(--color-text-secondary)",
-  fontSize: "0.875rem",
-  margin: 0,
+  gap: "var(--space-6)",
 };
 
 interface AutoResizeTextareaProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  modalTitle?: string;
 }
 
-function AutoResizeTextarea({ value, onChange, placeholder }: AutoResizeTextareaProps) {
+function AutoResizeTextarea({
+  value,
+  onChange,
+  placeholder,
+  modalTitle = "Descripción",
+}: AutoResizeTextareaProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  const modalRef = useRef<HTMLTextAreaElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [container, setContainer] = useState<HTMLElement | null>(null);
+  const titleId = useId();
 
   const autosize = (el: HTMLTextAreaElement | null) => {
     if (!el) return;
     el.style.height = "auto";
+    if (!el.value) {
+      el.style.height = "";
+      return;
+    }
     el.style.height = `${el.scrollHeight}px`;
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     autosize(ref.current);
   }, [value]);
 
+  useLayoutEffect(() => {
+    if (expanded) autosize(modalRef.current);
+  }, [expanded, value]);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const section = rootRef.current?.closest("section") as HTMLElement | null;
+    if (section) {
+      section.style.position = "relative";
+      setContainer(section);
+    }
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExpanded(false);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [expanded]);
+
+  useEffect(() => {
+    if (expanded) {
+      requestAnimationFrame(() => modalRef.current?.focus());
+    }
+  }, [expanded]);
+
+  const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    onChange(event.target.value);
+    autosize(event.target);
+  };
+
   return (
-    <textarea
-      ref={ref}
-      rows={1}
-      value={value}
-      placeholder={placeholder}
-      onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
-        onChange(event.target.value);
-        autosize(event.target);
-      }}
-    />
+    <div ref={rootRef} className="tab-examen-row__textarea">
+      <textarea
+        ref={ref}
+        rows={1}
+        value={value}
+        placeholder={placeholder}
+        onChange={handleChange}
+      />
+      <button
+        type="button"
+        className="tab-examen-row__textarea-expand"
+        onClick={() => setExpanded(true)}
+        aria-label="Expandir descripción"
+        title="Expandir"
+      >
+        <Icon name="icon-maximize" size={12} />
+      </button>
+      {expanded && container
+        ? createPortal(
+            <div
+              className="tab-examen-row__overlay"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={titleId}
+              onClick={() => setExpanded(false)}
+            >
+              <div
+                className="tab-examen-row__overlay-card"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <header className="tab-examen-row__overlay-header">
+                  <h4 id={titleId}>{modalTitle}</h4>
+                  <button
+                    type="button"
+                    className="tab-examen-row__overlay-close"
+                    onClick={() => setExpanded(false)}
+                    aria-label="Cerrar"
+                  >
+                    <Icon name="icon-x" size={14} />
+                  </button>
+                </header>
+                <textarea
+                  ref={modalRef}
+                  value={value}
+                  placeholder={placeholder}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>,
+            container,
+          )
+        : null}
+    </div>
   );
 }
 
 export function TabExamen() {
-  const { control, register } = useFormContext<UpdateEvolutionDraftFormValues>();
+  const { control } = useFormContext<UpdateEvolutionDraftFormValues>();
 
   const {
     fields: systemsFields,
@@ -193,10 +243,10 @@ export function TabExamen() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
+    <div style={ROW_CONTAINER_STYLE}>
       <WcFormSection
-        title="Revisión por sistemas"
-        subtitle="Cada fila combina el estado de la vía aérea y la condición general, con una descripción única."
+        title="Enfermedad actual y Revisión de sistemas"
+        info="Describir cronología, localización, características, intensidad, frecuencia, factores agravantes."
         actions={
           <WcButton
             variant="terciary"
@@ -208,15 +258,60 @@ export function TabExamen() {
         }
       >
         {systemsFields.length === 0 ? (
-          <p style={EMPTY_STATE_STYLE}>
+          <p className="tab-examen-injuries__empty">
             No hay revisiones registradas. Haz clic en "Agregar combinación".
           </p>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+          <div className="tab-examen-injuries__list">
             {systemsFields.map((field, index) => (
-              <div key={field.id} style={ROW_CARD_STYLE}>
-                <div style={ROW_HEADER_STYLE}>
-                  <h4 style={ROW_TITLE_STYLE}>Combinación {index + 1}</h4>
+              <div
+                key={field.id}
+                className="tab-examen-row tab-examen-row--system"
+              >
+                <div className="tab-examen-row__number tab-examen-row__number--exam">
+                  {index + 1}
+                </div>
+                <div className="tab-examen-row__select">
+                  <Controller
+                    control={control}
+                    name={`systemsReview.${index}.airwayStatus` as const}
+                    render={({ field: f }) => (
+                      <WcSelect
+                        value={f.value ?? null}
+                        onChange={(value) => f.onChange(value as AirwayStatus)}
+                        options={AIRWAY_OPTIONS}
+                      />
+                    )}
+                  />
+                </div>
+                <div className="tab-examen-row__select">
+                  <Controller
+                    control={control}
+                    name={`systemsReview.${index}.generalCondition` as const}
+                    render={({ field: f }) => (
+                      <WcSelect
+                        value={f.value ?? null}
+                        onChange={(value) => f.onChange(value as GeneralCondition)}
+                        options={GENERAL_CONDITION_OPTIONS}
+                      />
+                    )}
+                  />
+                </div>
+                <div className="tab-examen-row__description">
+                  <Controller
+                    control={control}
+                    name={`systemsReview.${index}.description` as const}
+                    render={({ field: f }) => (
+                      <AutoResizeTextarea
+                        value={f.value ?? ""}
+                        onChange={f.onChange}
+                        placeholder="Cronología, características, intensidad, factores agravantes..."
+                        modalTitle="Enfermedad actual / Revisión de sistemas"
+                      />
+                    )}
+                  />
+                </div>
+                <div className="tab-examen-row__delete">
                   <WcButtonIcon
                     variant="danger"
                     shape="square"
@@ -224,53 +319,9 @@ export function TabExamen() {
                     onClick={() => removeSystem(index)}
                     aria-label={`Eliminar combinación ${index + 1}`}
                   >
-                    <Icon name="icon-trash" size={16} />
+                    <Icon name="icon-trash" size={14} />
                   </WcButtonIcon>
                 </div>
-                <WcFormGrid columns={2}>
-                  <WcField label="Vía aérea">
-                    <Controller
-                      control={control}
-                      name={`systemsReview.${index}.airwayStatus` as const}
-                      render={({ field: f }) => (
-                        <WcSelect
-                          value={f.value ?? null}
-                          onChange={(value) => f.onChange(value as AirwayStatus)}
-                          options={AIRWAY_OPTIONS}
-                        />
-                      )}
-                    />
-                  </WcField>
-                  <WcField label="Condición general">
-                    <Controller
-                      control={control}
-                      name={`systemsReview.${index}.generalCondition` as const}
-                      render={({ field: f }) => (
-                        <WcSelect
-                          value={f.value ?? null}
-                          onChange={(value) => f.onChange(value as GeneralCondition)}
-                          options={GENERAL_CONDITION_OPTIONS}
-                        />
-                      )}
-                    />
-                  </WcField>
-                  <WcField label="Descripción" spanFull>
-                    <Controller
-                      control={control}
-                      name={`systemsReview.${index}.description` as const}
-                      render={({ field: f }) => (
-                        <WcTextareaExpand
-                          value={f.value ?? ""}
-                          onChange={f.onChange}
-                          placeholder="Hallazgos clínicos, manejo aplicado..."
-                          minRows={2}
-                          maxRows={5}
-                          label="Descripción"
-                        />
-                      )}
-                    />
-                  </WcField>
-                </WcFormGrid>
               </div>
             ))}
           </div>
@@ -279,6 +330,7 @@ export function TabExamen() {
 
       <WcFormSection
         title="Examen físico"
+        info="Cada fila numera una región anatómica, marca si presenta patología y permite extender los hallazgos."
         actions={
           <WcButton
             variant="terciary"
@@ -286,20 +338,75 @@ export function TabExamen() {
               appendExam({ region: "OTRO", hasPathology: false, description: "" })
             }
           >
-            <Icon name="icon-add" size={16} /> Agregar
+            <Icon name="icon-add" size={16} /> Agregar región
           </WcButton>
         }
       >
         {examFields.length === 0 ? (
-          <p style={EMPTY_STATE_STYLE}>
-            No hay exámenes registrados. Haz clic en "Agregar".
+          <p className="tab-examen-injuries__empty">
+            No hay regiones registradas. Haz clic en "Agregar región".
           </p>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+          <div className="tab-examen-injuries__list">
             {examFields.map((field, index) => (
-              <div key={field.id} style={ROW_CARD_STYLE}>
-                <div style={ROW_HEADER_STYLE}>
-                  <h4 style={ROW_TITLE_STYLE}>Región {index + 1}</h4>
+              <div
+                key={field.id}
+                className="tab-examen-row tab-examen-row--exam"
+              >
+                <div className="tab-examen-row__number tab-examen-row__number--exam">
+                  {index + 1}
+                </div>
+                <div className="tab-examen-row__select">
+                  <Controller
+                    control={control}
+                    name={`physicalExams.${index}.region` as const}
+                    render={({ field: f }) => (
+                      <WcSelect
+                        value={f.value ?? null}
+                        onChange={(value) => f.onChange(value as PhysicalExamRegion)}
+                        options={REGION_OPTIONS}
+                      />
+                    )}
+                  />
+                </div>
+                <Controller
+                  control={control}
+                  name={`physicalExams.${index}.hasPathology` as const}
+                  render={({ field: f }) => {
+                    const active = Boolean(f.value);
+                    return (
+                      <button
+                        type="button"
+                        className={`tab-examen-row__pathology ${
+                          active ? "tab-examen-row__pathology--active" : ""
+                        }`}
+                        aria-pressed={active}
+                        aria-label="Marcar como con patología"
+                        title={active ? "Con patología (CP)" : "Sin patología (SP)"}
+                        onClick={() => f.onChange(!active)}
+                      >
+                        <span className="tab-examen-row__pathology-label">
+                          {active ? "CP" : "SP"}
+                        </span>
+                      </button>
+                    );
+                  }}
+                />
+                <div className="tab-examen-row__description">
+                  <Controller
+                    control={control}
+                    name={`physicalExams.${index}.description` as const}
+                    render={({ field: f }) => (
+                      <AutoResizeTextarea
+                        value={f.value ?? ""}
+                        onChange={f.onChange}
+                        placeholder="Hallazgos / descripción de la región"
+                        modalTitle="Hallazgos del examen físico"
+                      />
+                    )}
+                  />
+                </div>
+                <div className="tab-examen-row__delete">
                   <WcButtonIcon
                     variant="danger"
                     shape="square"
@@ -307,37 +414,9 @@ export function TabExamen() {
                     onClick={() => removeExam(index)}
                     aria-label={`Eliminar región ${index + 1}`}
                   >
-                    <Icon name="icon-trash" size={16} />
+                    <Icon name="icon-trash" size={14} />
                   </WcButtonIcon>
                 </div>
-                <WcFormGrid columns={3}>
-                  <WcField label="Región">
-                    <Controller
-                      control={control}
-                      name={`physicalExams.${index}.region` as const}
-                      render={({ field: f }) => (
-                        <WcSelect
-                          value={f.value ?? null}
-                          onChange={(value) => f.onChange(value as PhysicalExamRegion)}
-                          options={REGION_OPTIONS}
-                        />
-                      )}
-                    />
-                  </WcField>
-                  <WcField label="Estado">
-                    <WcCheckbox
-                      {...register(`physicalExams.${index}.hasPathology` as const)}
-                      label="Con Patología (CP)"
-                    />
-                  </WcField>
-                  <WcField label="Hallazgos">
-                    <WcInput
-                      type="text"
-                      placeholder="Descripción de la patología..."
-                      {...register(`physicalExams.${index}.description` as const)}
-                    />
-                  </WcField>
-                </WcFormGrid>
               </div>
             ))}
           </div>
@@ -346,7 +425,7 @@ export function TabExamen() {
 
       <WcFormSection
         title="Lesiones"
-        subtitle="Marca en el diagrama corporal la ubicación de cada lesión. Cada click crea una nueva fila numerada."
+        info="Marca en el diagrama corporal la ubicación de cada lesión. Cada click crea una nueva fila numerada."
       >
         <div className="tab-examen-injuries">
           <div className="tab-examen-injuries__diagram">
@@ -389,9 +468,14 @@ export function TabExamen() {
               </p>
             ) : (
               injuryFields.map((field, index) => (
-                <div key={field.id} className="tab-examen-injury-row">
-                  <div className="tab-examen-injury-row__number">{index + 1}</div>
-                  <div className="tab-examen-injury-row__type">
+                <div
+                  key={field.id}
+                  className="tab-examen-row tab-examen-row--injury"
+                >
+                  <div className="tab-examen-row__number tab-examen-row__number--injury">
+                    {index + 1}
+                  </div>
+                  <div className="tab-examen-row__select">
                     <Controller
                       control={control}
                       name={`injuries.${index}.injuryType` as const}
@@ -404,7 +488,7 @@ export function TabExamen() {
                       )}
                     />
                   </div>
-                  <div className="tab-examen-injury-row__description">
+                  <div className="tab-examen-row__description">
                     <Controller
                       control={control}
                       name={`injuries.${index}.description` as const}
@@ -413,11 +497,12 @@ export function TabExamen() {
                           value={f.value ?? ""}
                           onChange={f.onChange}
                           placeholder="Descripción (ej. 5 cm en región frontal derecha)"
+                          modalTitle="Descripción de la lesión"
                         />
                       )}
                     />
                   </div>
-                  <div className="tab-examen-injury-row__delete">
+                  <div className="tab-examen-row__delete">
                     <WcButtonIcon
                       variant="danger"
                       shape="square"
