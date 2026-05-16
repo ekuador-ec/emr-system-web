@@ -12,18 +12,45 @@ import {
   WcTables,
   TableAvatarCell,
   TableActionCell,
-  TableStatusBadge,
 } from "@/presentation/modules/shared/components/ui/webcomponents/Tables/wcTables";
 import type {
   WcTableColumn,
   WcTableRow,
 } from "@/presentation/modules/shared/components/ui/webcomponents/Tables/wcTables";
+import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
+import WcTag from "@/presentation/modules/shared/components/ui/webcomponents/Tags/wcTag";
 import { useConfirmDialog } from "@/presentation/modules/shared/components/ui/useConfirmDialog";
+import "@/presentation/modules/medical-record/components/list/MedicalRecordsList.css";
 
 interface MedicalRecordsListProps {
   result?: PaginatedResult<MedicalRecordListItem>;
   onSelectRecord: (record: MedicalRecordListItem) => void;
+}
+
+function getPaginationItems(totalPages: number, currentPage: number): Array<number | "ellipsis"> {
+  if (totalPages <= 2) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  const items: Array<number | "ellipsis"> = [1];
+  const isCurrentInMiddle = currentPage > 1 && currentPage < totalPages;
+
+  if (currentPage > 2) {
+    items.push("ellipsis");
+  }
+
+  if (isCurrentInMiddle) {
+    items.push(currentPage);
+  }
+
+  if (currentPage < totalPages - 1) {
+    items.push("ellipsis");
+  }
+
+  items.push(totalPages);
+
+  return items;
 }
 
 export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsListProps) {
@@ -40,9 +67,10 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
 
   const { data: records, total, page, limit } = result;
   const totalPages = Math.ceil(total / limit);
+  const paginationItems = getPaginationItems(totalPages, page);
 
   const handlePageChange = (newPage: number) => {
-    setFilters({ page: newPage });
+    setFilters({ page: newPage, limit: 10 });
   };
 
   const handleToggleStatus = async (record: MedicalRecordListItem) => {
@@ -82,22 +110,21 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
       key: "status",
       name: "Estado",
       align: "center",
+      width: "150px",
       render: (row) => {
         const isActive = row.isActive === true;
 
         return (
-          <TableStatusBadge
-            status={isActive ? "success" : "warning"}
-            label={isActive ? "Activo" : "Inactivo"}
-            color={isActive ? "success" : "warning"}
-          />
+          <WcTag variant={isActive ? "success" : "warning"} size="sm">
+            {isActive ? "Activo" : "Archivado"}
+          </WcTag>
         );
       },
     },
     {
       key: "patient",
       name: "Paciente",
-      align: "center",
+      align: "left",
       render: (row) => (
         <TableAvatarCell
           title={String(row.patientName ?? "")}
@@ -118,15 +145,16 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
       name: "Evoluciones",
       align: "center",
       render: (row) => (
-        <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-semibold">
+        <WcTag variant="neutral" size="sm">
           {String(row.evolutionCount ?? 0)}
-        </span>
+        </WcTag>
       ),
     },
     {
       key: "actions",
       name: "Acciones",
-      align: "left",
+      align: "center",
+      width: "132px",
       render: (row) => {
         const id = String(row.id ?? "");
         const isActive = row.isActive === true;
@@ -134,11 +162,12 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
         const selectedRecord = records.find((record) => record.id === id);
 
         return (
-          <TableActionCell>
+          <TableActionCell className="medical-records-table-action-cell">
             <WcButtonIcon
               variant="terciary"
               icon="icon-see-details"
               size="sm"
+              className="medical-records-table-action-icon"
               title="Ver Detalles"
               onClick={() => {
                 if (selectedRecord) {
@@ -147,9 +176,10 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
               }}
             />
             <WcButtonIcon
-              variant="terciary"
+              variant="primary"
               icon="icon-open-folder"
               size="sm"
+              className="medical-records-table-action-icon"
               title="Ver Historia Clínica"
               onClick={() => navigate(`/pacientes/${patientId}/historia`)}
             />
@@ -157,8 +187,9 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
               <WcButtonIcon
                 icon={isActive ? "icon-archive" : "icon-unarchive"}
                 title={isActive ? "Archivar HC" : "Activar HC"}
-                variant={isActive ? "danger" : "secondary"}
+                variant="danger"
                 size="sm"
+                className="medical-records-table-action-icon"
                 disabled={isUpdating}
                 onClick={() => selectedRecord && handleToggleStatus(selectedRecord)}
               />
@@ -181,62 +212,59 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
   }));
 
   return (
-    <div
-      className="card"
-      style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}
-    >
+    <>
       <WcTables
         columns={columns}
         rows={rows}
         emptyMessage="No se encontraron historias clínicas"
         showPagination={false}
+        className="medical-records-table"
       />
       {DialogComponent}
       {totalPages > 1 && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "var(--space-4)",
-            borderTop: "1px solid var(--color-border)",
-          }}
-        >
-          <span style={{ fontSize: "var(--font-size-sm)", color: "var(--color-text-secondary)" }}>
-            Mostrando {(page - 1) * limit + 1} a {Math.min(page * limit, total)} de {total}{" "}
-            resultados
+        <div className="wc-tables__footer">
+          <span className="wc-tables__summary">
+            Mostrando {(page - 1) * limit + 1}-{Math.min(page * limit, total)} de {total} registros
           </span>
-          <div style={{ display: "flex", gap: "var(--space-1)", alignItems: "center" }}>
-            <button
-              type="button"
-              className="btn-ghost"
+          <div className="wc-tables__pagination">
+            <WcButton
+              variant="primary"
+              className="wc-tables__pagination-btn"
               disabled={page === 1}
               onClick={() => handlePageChange(page - 1)}
-              style={{ padding: "var(--space-1) var(--space-2)" }}
+              aria-label="Pagina anterior"
             >
-              Anterior
-            </button>
-            <span
-              style={{
-                padding: "var(--space-1) var(--space-3)",
-                fontSize: "var(--font-size-sm)",
-                fontWeight: "var(--font-weight-medium)",
-              }}
-            >
-              Página {page} de {totalPages}
-            </span>
-            <button
-              type="button"
-              className="btn-ghost"
+              {"<"}
+            </WcButton>
+            {paginationItems.map((item, index) =>
+              item === "ellipsis" ? (
+                <span key={`ellipsis-${index}`} className="wc-tables__pagination-ellipsis">
+                  ...
+                </span>
+              ) : (
+                <WcButton
+                  variant={page === item ? "primary" : "secondary"}
+                  key={`page-${item}`}
+                  className={`wc-tables__pagination-btn${page === item ? " wc-tables__pagination-btn--active" : ""}`}
+                  onClick={() => handlePageChange(item)}
+                  aria-current={page === item ? "page" : undefined}
+                >
+                  {item}
+                </WcButton>
+              ),
+            )}
+            <WcButton
+              variant="primary"
+              className="wc-tables__pagination-btn"
               disabled={page === totalPages}
               onClick={() => handlePageChange(page + 1)}
-              style={{ padding: "var(--space-1) var(--space-2)" }}
+              aria-label="Pagina siguiente"
             >
-              Siguiente
-            </button>
+              {">"}
+            </WcButton>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

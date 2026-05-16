@@ -1,0 +1,16 @@
+.medical-records-table-action-icon.wc-button-icon {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+}
+
+.medical-records-table-action-cell {
+  justify-content: center;
+  min-height: 24px;
+}
+
+.medical-records-table-action-icon.wc-button-icon svg {
+  width: 14px;
+  height: 14px;
+}
