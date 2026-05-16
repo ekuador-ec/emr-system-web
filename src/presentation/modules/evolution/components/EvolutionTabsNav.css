@@ -187,9 +187,10 @@
 @media (max-width: 1023px) {
   .evol-tabs-nav {
     flex-direction: row;
-    gap: var(--space-2);
-    overflow: visible;
+    gap: var(--space-1);
     align-items: center;
+    flex-wrap: nowrap;
+    padding-bottom: 2px;
   }
 
   .evol-tabs-nav__item {
@@ -197,32 +198,70 @@
     flex-shrink: 0;
     white-space: nowrap;
     min-height: 40px;
-    padding: var(--space-2) var(--space-4);
+    min-width: 40px;
+    padding: var(--space-2);
+    justify-content: center;
+    gap: 0;
+    transition:
+      padding var(--transition-fast),
+      gap var(--transition-fast),
+      background-color var(--transition-fast),
+      color var(--transition-fast),
+      border-color var(--transition-fast);
+  }
+
+  .evol-tabs-nav__item .evol-tabs-nav__label {
+    display: inline-block;
+    max-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition:
+      max-width var(--transition-fast),
+      opacity var(--transition-fast);
+  }
+
+  .evol-tabs-nav__item[data-active="true"] {
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
+  }
+
+  .evol-tabs-nav__item[data-active="true"] .evol-tabs-nav__label {
+    max-width: 180px;
+    opacity: 1;
   }
 
   .evol-tabs-nav__item[data-active="true"]::before {
     left: 4px;
     right: 4px;
-    bottom: -1px;
+    bottom: -2px;
     top: auto;
     width: auto;
     height: 3px;
   }
 }
 
+@media (max-width: 1023px) and (min-width: 481px) {
+  .evol-tabs-nav {
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-behavior: smooth;
+  }
+
+  .evol-tabs-nav::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @media (max-width: 480px) {
   .evol-tabs-nav {
-    gap: var(--space-1);
+    overflow: visible;
   }
 
-  .evol-tabs-nav__item {
-    padding: var(--space-2);
-    min-width: 40px;
-    justify-content: center;
-  }
-
-  .evol-tabs-nav__item .evol-tabs-nav__label {
-    display: none;
+  .evol-tabs-nav__more {
+    margin-left: auto;
+    flex-shrink: 0;
   }
 
   .evol-tabs-nav__more-trigger {

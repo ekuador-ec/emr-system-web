@@ -25,6 +25,7 @@
   position: sticky;
   top: calc(var(--evolution-banner-height) + var(--space-3));
   align-self: start;
+  z-index: 15;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);

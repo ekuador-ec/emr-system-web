@@ -21,6 +21,8 @@ export function EvolutionTabsNav({ tabs, activeIndex, onChange }: EvolutionTabsN
   const [isMobile, setIsMobile] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement | null>(null);
+  const navRef = useRef<HTMLElement | null>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -30,6 +32,16 @@ export function EvolutionTabsNav({ tabs, activeIndex, onChange }: EvolutionTabsN
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const nav = navRef.current;
+    const active = itemRefs.current[activeIndex];
+    if (!nav || !active) return;
+    const isHorizontal = window.matchMedia("(max-width: 1023px)").matches;
+    if (!isHorizontal) return;
+    active.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+  }, [activeIndex]);
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -77,7 +89,12 @@ export function EvolutionTabsNav({ tabs, activeIndex, onChange }: EvolutionTabsN
   const overflowHasActive = overflowIndexes.includes(activeIndex);
 
   return (
-    <nav className="evol-tabs-nav" role="tablist" aria-orientation={isMobile ? "horizontal" : "vertical"}>
+    <nav
+      ref={navRef}
+      className="evol-tabs-nav"
+      role="tablist"
+      aria-orientation={isMobile ? "horizontal" : "vertical"}
+    >
       {visibleIndexes.map((index) => {
         const tab = tabs[index];
         if (!tab) return null;
@@ -85,6 +102,9 @@ export function EvolutionTabsNav({ tabs, activeIndex, onChange }: EvolutionTabsN
         return (
           <button
             key={tab.label}
+            ref={(el) => {
+              itemRefs.current[index] = el;
+            }}
             type="button"
             role="tab"
             aria-selected={isActive}
