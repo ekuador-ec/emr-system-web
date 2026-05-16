@@ -1,27 +1,63 @@
-/* ───────────── Patient cell (avatar pushed left, action pinned right) ───────────── */
+.evolution-results-table-card {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  --evolution-table-min-width: calc(var(--space-10) * 24);
+  --evolution-col-status-width: calc(var(--space-10) * 4);
+  --evolution-col-attention-width: calc(var(--space-10) * 4.5);
+  --evolution-col-actions-width: calc(var(--space-10) * 5);
+}
+
+.evolution-results-table-card .wc-tables {
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.evolution-results-table-card .wc-tables__table {
+  min-width: var(--evolution-table-min-width);
+}
+
+.evolution-results-table-card .wc-tables__avatar-cell {
+  width: 100%;
+  min-width: 0;
+}
+
+.evolution-results-table-card .wc-tables__avatar-info {
+  min-width: 0;
+}
+
 .evolution-patient-cell {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-2, 8px);
+  column-gap: var(--space-3);
   width: 100%;
   min-width: 0;
 }
 
 .evolution-patient-cell .wc-tables__avatar-cell {
-  flex: 1 1 auto;
+  width: 100%;
   min-width: 0;
 }
 
 .evolution-patient-cell__action {
-  flex-shrink: 0;
-  margin-left: auto;
+  justify-self: end;
+  align-self: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  min-width: var(--space-6);
+  min-height: var(--space-6);
 }
 
-/* ───────────── Attention cell (date + time stacked, centered) ───────────── */
+.evolution-patient-cell__action.wc-button-icon svg {
+  width: var(--font-size-sm);
+  height: var(--font-size-sm);
+}
+
 .evolution-attention-cell {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   text-align: left;
   line-height: 1.25;
 }
@@ -35,106 +71,111 @@
 .evolution-attention-cell__text {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: calc(var(--space-1) / 4);
 }
 
 .evolution-attention-cell__date {
-  font-size: var(--font-size-sm, 0.85rem);
-  font-weight: var(--font-weight-semibold, 600);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.01em;
 }
 
 .evolution-attention-cell__time {
-  font-size: var(--font-size-xs, 0.78rem);
+  font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.01em;
 }
 
 .evolution-attention-cell__empty {
   color: var(--color-text-secondary);
   font-style: italic;
-  font-size: var(--font-size-xs, 0.78rem);
+  font-size: var(--font-size-xs);
 }
 
-/* ───────────── Audit cell (name / role / date · time) ───────────── */
 .evolution-audit-cell {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
+  gap: calc(var(--space-1) / 2);
   min-width: 0;
-  text-align: left;
-  line-height: 1.25;
 }
 
 .evolution-audit-cell__row {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: var(--font-size-xs, 0.78rem);
-  color: var(--color-text-secondary);
+  gap: var(--space-1);
   min-width: 0;
 }
 
 .evolution-audit-cell__icon {
-  color: var(--color-text-secondary);
   flex-shrink: 0;
-  opacity: 0.85;
 }
 
-.evolution-audit-cell__row--name {
-  font-size: var(--font-size-sm, 0.85rem);
-  font-weight: var(--font-weight-semibold, 600);
-  color: var(--color-text);
+.evolution-table-action-cell {
+  justify-content: center;
+  min-height: var(--space-6);
 }
 
-.evolution-audit-cell__row--name .evolution-audit-cell__icon {
-  color: var(--color-primary);
-  opacity: 1;
+.evolution-table-action-icon.wc-button-icon {
+  width: var(--space-6);
+  height: var(--space-6);
+  min-width: var(--space-6);
+  min-height: var(--space-6);
 }
 
-.evolution-audit-cell__name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 100%;
+.evolution-table-action-icon.wc-button-icon svg {
+  width: var(--font-size-sm);
+  height: var(--font-size-sm);
 }
 
-.evolution-audit-cell__row--role .evolution-audit-cell__icon {
-  color: color-mix(in srgb, var(--color-primary) 70%, var(--color-text-secondary));
+.evolution-results-table-card__footer {
+  border: 1px solid var(--color-border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: var(--color-surface);
+  margin-top: -1px;
 }
 
-.evolution-audit-cell__role {
-  font-weight: var(--font-weight-medium, 500);
-  color: var(--color-text);
-  opacity: 0.85;
+.evolution-results-table-card__summary {
+  white-space: nowrap !important;
 }
 
-.evolution-audit-cell__date,
-.evolution-audit-cell__time {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.01em;
+.evolution-results-table-card__pagination {
+  gap: calc(var(--space-3) / 4) !important;
 }
 
-.evolution-audit-cell__sep {
-  opacity: 0.5;
-}
-
-.evolution-audit-cell__empty {
-  color: var(--color-text-secondary);
-  font-style: italic;
-  font-size: var(--font-size-xs, 0.78rem);
+.evolution-results-table-card__pagination-btn.wc-button {
+  min-width: var(--space-6);
+  height: var(--space-6);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs) !important;
+  padding: 0 var(--space-2) !important;
+  box-shadow: none;
 }
 
 @media (max-width: 960px) {
-  .evolution-audit-cell__row {
-    font-size: 0.72rem;
+  .evolution-results-table-card {
+    --evolution-table-min-width: calc(var(--space-10) * 21);
   }
 
-  .evolution-audit-cell__row--name {
-    font-size: 0.8rem;
+  .evolution-results-table-card__footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .evolution-results-table-card__summary {
+    white-space: normal !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .evolution-patient-cell {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+  }
+
+  .evolution-patient-cell__action {
+    display: none;
   }
 }
