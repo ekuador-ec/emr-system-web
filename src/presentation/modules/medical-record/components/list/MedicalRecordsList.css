@@ -14,3 +14,8 @@
   width: 14px;
   height: 14px;
 }
+
+.medical-records-table-action-icon--archive.wc-button-icon svg {
+  width: 16px;
+  height: 16px;
+}

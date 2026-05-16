@@ -185,11 +185,11 @@ export function MedicalRecordsList({ result, onSelectRecord }: MedicalRecordsLis
             />
             {canAdmin && (
               <WcButtonIcon
-                icon={isActive ? "icon-archive" : "icon-unarchive"}
+                icon="icon-archive"
                 title={isActive ? "Archivar HC" : "Activar HC"}
-                variant="danger"
+                variant={isActive ? "danger" : "success"}
                 size="sm"
-                className="medical-records-table-action-icon"
+                className="medical-records-table-action-icon medical-records-table-action-icon--archive"
                 disabled={isUpdating}
                 onClick={() => selectedRecord && handleToggleStatus(selectedRecord)}
               />

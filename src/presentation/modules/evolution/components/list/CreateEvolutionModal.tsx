@@ -121,7 +121,7 @@ function PatientEvolutionRow({
           }}
           style={{ whiteSpace: "nowrap" }}
         >
-          <Icon name="icon-plus" size={16} />
+          <Icon name="icon-plus-solid" size={16} />
           {isLoadingMedicalRecord
             ? "Cargando..."
             : hasMedicalRecord
