@@ -189,11 +189,11 @@ export function PatientsList({ patientsResult }: PatientsListProps) {
                 onClick={() => setEditingPatientId(id)}
               />
               <WcButtonIcon
-                variant={isActive ? "danger" : "primary"}
+                variant={isActive ? "danger" : "success"}
                 shape="square"
                 size="sm"
                 className="patients-table-action-icon"
-                icon={isActive ? "icon-lock" : "icon-activate-solid"}
+                icon="icon-archive"
                 title={isActive ? "Archivar paciente" : "Activar paciente"}
                 aria-label={isActive ? "Archivar paciente" : "Activar paciente"}
                 onClick={() => void handleToggleStatus({ id, isActive, fullName })}
