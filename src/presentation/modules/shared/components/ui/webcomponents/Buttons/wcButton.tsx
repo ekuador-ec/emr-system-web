@@ -2,7 +2,7 @@ import { Children } from "react";
 import type { ButtonHTMLAttributes } from "react";
 import "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton.css";
 
-type ButtonVariant = "primary" | "secondary" | "danger" | "terciary";
+type ButtonVariant = "primary" | "secondary" | "danger" | "terciary" | "success";
 
 interface WcButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
