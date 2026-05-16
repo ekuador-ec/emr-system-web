@@ -201,11 +201,11 @@ export function MedicalRecordSummary({ patientId }: MedicalRecordSummaryProps) {
 
           {canAdmin && (
             <WcButton
-              variant={medicalRecord.isActive ? "danger" : "primary"}
+              variant={medicalRecord.isActive ? "danger" : "success"}
               disabled={isUpdating}
               onClick={handleToggleStatus}
             >
-              <Icon name={medicalRecord.isActive ? "icon-archive" : "icon-unarchive"} size={16} />
+              <Icon name="icon-archive" size={16} />
               {medicalRecord.isActive ? "Archivar HC" : "Activar HC"}
             </WcButton>
           )}
