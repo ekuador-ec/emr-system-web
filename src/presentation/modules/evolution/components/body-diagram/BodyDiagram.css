@@ -1,0 +1,99 @@
+/* ============================================================
+ * Body diagram (editor + read-only)
+ * SVG overlay aligned to image bounding box using a 0-100 viewBox.
+ * All marker coordinates live in percent space so they scale at any
+ * render size without losing position.
+ * ============================================================ */
+
+.body-diagram {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.body-diagram__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.body-diagram__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.body-diagram__marker {
+  cursor: default;
+  transition: opacity 0.15s ease;
+}
+
+.body-diagram__marker-circle {
+  fill: rgba(220, 38, 38, 0.18);
+  stroke: #b91c1c;
+  stroke-width: 0.4;
+  transition: fill 0.15s ease, stroke-width 0.15s ease;
+}
+
+.body-diagram__marker-text {
+  font-size: 2.6px;
+  font-weight: 800;
+  fill: #b91c1c;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* ───────── Editable mode ───────── */
+.body-diagram--editable {
+  cursor: crosshair;
+  border: 1px dashed var(--color-border, #cbd5e1);
+  border-radius: 8px;
+  padding: 4px;
+  background-color: var(--color-surface, #ffffff);
+}
+
+.body-diagram--editable .body-diagram__marker {
+  cursor: pointer;
+}
+
+.body-diagram--editable .body-diagram__marker:hover .body-diagram__marker-circle {
+  fill: rgba(220, 38, 38, 0.35);
+  stroke-width: 0.6;
+}
+
+.body-diagram__hint {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #64748b);
+  background-color: var(--color-surface, #ffffff);
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 1px solid var(--color-border, #cbd5e1);
+  pointer-events: none;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+/* ───────── Read-only mode (PDF preview) ───────── */
+.body-diagram--readonly {
+  background-color: #ffffff;
+  padding: 0;
+  border: none;
+}
+
+.body-diagram--readonly .body-diagram__marker {
+  pointer-events: none;
+}

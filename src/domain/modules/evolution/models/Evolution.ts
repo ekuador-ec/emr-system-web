@@ -87,9 +87,20 @@ export interface EvolutionPhysicalExam {
   description: string;
 }
 
+export interface InjuryCircleMarker {
+  shape: "CIRCLE";
+  cx: number;
+  cy: number;
+  r: number;
+}
+
+export type InjuryMarker = InjuryCircleMarker;
+
 export interface EvolutionInjury {
   id?: string;
   injuryType: InjuryType;
+  description: string | null;
+  marker: InjuryMarker | null;
 }
 
 export interface EvolutionDiagnosis {

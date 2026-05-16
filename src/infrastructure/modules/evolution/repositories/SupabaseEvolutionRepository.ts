@@ -122,20 +122,28 @@ function cleanPhysicalExams(
   return result;
 }
 
-type InjuryInsert = { evolution_id: string; injury_type: string };
+type InjuryInsert = {
+  evolution_id: string;
+  injury_type: string;
+  description: string | null;
+  marker: object | null;
+};
 
 function cleanInjuries(
   items: NonNullable<UpdateEvolutionPayload["injuries"]> | undefined,
   evolutionId: string,
 ): InjuryInsert[] {
   if (!items) return [];
-  const seen = new Set<string>();
   const result: InjuryInsert[] = [];
   for (const item of items) {
     if (!item.injuryType) continue;
-    if (seen.has(item.injuryType)) continue;
-    seen.add(item.injuryType);
-    result.push({ evolution_id: evolutionId, injury_type: item.injuryType });
+    const description = (item.description ?? "").trim();
+    result.push({
+      evolution_id: evolutionId,
+      injury_type: item.injuryType,
+      description: description.length > 0 ? description : null,
+      marker: item.marker ?? null,
+    });
   }
   return result;
 }

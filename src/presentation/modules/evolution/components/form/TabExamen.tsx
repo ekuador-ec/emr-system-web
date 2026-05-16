@@ -1,8 +1,11 @@
 import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
+import { useEffect, useRef } from "react";
+import type { ChangeEvent } from "react";
 import type { UpdateEvolutionDraftFormValues } from "../../schemas/evolution.schema";
 import type {
   AirwayStatus,
   GeneralCondition,
+  InjuryMarker,
   InjuryType,
   PhysicalExamRegion,
 } from "@/domain/modules/evolution/models/Evolution";
@@ -19,6 +22,9 @@ import {
   WcInput,
   WcSelect,
 } from "@/presentation/modules/shared/components/ui/webcomponents/Inputs";
+import { WcTextareaExpand } from "@/presentation/modules/shared/components/ui/webcomponents/Inputs/wcTextareaExpand";
+import { BodyDiagramEditor } from "@/presentation/modules/evolution/components/body-diagram/BodyDiagram";
+import "./TabExamen.css";
 
 const SYSTEM_REVIEW_COMBOS: Array<{
   airwayStatus: AirwayStatus;
@@ -103,6 +109,39 @@ const EMPTY_STATE_STYLE = {
   margin: 0,
 };
 
+interface AutoResizeTextareaProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}
+
+function AutoResizeTextarea({ value, onChange, placeholder }: AutoResizeTextareaProps) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  const autosize = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
+  useEffect(() => {
+    autosize(ref.current);
+  }, [value]);
+
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      value={value}
+      placeholder={placeholder}
+      onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
+        onChange(event.target.value);
+        autosize(event.target);
+      }}
+    />
+  );
+}
+
 export function TabExamen() {
   const { control, register } = useFormContext<UpdateEvolutionDraftFormValues>();
 
@@ -127,6 +166,11 @@ export function TabExamen() {
   const watchedSystems = useWatch({ control, name: "systemsReview" }) as
     | { airwayStatus?: AirwayStatus; generalCondition?: GeneralCondition }[]
     | undefined;
+
+  const watchedInjuriesRaw = useWatch({ control, name: "injuries" }) as
+    | { injuryType?: InjuryType; description?: string | null; marker?: InjuryMarker | null }[]
+    | undefined;
+  const watchedInjuries = watchedInjuriesRaw ?? [];
 
   const availableCombos = SYSTEM_REVIEW_COMBOS.filter(
     (combo) =>
@@ -183,7 +227,7 @@ export function TabExamen() {
                     <Icon name="icon-trash" size={16} />
                   </WcButtonIcon>
                 </div>
-                <WcFormGrid columns={3}>
+                <WcFormGrid columns={2}>
                   <WcField label="Vía aérea">
                     <Controller
                       control={control}
@@ -210,11 +254,20 @@ export function TabExamen() {
                       )}
                     />
                   </WcField>
-                  <WcField label="Descripción">
-                    <WcInput
-                      type="text"
-                      placeholder="Hallazgos clínicos, manejo aplicado..."
-                      {...register(`systemsReview.${index}.description` as const)}
+                  <WcField label="Descripción" spanFull>
+                    <Controller
+                      control={control}
+                      name={`systemsReview.${index}.description` as const}
+                      render={({ field: f }) => (
+                        <WcTextareaExpand
+                          value={f.value ?? ""}
+                          onChange={f.onChange}
+                          placeholder="Hallazgos clínicos, manejo aplicado..."
+                          minRows={2}
+                          maxRows={5}
+                          label="Descripción"
+                        />
+                      )}
                     />
                   </WcField>
                 </WcFormGrid>
@@ -293,34 +346,52 @@ export function TabExamen() {
 
       <WcFormSection
         title="Lesiones"
-        actions={
-          <WcButton variant="terciary" onClick={() => appendInjury({ injuryType: "OTRO" })}>
-            <Icon name="icon-add" size={16} /> Agregar
-          </WcButton>
-        }
+        subtitle="Marca en el diagrama corporal la ubicación de cada lesión. Cada click crea una nueva fila numerada."
       >
-        {injuryFields.length === 0 ? (
-          <p style={EMPTY_STATE_STYLE}>
-            No hay lesiones registradas. Haz clic en "Agregar".
-          </p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-            {injuryFields.map((field, index) => (
-              <div key={field.id} style={ROW_CARD_STYLE}>
-                <div style={ROW_HEADER_STYLE}>
-                  <h4 style={ROW_TITLE_STYLE}>Lesión {index + 1}</h4>
-                  <WcButtonIcon
-                    variant="danger"
-                    shape="square"
-                    size="sm"
-                    onClick={() => removeInjury(index)}
-                    aria-label={`Eliminar lesión ${index + 1}`}
-                  >
-                    <Icon name="icon-trash" size={16} />
-                  </WcButtonIcon>
-                </div>
-                <WcFormGrid columns={2}>
-                  <WcField label="Tipo de lesión" spanFull>
+        <div className="tab-examen-injuries">
+          <div className="tab-examen-injuries__diagram">
+            <BodyDiagramEditor
+              markers={(() => {
+                const visible: Array<{ marker: InjuryMarker; number: number }> = [];
+                watchedInjuries.forEach((injury, index) => {
+                  if (injury?.marker) {
+                    visible.push({ marker: injury.marker, number: index + 1 });
+                  }
+                });
+                return visible;
+              })()}
+              onAddMarker={(marker) => {
+                appendInjury({
+                  injuryType: "OTRO",
+                  description: "",
+                  marker,
+                });
+              }}
+              onRemoveMarker={(visibleIndex) => {
+                let cursor = -1;
+                for (let i = 0; i < watchedInjuries.length; i += 1) {
+                  if (watchedInjuries[i]?.marker) {
+                    cursor += 1;
+                    if (cursor === visibleIndex) {
+                      removeInjury(i);
+                      return;
+                    }
+                  }
+                }
+              }}
+            />
+          </div>
+
+          <div className="tab-examen-injuries__list">
+            {injuryFields.length === 0 ? (
+              <p className="tab-examen-injuries__empty">
+                Sin lesiones registradas. Marca en el diagrama para agregar una.
+              </p>
+            ) : (
+              injuryFields.map((field, index) => (
+                <div key={field.id} className="tab-examen-injury-row">
+                  <div className="tab-examen-injury-row__number">{index + 1}</div>
+                  <div className="tab-examen-injury-row__type">
                     <Controller
                       control={control}
                       name={`injuries.${index}.injuryType` as const}
@@ -332,12 +403,36 @@ export function TabExamen() {
                         />
                       )}
                     />
-                  </WcField>
-                </WcFormGrid>
-              </div>
-            ))}
+                  </div>
+                  <div className="tab-examen-injury-row__description">
+                    <Controller
+                      control={control}
+                      name={`injuries.${index}.description` as const}
+                      render={({ field: f }) => (
+                        <AutoResizeTextarea
+                          value={f.value ?? ""}
+                          onChange={f.onChange}
+                          placeholder="Descripción (ej. 5 cm en región frontal derecha)"
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="tab-examen-injury-row__delete">
+                    <WcButtonIcon
+                      variant="danger"
+                      shape="square"
+                      size="sm"
+                      onClick={() => removeInjury(index)}
+                      aria-label={`Eliminar lesión ${index + 1}`}
+                    >
+                      <Icon name="icon-trash" size={14} />
+                    </WcButtonIcon>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
-        )}
+        </div>
       </WcFormSection>
     </div>
   );

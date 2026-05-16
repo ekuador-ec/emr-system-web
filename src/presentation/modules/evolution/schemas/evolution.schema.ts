@@ -101,9 +101,18 @@ export const EvolutionPhysicalExamSchema = z.object({
   description: z.string(),
 });
 
+export const InjuryMarkerSchema = z.object({
+  shape: z.literal("CIRCLE"),
+  cx: z.number().min(0).max(100),
+  cy: z.number().min(0).max(100),
+  r: z.number().min(0).max(50),
+});
+
 export const EvolutionInjurySchema = z.object({
   id: z.string().optional(),
   injuryType: InjuryTypeSchema,
+  description: z.string().nullable(),
+  marker: InjuryMarkerSchema.nullable(),
 });
 
 export const EvolutionDiagnosisSchema = z.object({

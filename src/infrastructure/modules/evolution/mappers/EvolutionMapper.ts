@@ -156,7 +156,9 @@ export class EvolutionMapper {
 
       injuries: data.evolution_injuries ? data.evolution_injuries.map((item: any) => ({
         id: item.id,
-        injuryType: item.injury_type
+        injuryType: item.injury_type,
+        description: item.description ?? null,
+        marker: item.marker ?? null,
       })) : [],
 
       diagnoses: data.evolution_diagnoses ? data.evolution_diagnoses.map((item: any) => ({

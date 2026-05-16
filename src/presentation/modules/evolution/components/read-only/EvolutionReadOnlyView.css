@@ -244,6 +244,45 @@
   border-bottom: 1px solid var(--em-border);
 }
 
+/* ───────────── Section 8 — Body diagram + numbered injury list ───────────── */
+.em-pdf-injuries-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+  padding: 10px 12px;
+}
+
+.em-pdf-injuries-layout__diagram {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  border-right: 1px solid var(--em-border);
+  padding-right: 14px;
+}
+
+.em-pdf-injuries-layout__diagram .body-diagram {
+  max-width: 260px;
+}
+
+.em-pdf-injuries-layout__diagram .body-diagram__marker-circle {
+  fill: rgba(220, 38, 38, 0.15);
+}
+
+.em-pdf-injuries-layout__list {
+  display: flex;
+  min-width: 0;
+}
+
+.em-pdf-record-list--seamless {
+  flex: 1;
+  border-top: 1px solid var(--em-border);
+}
+
+.em-pdf-record-row--injuries {
+  grid-template-columns: 22px minmax(0, 0.9fr) minmax(0, 2.4fr);
+}
+
 @media (max-width: 900px) {
   .em-pdf-discharge-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
