@@ -12,6 +12,7 @@ import { canChangeMedicalRecordStatus } from "@/presentation/core/security/medic
 import type { MedicalRecordListItem } from "@/domain/modules/medical-record/models/MedicalRecord";
 import { PatientDetailsDrawer } from "@/presentation/modules/patient/components/Patients/PatientDetailsDrawer";
 import { WcModuleHeader } from "@/presentation/modules/shared/components/ui/webcomponents/Headers/WcModuleHeader";
+import { WcTabsFolder } from "@/presentation/modules/shared/components/ui/webcomponents/Tabs/wcTabsFolder";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import {
@@ -68,12 +69,12 @@ export function MedicalRecordsPage() {
         description="Consulta y administra las historias clínicas del sistema."
       >
         <WcButton variant="primary" onClick={() => setIsCreateOpen(true)}>
-          <Icon name="icon-add-folder" size={20} />
+          <Icon name="icon-add-folder" size={14} />
           Crear Historia Clínica
         </WcButton>
         {canAdmin && (
           <WcButton variant="terciary" onClick={() => setIsConfigOpen(true)}>
-            <Icon name="icon-settings" size={20} />
+            <Icon name="icon-settings" size={14} />
             Configurar Encabezado
           </WcButton>
         )}
@@ -105,44 +106,52 @@ export function MedicalRecordsPage() {
       )}
 
       <div style={{ marginTop: "var(--space-6)" }}>
-        {isLoading ? (
-          <div className="card" style={{ padding: "var(--space-8)", textAlign: "center" }}>
-            Cargando historias clinicas...
-          </div>
-        ) : isError && validationMessage ? (
-          <div
-            className="card"
-            style={{
-              padding: "var(--space-8)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "var(--space-3)",
-              alignItems: "center",
-              textAlign: "center",
-            }}
-          >
-            <h3 style={{ margin: 0 }}>El rango seleccionado es demasiado amplio</h3>
-            <p style={{ margin: 0, color: "var(--color-text-secondary)" }}>
-              La consulta por fecha de edición admite un máximo de 31 días. Ajusta el rango o vuelve
-              al periodo reciente por defecto.
-            </p>
-            <WcButton variant="primary" onClick={handleResetToRecentRange}>
-              Volver a últimos 2 días
-            </WcButton>
-          </div>
-        ) : isError ? (
-          <div
-            className="card"
-            style={{ padding: "var(--space-8)", textAlign: "center", color: "var(--color-danger)" }}
-          >
-            Error al cargar historias: {error.message}
-          </div>
-        ) : (
-          <MedicalRecordsList
-            result={records}
-            onSelectRecord={(record) => setSelectedRecord(record)}
-          />
-        )}
+        <WcTabsFolder
+          tabs={[
+            {
+              name: "Historias",
+              icon: <Icon name="icon-clinical-history" size={16} />,
+              content: isLoading ? (
+                <div className="card" style={{ padding: "var(--space-8)", textAlign: "center" }}>
+                  Cargando historias clinicas...
+                </div>
+              ) : isError && validationMessage ? (
+                <div
+                  className="card"
+                  style={{
+                    padding: "var(--space-8)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "var(--space-3)",
+                    alignItems: "center",
+                    textAlign: "center",
+                  }}
+                >
+                  <h3 style={{ margin: 0 }}>El rango seleccionado es demasiado amplio</h3>
+                  <p style={{ margin: 0, color: "var(--color-text-secondary)" }}>
+                    La consulta por fecha de edición admite un máximo de 31 días. Ajusta el rango o vuelve
+                    al periodo reciente por defecto.
+                  </p>
+                  <WcButton variant="primary" onClick={handleResetToRecentRange}>
+                    Volver a últimos 2 días
+                  </WcButton>
+                </div>
+              ) : isError ? (
+                <div
+                  className="card"
+                  style={{ padding: "var(--space-8)", textAlign: "center", color: "var(--color-danger)" }}
+                >
+                  Error al cargar historias: {error.message}
+                </div>
+              ) : (
+                <MedicalRecordsList
+                  result={records}
+                  onSelectRecord={(record) => setSelectedRecord(record)}
+                />
+              ),
+            },
+          ]}
+        />
       </div>
 
       <OrganizationConfigModal isOpen={isConfigOpen} onClose={() => setIsConfigOpen(false)} />

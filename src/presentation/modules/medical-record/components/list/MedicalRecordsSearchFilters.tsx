@@ -144,8 +144,9 @@ export function MedicalRecordsSearchFilters() {
                 display: "flex",
                 alignItems: "center",
                 gap: "var(--space-1)",
-                fontSize: "var(--font-size-sm)",
-                padding: "var(--space-2) var(--space-3)",
+                height: "34px",
+                minHeight: "34px",
+                padding: "0 12px",
               }}
               title="Vuelve al filtro por defecto (últimas 48h)"
             >
