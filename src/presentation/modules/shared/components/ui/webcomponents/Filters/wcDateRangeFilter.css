@@ -39,6 +39,41 @@
 
 .wc-date-range-filter__field-input {
   min-width: 160px;
+  border-radius: 5px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  -webkit-text-fill-color: var(--color-text);
+  caret-color: var(--color-text);
+  padding: 6px 10px;
+  min-height: 34px;
+  font-size: 0.82rem;
+}
+
+.wc-date-range-filter .input-field:focus,
+.wc-date-range-filter .input-field:focus-visible {
+  outline: none;
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.wc-date-range-filter input[type="date"].wc-date-range-filter__field-input {
+  color-scheme: light;
+}
+
+.wc-date-range-filter input[type="date"].wc-date-range-filter__field-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.8;
+  filter: brightness(0) saturate(100%) invert(22%) sepia(13%) saturate(640%) hue-rotate(184deg) brightness(96%) contrast(92%);
+}
+
+.dark .wc-date-range-filter input[type="date"].wc-date-range-filter__field-input {
+  color-scheme: dark;
+}
+
+.dark .wc-date-range-filter input[type="date"].wc-date-range-filter__field-input::-webkit-calendar-picker-indicator {
+  opacity: 0.95;
+  filter: brightness(0) saturate(100%) invert(95%) sepia(8%) saturate(211%) hue-rotate(188deg) brightness(102%) contrast(92%);
 }
 
 .wc-date-range-filter__presets {
@@ -52,6 +87,10 @@
 .wc-date-range-filter__presets-label {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
+}
+
+.wc-date-range-filter.card:hover {
+  box-shadow: var(--shadow-sm);
 }
 
 @media (max-width: 720px) {

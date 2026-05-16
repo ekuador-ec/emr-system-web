@@ -4,10 +4,10 @@
   right: 0;
   width: 380px;
   max-height: 580px;
-  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: var(--color-surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
   z-index: 50;
@@ -15,12 +15,18 @@
   flex-direction: column;
 }
 
+.notification-popover > div:first-child {
+  background: var(--color-surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .notification-item {
   /* Handled inline, but we inject hover behavior here */
 }
 
 .notification-item:hover {
-  background-color: var(--hover-bg) !important;
+  background-color: var(--hover-bg);
 }
 
 @media (max-width: 480px) {

@@ -7,7 +7,9 @@ import { PatientsList } from "@/presentation/modules/patient/components/Patients
 import { PatientSearchFilters } from "@/presentation/modules/patient/components/Patients/PatientSearchFilters";
 import { PatientDetailsDrawer } from "@/presentation/modules/patient/components/Patients/PatientDetailsDrawer";
 import { WcModuleHeader } from "@/presentation/modules/shared/components/ui/webcomponents/Headers/WcModuleHeader";
+import { WcTabsFolder } from "@/presentation/modules/shared/components/ui/webcomponents/Tabs/wcTabsFolder";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
+import "@/presentation/modules/patient/pages/PatientsPage.css";
 
 export function PatientsPage() {
   const {
@@ -71,6 +73,69 @@ export function PatientsPage() {
     { enabled: hasSearched },
   );
 
+  const renderPatientsContent = () => {
+    if (!hasSearched) {
+      return (
+        <div className="patients-load-cta">
+          <Icon
+            name="icon-search-solid"
+            size={32}
+            className="patients-load-cta__icon"
+          />
+          <p className="patients-load-cta__title">
+            Comienza una búsqueda
+          </p>
+          <p className="patients-load-cta__description">
+            Utiliza la barra superior para encontrar un paciente por su número de cédula,
+            nombres o apellidos.
+          </p>
+        </div>
+      );
+    }
+
+    if (isLoading) {
+      return (
+        <div
+          className="card"
+          style={{
+            padding: "var(--space-16) var(--space-8)",
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "var(--space-4)",
+          }}
+        >
+          <div
+            className="spinner"
+            style={{
+              width: "32px",
+              height: "32px",
+              border: "3px solid var(--color-border)",
+              borderTopColor: "var(--color-primary)",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite",
+            }}
+          />
+          <p style={{ color: "var(--color-text-secondary)" }}>Buscando pacientes...</p>
+        </div>
+      );
+    }
+
+    if (isError) {
+      return (
+        <div
+          className="card"
+          style={{ padding: "var(--space-8)", textAlign: "center", color: "var(--color-danger)" }}
+        >
+          Error al consultar los pacientes: {error.message}
+        </div>
+      );
+    }
+
+    return <PatientsList patientsResult={patientsResult} />;
+  };
+
   return (
     <div style={{ padding: "var(--space-8)", maxWidth: "1200px", margin: "0 auto" }}>
       <WcModuleHeader
@@ -94,87 +159,15 @@ export function PatientsPage() {
       <PatientSearchFilters />
 
       <div style={{ marginTop: "var(--space-6)" }}>
-        {!hasSearched ? (
-          <div
-            className="card"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "var(--space-16) var(--space-8)",
-              textAlign: "center",
-              color: "var(--color-text-secondary)",
-              gap: "var(--space-4)",
-              border: "1px dashed var(--color-border)",
-              boxShadow: "none",
-            }}
-          >
-            <div
-              style={{
-                width: "64px",
-                height: "64px",
-                borderRadius: "var(--radius-full)",
-                backgroundColor: "var(--color-bg-secondary)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--color-text-tertiary)",
-              }}
-            >
-              <Icon name="icon-search" size={24} />
-            </div>
-            <div style={{ maxWidth: "340px" }}>
-              <h3
-                style={{
-                  marginBottom: "var(--space-2)",
-                  color: "var(--color-text-primary)",
-                  fontWeight: "var(--font-weight-medium)",
-                }}
-              >
-                Comienza una búsqueda
-              </h3>
-              <p style={{ margin: 0, lineHeight: "1.5" }}>
-                Utiliza la barra superior para encontrar un paciente por su número de cédula,
-                nombres o apellidos.
-              </p>
-            </div>
-          </div>
-        ) : isLoading ? (
-          <div
-            className="card"
-            style={{
-              padding: "var(--space-16) var(--space-8)",
-              textAlign: "center",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "var(--space-4)",
-            }}
-          >
-            <div
-              className="spinner"
-              style={{
-                width: "32px",
-                height: "32px",
-                border: "3px solid var(--color-border)",
-                borderTopColor: "var(--color-primary)",
-                borderRadius: "50%",
-                animation: "spin 1s linear infinite",
-              }}
-            />
-            <p style={{ color: "var(--color-text-secondary)" }}>Buscando pacientes...</p>
-          </div>
-        ) : isError ? (
-          <div
-            className="card"
-            style={{ padding: "var(--space-8)", textAlign: "center", color: "var(--color-danger)" }}
-          >
-            Error al consultar los pacientes: {error.message}
-          </div>
-        ) : (
-          <PatientsList patientsResult={patientsResult} />
-        )}
+        <WcTabsFolder
+          tabs={[
+            {
+              name: "Pacientes",
+              icon: <Icon name="icon-patient" size={16} />,
+              content: renderPatientsContent(),
+            },
+          ]}
+        />
       </div>
 
       {selectedPatientId && <PatientDetailsDrawer />}
