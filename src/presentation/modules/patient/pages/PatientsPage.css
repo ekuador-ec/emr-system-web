@@ -1,0 +1,185 @@
+.patients-load-cta {
+  width: min(640px, 100%);
+  min-height: 240px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-6) 0;
+  color: var(--color-text-secondary);
+}
+
+.patients-load-cta__icon {
+  color: var(--color-text-secondary);
+  fill: currentColor;
+  stroke: none;
+}
+
+.patients-load-cta__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.patients-load-cta__description {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  max-width: 420px;
+  line-height: 1.5;
+}
+
+.patients-list-card {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.patients-list-card .wc-tables {
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.patients-list-card .wc-tables__header-cell {
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.patients-list-card .wc-tables__body-cell {
+  font-size: 12px;
+}
+
+.patients-id-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-warning);
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.patients-contact-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.patients-name-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.patients-name-cell__title {
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.2;
+}
+
+.patients-name-cell__subtitle {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.patients-contact-cell__email {
+  color: var(--color-text-secondary);
+}
+
+.patients-contact-cell__muted {
+  color: var(--color-text-tertiary);
+}
+
+.patients-table-action-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.patients-table-action-cell {
+  justify-content: center;
+  min-height: 24px;
+}
+
+.patients-table-action-icon.wc-button-icon {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+}
+
+.patients-table-action-icon.wc-button-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.patients-list-card__footer {
+  border: 1px solid var(--color-border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: var(--color-surface);
+  margin-top: -1px;
+}
+
+.patients-list-card__summary {
+  white-space: nowrap !important;
+}
+
+.patients-list-card__pagination {
+  gap: 3px !important;
+}
+
+.patients-list-card__pagination-btn.wc-button {
+  min-width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  font-size: 11px !important;
+  padding: 0 7px !important;
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .patients-load-cta {
+    min-height: 200px;
+    padding: var(--space-5) var(--space-2);
+  }
+
+  .patients-load-cta__description {
+    max-width: 100%;
+  }
+
+  .patients-list-card__footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .patients-list-card__summary {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 460px) {
+  .patients-load-cta {
+    min-height: 180px;
+    gap: var(--space-1);
+  }
+
+  .patients-load-cta__title {
+    font-size: var(--font-size-md);
+  }
+}
