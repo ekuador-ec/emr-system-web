@@ -77,7 +77,7 @@ export function MedicalRecordSummary({ patientId }: MedicalRecordSummaryProps) {
             disabled={isCreating}
             onClick={() => createMedicalRecord(patientId)}
           >
-            <Icon name="icon-plus" size={16} />
+            <Icon name="icon-plus-solid" size={16} />
             {isCreating ? "Creando..." : "Crear Historia Clinica"}
           </WcButton>
         </div>

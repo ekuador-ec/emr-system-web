@@ -80,7 +80,7 @@ export function MedicalRecordEvolutionsList({ medicalRecordId }: MedicalRecordEv
           onClick={handleNewEvolution}
           disabled={createEvolution.isPending}
         >
-          <Icon name="icon-plus" size={16} />
+          <Icon name="icon-plus-solid" size={16} />
           {createEvolution.isPending ? 'Creando...' : 'Nueva Evolución'}
         </WcButton>
       </div>
