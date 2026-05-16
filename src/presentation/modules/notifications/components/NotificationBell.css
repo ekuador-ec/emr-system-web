@@ -46,3 +46,11 @@
     border-right: none;
   }
 }
+
+/* ===== Touch / coarse pointer ===== */
+@media (pointer: coarse) {
+  .floating-hub .wc-button-icon[aria-label="Notificaciones"] {
+    width: 44px;
+    height: 44px;
+  }
+}

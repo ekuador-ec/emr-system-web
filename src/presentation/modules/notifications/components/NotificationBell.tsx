@@ -5,10 +5,15 @@ import { useNotificationsList, useMarkNotificationRead, useMarkAllNotificationsR
 import { describeNotification, type NotificationStatusTone } from '@/presentation/modules/notifications/registry/notificationRegistry';
 import WcButtonIcon from '@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon';
 import { Icon } from '@/presentation/modules/shared/components/Sidebar/icons/Icon';
+import {
+  announceFloatingPopover,
+  onFloatingPopoverOpened,
+} from '@/presentation/modules/shared/utils/floatingPopoverBus';
 import type { Notification } from '@/domain/modules/notifications/models/Notification';
 
 interface NotificationBellProps {
   userId: string | undefined;
+  onOpenChange?: (isOpen: boolean) => void;
 }
 
 const STATUS_TONE_STYLES: Record<NotificationStatusTone, { background: string; color: string }> = {
@@ -96,7 +101,7 @@ const getVariantStyles = (type: string, isRead: boolean) => {
   };
 };
 
-export function NotificationBell({ userId }: NotificationBellProps) {
+export function NotificationBell({ userId, onOpenChange }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -115,6 +120,10 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    return onFloatingPopoverOpened("notifications", () => setIsOpen(false));
   }, []);
 
   const handleNotificationClick = (notification: Notification) => {
@@ -303,7 +312,12 @@ export function NotificationBell({ userId }: NotificationBellProps) {
           variant="ghost"
           shape="circle"
           icon="icon-bell"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => {
+            const next = !isOpen;
+            setIsOpen(next);
+            onOpenChange?.(next);
+            if (next) announceFloatingPopover("notifications");
+          }}
           style={{ background: isOpen ? 'color-mix(in srgb, var(--color-text) 4%, transparent)' : 'transparent' }}
           aria-label="Notificaciones"
         />
