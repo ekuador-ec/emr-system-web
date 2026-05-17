@@ -1,0 +1,106 @@
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-4);
+}
+
+.kpi-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 140px;
+  position: relative;
+  transition: box-shadow var(--transition-normal);
+}
+
+.kpi-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.kpi-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.kpi-card__label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kpi-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.kpi-card__value {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-text);
+  line-height: 1.1;
+}
+
+.kpi-card__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  width: fit-content;
+}
+
+.kpi-card__delta--up {
+  color: var(--color-success);
+  background-color: var(--color-success-light);
+}
+
+.kpi-card__delta--down {
+  color: var(--color-danger);
+  background-color: var(--color-danger-light);
+}
+
+.kpi-card__delta--neutral {
+  color: var(--color-text-secondary);
+  background-color: var(--color-primary-light);
+}
+
+.kpi-card__hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-top: auto;
+}
+
+.kpi-card__skeleton {
+  height: 1.6rem;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-border) 0%,
+    var(--color-primary-light) 50%,
+    var(--color-border) 100%
+  );
+  background-size: 200% 100%;
+  animation: kpi-skeleton 1.4s ease infinite;
+}
+
+@keyframes kpi-skeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

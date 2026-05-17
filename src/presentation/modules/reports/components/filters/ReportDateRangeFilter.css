@@ -1,0 +1,127 @@
+.report-range-filter {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.report-range-filter__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.report-range-filter__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.report-range-filter__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.report-range-filter__preset {
+  border: 1px solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.report-range-filter__preset:hover {
+  color: var(--color-text);
+  border-color: var(--color-primary-hover);
+}
+
+.report-range-filter__preset.is-active {
+  color: var(--color-primary-foreground);
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.report-range-filter__custom {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.report-range-filter__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 150px;
+}
+
+.report-range-filter__field-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.report-range-filter__field-input {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+.report-range-filter__field-input:focus {
+  outline: none;
+  border-color: var(--color-primary-hover);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.report-range-filter__granularity {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.report-range-filter__granularity select {
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-2);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+.report-range-filter__error {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+}
+
+.report-range-filter__summary {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.report-range-filter__summary strong {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
