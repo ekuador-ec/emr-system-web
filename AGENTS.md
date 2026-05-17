@@ -114,7 +114,7 @@ src/
         utils/             Helpers locales del módulo
 ```
 
-Módulos activos: `auth`, `catalog`, `dashboard`, `evolution`, `medical-record`, `messaging`, `notifications`, `patient`, `shared`, `users`.
+Módulos activos: `auth`, `catalog`, `dashboard`, `evolution`, `medical-record`, `messaging`, `notifications`, `patient`, `reports`, `shared`, `users`.
 
 ## Mapa de Rutas (`src/App.tsx`)
 
@@ -129,6 +129,7 @@ Módulos activos: `auth`, `catalog`, `dashboard`, `evolution`, `medical-record`,
 | `/historias-clinicas` | `MedicalRecordsPage` | Autenticado |
 | `/evoluciones` | `EvolutionsPage` | Autenticado |
 | `/mensajes` | `MessagesPage` | Autenticado |
+| `/reportes` | `ReportsPage` | Autenticado |
 | `/admin/users` | `UsersManagementPage` | `admin` |
 | `*` | Redirección a `/` | - |
 
@@ -307,6 +308,87 @@ Capa transversal con utilidades, validadores, storage y la librería de UI (`Wc*
   - Hooks: `useDebounce`.
   - Store: `themeStore` (light/dark).
   - Utils: `imageUtils.ts` (procesado de imágenes para crop de avatar).
+
+### 11. Reports (`reports`)
+Modulo de analitica y reportes. Provee dos superficies: el `DashboardPage` (en `/`) que resume los KPIs principales de los ultimos 30 dias y la `ReportsPage` (en `/reportes`) con vistas detalladas filtrables por rango. Fases 1-5 estan completas: vista general, actividad clinica, diagnosticos, tendencias historicas (365 dias via snapshots), productividad por clinico, carga/picos, lazy-loading del modulo y exportacion CSV.
+
+- Domain: `ReportRange` (`from`, `to`, `granularity`), `ReportRangeOnly`, `GeneralKpis`, `EvolutionVolumePoint`, `DemographicBuckets`, `TopDiagnosis`, `TopDiagnosesFilters`, `EvolutionDistribution`, `EvolutionCloseStats`, `DiagnosesByChapter`, `DiagnosesSummary`, `DiagnosesChapterFilters`, `ClinicianProductivityRow`, `ClinicianProductivityFilters`, `WorkloadHeatmapCell`, `MetricKey`, `MetricSeriesPoint`, `MetricSeriesRequest`.
+- Application: `GetGeneralKpisUseCase`, `GetEvolutionVolumeUseCase`, `GetPatientDemographicsUseCase`, `GetTopDiagnosesUseCase`, `GetEvolutionDistributionUseCase`, `GetEvolutionCloseStatsUseCase`, `GetDiagnosesByChapterUseCase`, `GetDiagnosesSummaryUseCase`, `GetClinicianProductivityUseCase`, `GetWorkloadHeatmapUseCase`, `GetMetricSeriesUseCase` (rango max 365 dias). Helper compartido `assertReportRange` (max 90 dias para RPCs en vivo).
+- Infrastructure: `SupabaseReportsRepository` consume las RPCs `report_general_kpis`, `report_evolution_volume`, `report_patient_demographics`, `report_top_diagnoses`, `report_evolution_distribution`, `report_evolution_close_stats`, `report_diagnoses_by_chapter`, `report_diagnoses_summary`, `report_clinician_productivity`, `report_workload_heatmap`, `report_metric_series`. `reportsMapper.ts` normaliza snake_case y bigint string -> number.
+- Backend:
+  - `supabase/migrations/47_reports_general_kpis.sql`: RPCs basicas + helper `reports_assert_range` (max 90 dias).
+  - `supabase/migrations/48_reports_clinical_activity.sql`: distribuciones por estado, arribo, causa clinica, alta; estadisticas de cierre (avg/mediana/p90/alertas > 24h y > 72h).
+  - `supabase/migrations/49_reports_diagnoses_insights.sql`: agregaciones por capitulo CIE-10 y resumen comparativo ingreso/alta + presuntivo/definitivo.
+  - `supabase/migrations/50_mv_evolutions_daily.sql`: materialized view diaria por (bucket, status, clinical_cause, arrival_method, opened_by) refrescada cada hora via `pg_cron`.
+  - `supabase/migrations/51_reports_admin_kpis.sql`: RPCs admin con guard `reports_assert_admin()`. `report_clinician_productivity(from, to, role?)` y `report_workload_heatmap(from, to)` (ISO weekday en `America/Guayaquil`).
+  - `supabase/migrations/52_report_snapshots.sql`: tabla generica `report_snapshots(snapshot_date, metric_key, value, dims jsonb)` con UNIQUE(snapshot_date, metric_key, dims) e indices `(metric_key, snapshot_date DESC)` + GIN(dims). Helpers `write_snapshot()`, `collect_daily_snapshots(date)` (idempotente, calcula 8+ metricas core), `backfill_report_snapshots(from, to)` (max 730 dias) y RPC publica `report_metric_series(key, from, to, dims?)` (max 365 dias). Job `pg_cron` nocturno a 03:30 UTC + bootstrap inicial al instalar la migracion.
+  - Todas las RPCs son `SECURITY DEFINER` con `GRANT EXECUTE` a `authenticated`. Las admin verifican rol internamente. Las agregaciones ocurren en Postgres; el cliente jamas descarga listados completos.
+  - Catalogo actual de `metric_key`: `patients.total`, `patients.created.daily`, `medical_records.total`, `medical_records.created.daily`, `evolutions.created.daily` (con dims `status` o sin dims), `evolutions.closed.daily`, `diagnoses.created.daily`, `users.active.total`, `messages.created.daily`. Para agregar una nueva metrica basta con anadir el bloque en `collect_daily_snapshots()` (sin cambios de esquema gracias al diseno key+dims).
+- Presentation:
+  - Pages: `DashboardPage` (KPIs compactos + 2 mini-charts; CTA hacia `/reportes`), `ReportsPage` (cargada via `React.lazy` con `<Suspense>` desde `App.tsx`; `WcModuleHeader` + filtro de rango global + `WcTabsFolder` con tabs "General", "Actividad clinica", "Diagnosticos", "Tendencias historicas" y para admin "Productividad", "Carga y picos").
+  - Components:
+    - Widgets: `KpiCard`, `ChartCard`, `LineChartCard`, `BarChartCard`, `DonutChartCard`, `RankingTableCard`, `HeatmapCard`, `ExportCsvButton` (boton reusable con `csvExport.ts` - BOM UTF-8 + escape correcto). `chartPalette` tematizable.
+    - Layout: `ReportSection`.
+    - Filters: `ReportDateRangeFilter` parametrizable (`presets`, `maxDays`, `title`) - mismo componente sirve para rangos de 90 dias (tabs en vivo) y 365 dias (tendencias historicas); `SegmentedControl`.
+    - Sections: `GeneralOverviewSection`, `ClinicalActivitySection`, `DiagnosesInsightsSection`, `HistoricalTrendsSection` (filtro local + multi-metric toggle + line chart con bucketizado cliente por dia/semana/mes), `AdminProductivitySection`, `AdminWorkloadSection`. La tabla rica de productividad vive en `ProductivityTable.tsx`.
+  - Hooks: `useGeneralKpis`, `useEvolutionVolume`, `usePatientDemographics`, `useTopDiagnoses`, `useEvolutionDistribution`, `useEvolutionCloseStats`, `useDiagnosesByChapter`, `useDiagnosesSummary`, `useClinicianProductivity` (admin), `useWorkloadHeatmap` (admin), `useMetricSeries` (snapshots, `staleTime` 1h) - TanStack Query con `staleTime` 2-5 min para vivos, 1h para historicos, `refetchOnWindowFocus: false`. `useReportsRefresh` invalida todo el queryKey `['reports']`.
+  - Store: `useReportsUIStore` (Zustand sin `persist`: preset, range, granularity para tabs en vivo). `HistoricalTrendsSection` mantiene su propio estado local porque opera en un universo de rangos distinto (max 365 dias).
+  - Utils: `dateRange.ts` (presets cortos y largos: `last7..last365`, `mtd`, `lastMonth`, `ytd`, `lastFullYear`, `custom`); `reportLabels.ts`; `csvExport.ts` (`rowsToCsv`, `downloadCsv` con BOM UTF-8 y nombre con timestamp).
+- Libreria de graficos: `recharts` (paleta tematizable via CSS vars).
+- Bundling: `vite.config.ts` define `manualChunks` que separa `recharts` y `d3-*` en el chunk `vendor-charts`, ademas de chunks dedicados para `@tanstack/react-query`, `@supabase`, `react-router` y `emoji-picker-react`. El modulo `/reportes` se carga con `React.lazy` desde `App.tsx`, asi que la primera visita a otras rutas no descarga `recharts`.
+- Performance:
+  - RPCs en vivo: rango max 90 dias validado en SQL.
+  - Series historicas: leen `report_snapshots` precalculados (idempotentes, generados por `collect_daily_snapshots()` cada noche). Cero impacto sobre tablas transaccionales para rangos largos.
+  - `useQueries` despacha las 9+ series de tendencias en paralelo con queryKeys estables.
+  - El modulo NO se suscribe a Realtime; refresh manual o por `staleTime`.
+- Seguridad: las tabs admin se filtran por `useAuth().isAdmin` y las RPCs respaldan el guard en SQL (defensa en profundidad). RLS sobre `report_snapshots` solo permite SELECT a `authenticated`.
+
+#### Recetas: Agregar un nuevo reporte o KPI
+
+Hay tres escenarios comunes. Sigue el que aplique:
+
+**A) Agregar una metrica al panel de Tendencias historicas (`HistoricalTrendsSection`)**
+
+Es la opcion mas barata, sirve para cualquier KPI numerico diario y NO requiere cambios en frontend pesados.
+
+1. **Backend**: dentro de `public.collect_daily_snapshots()` (migracion 52 o una nueva migracion ascendente) agregar un `PERFORM public.write_snapshot(p_date, '<namespace>.<metric>.daily', (SELECT ... FROM ... WHERE created_at::date = p_date));`. Para series con dimensiones, usar `INSERT ... GROUP BY ... ON CONFLICT (snapshot_date, metric_key, dims) DO UPDATE` siguiendo el patron del bloque `evolutions.created.daily` por status. Tras desplegar la migracion, opcionalmente ejecutar `SELECT public.backfill_report_snapshots('YYYY-MM-DD'::date, CURRENT_DATE - 1);` para poblar el historico.
+2. **Domain**: anadir el literal a `MetricKey` (`src/domain/modules/reports/models/MetricSeries.ts`).
+3. **Frontend**: anadir una entrada al `METRIC_CATALOG` dentro de `HistoricalTrendsSection.tsx` (`key`, `label`, `hint`, `aggregation`). El chip aparece automaticamente y se grafica en cuanto el usuario lo activa.
+4. NO modificar `report_metric_series`, `useMetricSeries` ni el `LineChartCard`. Todo es data-driven gracias al diseno key+dims.
+
+**B) Agregar una RPC en vivo con un nuevo conjunto de columnas**
+
+Cuando la metrica no encaja en una serie diaria (rankings, agregaciones con filtros, distribuciones, etc.) y debe consultarse en tiempo real con rango maximo 90 dias.
+
+1. **Backend**: nueva migracion `XX_reports_<feature>.sql` con la RPC. Reglas inviolables:
+   - `LANGUAGE plpgsql SECURITY DEFINER STABLE`
+   - `SET search_path = public, pg_temp`
+   - Si es admin-only: `PERFORM public.reports_assert_admin();` al inicio.
+   - Validar el rango: `PERFORM public.reports_assert_range(p_from, p_to, 90);`
+   - `GRANT EXECUTE ON FUNCTION public.<nombre>(...) TO authenticated;`
+   - Comentar con `COMMENT ON FUNCTION` describiendo proposito y limites.
+   - Si la funcion usa `RETURNS TABLE(col_a, col_b, ...)` y referencia esos nombres como columnas/aliases dentro de CTEs, anteponer `#variable_conflict use_column` justo despues de `AS $$` para evitar el error "column reference X is ambiguous". Caso paradigmatico: `report_clinician_productivity` que reusa `user_id` en CTEs internas.
+2. **Domain**: modelo en `src/domain/modules/reports/models/<Feature>.ts` y metodo en `ReportsRepository`.
+3. **Application**: clase `Get<X>UseCase` con `execute` que llame `assertReportRange` y traduzca errores genericos en castellano (sin filtrar mensajes crudos del backend).
+4. **Infrastructure**: implementar en `SupabaseReportsRepository` (`await supabase.rpc(...)`) y anadir interfaz `<X>Row` + metodo `to<X>` en `reportsMapper.ts` (snake_case -> camelCase, `toNumber` para bigints serializados como string).
+5. **Hook**: agregar `use<X>` en `useReports.ts`. `staleTime` 2 min para KPIs, 5 min para series, 5 min para distribuciones. Para hooks admin: `enabled: isAdmin` ademas de la guard SQL (defensa en profundidad + evita 401s ruidosos).
+6. **Presentation**: crear la seccion (`<X>Section.tsx`) usando los widgets existentes (`KpiCard`, `LineChartCard`, `BarChartCard`, `DonutChartCard`, `RankingTableCard`, `HeatmapCard`). Si hay tabla descargable, incorporar `ExportCsvButton` via la prop `actions` del widget o en la toolbar de la seccion.
+7. **Routing**: anadir la tab en `ReportsPage.tsx`. Para tabs admin, agregarlas al bloque `if (isAdmin)`.
+8. **Documentar la migracion** en esta seccion (`AGENTS.md`) con su lista de RPCs.
+
+**C) Agregar un widget visual nuevo**
+
+Cuando ningun widget existente sirve para representar la metrica.
+
+1. Crear en `src/presentation/modules/reports/components/widgets/<X>Card.tsx` + `.css`. Convencion: aceptar `title`, `subtitle`, `isLoading`, `isEmpty`, `actions?: ReactNode`. Si usa colores, leer `chartColorAt(index)` para respetar la paleta tematica.
+2. Si encapsula una libreria pesada, exportar mediante `React.lazy` desde la seccion que lo consume. Recharts ya esta en un chunk separado (`vendor-charts`) gracias al `manualChunks` de Vite, por lo que widgets adicionales basados en Recharts NO incrementan el bundle inicial.
+3. Reutilizar antes de crear: muchas distribuciones encajan en `BarChartCard` o `DonutChartCard` con datos `{ label, value }`.
+
+**Lineamientos transversales**
+- Las queries de TanStack Query SIEMPRE deben tener queryKeys estables: `["reports", "<feature>", ...params].`
+- Refresh manual: llamar `useReportsRefresh()` que invalida todo el keyspace `['reports']`. Para invalidaciones quirurgicas usar `queryClient.invalidateQueries({ queryKey: ['reports', '<feature>'] })`.
+- Filtros y rangos sensibles a fechas pasan por `assertReportRange` (max 90 dias) o por la validacion local de `HistoricalTrendsSection` (max 365 dias). Toda RPC debe replicar la validacion en SQL (no confiar en el cliente).
+- Para series con > 90 dias, los datos SIEMPRE vienen de `report_snapshots`. Si una nueva pestana lo necesita, agregar la metrica al job nocturno (receta A) antes de tocar UI.
 
 ## Patrones Convencionales del Proyecto
 
