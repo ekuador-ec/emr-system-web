@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { LoginPage } from "@/presentation/modules/auth/pages/LoginPage";
 import { UpdatePasswordPage } from "@/presentation/modules/auth/pages/UpdatePasswordPage";
@@ -11,6 +12,27 @@ import { EvolutionsPage } from "@/presentation/modules/evolution/pages/Evolution
 import { MessagesPage } from "@/presentation/modules/messaging/pages/MessagesPage";
 import { ProtectedRoute } from "@/presentation/modules/auth/components/ProtectedRoute";
 import { AppLayout } from "@/presentation/modules/shared/layouts/AppLayout";
+
+const ReportsPage = lazy(() =>
+  import("@/presentation/modules/reports/pages/ReportsPage").then((module) => ({
+    default: module.ReportsPage,
+  })),
+);
+
+function ReportsPageFallback() {
+  return (
+    <div
+      style={{
+        padding: "var(--space-8)",
+        maxWidth: "1280px",
+        margin: "0 auto",
+        color: "var(--color-text-secondary)",
+      }}
+    >
+      Cargando reportes...
+    </div>
+  );
+}
 
 const router = createBrowserRouter([
   {
@@ -87,6 +109,18 @@ const router = createBrowserRouter([
       <ProtectedRoute>
         <AppLayout>
           <MessagesPage />
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/reportes",
+    element: (
+      <ProtectedRoute>
+        <AppLayout>
+          <Suspense fallback={<ReportsPageFallback />}>
+            <ReportsPage />
+          </Suspense>
         </AppLayout>
       </ProtectedRoute>
     ),

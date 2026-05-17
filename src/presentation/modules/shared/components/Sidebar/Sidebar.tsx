@@ -25,6 +25,7 @@ function useMenuGroups(): MenuGroup[] {
       label: 'Principal',
       items: [
         { path: '/', label: 'Dashboard', icon: 'icon-dashboard' },
+        { path: '/reportes', label: 'Reportes', icon: 'icon-reports' },
         { path: '/mensajes', label: 'Mensajes', icon: 'icon-messages', badge: unreadMessages },
       ]
     },
