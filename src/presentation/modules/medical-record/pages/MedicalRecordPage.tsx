@@ -4,6 +4,7 @@ import { MedicalRecordSummary } from '@/presentation/modules/medical-record/comp
 import { MedicalRecordEvolutionsList } from '@/presentation/modules/medical-record/components/evolutions/MedicalRecordEvolutionsList';
 import { useMedicalRecordByPatient } from '@/presentation/modules/medical-record/hooks/useMedicalRecord';
 import { PatientDetailsDrawer } from '@/presentation/modules/patient/components/Patients/PatientDetailsDrawer';
+import { MedicalRecordAiAssistant } from '@/presentation/modules/ai/components/MedicalRecordAiAssistant';
 
 export function MedicalRecordPage() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -25,7 +26,12 @@ export function MedicalRecordPage() {
         <MedicalRecordSummary patientId={patientId} />
 
         {medicalRecord && (
-          <MedicalRecordEvolutionsList medicalRecordId={medicalRecord.id} />
+          <>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <MedicalRecordAiAssistant patientId={patientId} />
+            </div>
+            <MedicalRecordEvolutionsList medicalRecordId={medicalRecord.id} />
+          </>
         )}
       </div>
 

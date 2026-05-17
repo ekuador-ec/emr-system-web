@@ -114,7 +114,7 @@ src/
         utils/             Helpers locales del módulo
 ```
 
-Módulos activos: `auth`, `catalog`, `dashboard`, `evolution`, `medical-record`, `messaging`, `notifications`, `patient`, `reports`, `shared`, `users`.
+Módulos activos: `ai`, `auth`, `catalog`, `dashboard`, `evolution`, `medical-record`, `messaging`, `notifications`, `patient`, `reports`, `shared`, `users`.
 
 ## Mapa de Rutas (`src/App.tsx`)
 
@@ -389,6 +389,58 @@ Cuando ningun widget existente sirve para representar la metrica.
 - Refresh manual: llamar `useReportsRefresh()` que invalida todo el keyspace `['reports']`. Para invalidaciones quirurgicas usar `queryClient.invalidateQueries({ queryKey: ['reports', '<feature>'] })`.
 - Filtros y rangos sensibles a fechas pasan por `assertReportRange` (max 90 dias) o por la validacion local de `HistoricalTrendsSection` (max 365 dias). Toda RPC debe replicar la validacion en SQL (no confiar en el cliente).
 - Para series con > 90 dias, los datos SIEMPRE vienen de `report_snapshots`. Si una nueva pestana lo necesita, agregar la metrica al job nocturno (receta A) antes de tocar UI.
+
+### 12. AI Assistant (`ai`)
+Modulo cliente que se integra con un servicio externo independiente (`emr-ai-service`, repo separado) para ofrecer **resumenes clinicos** de HC y EM, y **conversaciones de seguimiento** (chat con streaming SSE token a token). Toda la comunicacion respeta dos reglas no negociables: a) los datos enviados al LLM **estan anonimizados en cliente** (sin nombres, cedula, telefono, email, direccion) y el servidor aplica una segunda capa de sanitizacion como red de seguridad; b) la autenticacion combina `X-Api-Key` propio del tenant + JWT del Supabase del usuario.
+
+- Domain (`src/domain/modules/ai`):
+  - Modelos: `AiSummary`, `AiSummaryKind` (`medical_record` | `evolution`), `AiModelPreference` (`auto` | `deepseek`), `AiProviderName` (`deepseek` | `openrouter` | `mock`), `AiConversation`, `AiMessage`, `AiConversationWithMessages`.
+  - Repositorio: `AiServiceRepository` con `generateSummary`, `getLatestSummary`, `createConversation`, `listConversations`, `getConversation`, `deleteConversation`, `streamChatMessage(events, signal)`. Los eventos SSE estan tipados (`SseChatEvents`: `onConversation`, `onDelta`, `onDone`, `onCompleted`, `onError`).
+- Application (`src/application/modules/ai/use-cases/`):
+  - `GenerateAiSummaryUseCase`, `GetLatestAiSummaryUseCase`, `StartAiConversationUseCase`, `ListAiConversationsUseCase`, `GetAiConversationUseCase`, `DeleteAiConversationUseCase`, `StreamAiChatMessageUseCase` (valida 1-4000 chars y trim).
+- Infrastructure (`src/infrastructure/modules/ai/`):
+  - `AiApiClient`: cliente HTTP que adjunta `X-Api-Key` desde `VITE_AI_SERVICE_API_KEY` y `Authorization: Bearer` leyendo el access_token vivo desde `supabase.auth.getSession()` en cada request. Lanza `AiApiError` con `code`, `status` y `details` cuando el backend responde error. Expone `openSseStream` que devuelve un `ReadableStreamDefaultReader<Uint8Array>` listo para consumir.
+  - `sseParser.ts`: `consumeSse(reader, onEvent, signal)` parsea el flujo SSE respetando la spec (eventos separados por `\n\n`, soporta `event:` + multiples `data:`, ignora comentarios `:` y heartbeats), maneja abort y vuelca el buffer parcial al cerrar.
+  - `HttpAiServiceRepository`: implementa `AiServiceRepository` traduciendo cada metodo al endpoint correspondiente y, en `streamChatMessage`, despacha cada evento SSE al handler tipado adecuado.
+  - `config.ts`: composition root del modulo. Exporta `aiServiceConfigured` (boolean) que es `false` si falta cualquiera de `VITE_AI_SERVICE_URL` o `VITE_AI_SERVICE_API_KEY`; los hooks consultan este flag para deshabilitarse limpiamente sin romper la app si el servicio no esta desplegado.
+- Presentation (`src/presentation/modules/ai/`):
+  - Pages: ninguna nueva (el modulo solo aporta modales). El asistente se invoca desde otras paginas.
+  - Components:
+    - `AiAssistantModal`: el modal principal. Muestra el resumen mas reciente (o accion para generarlo), el selector de modelo, y -cuando el resumen existe- un panel de chat con composer + lista de mensajes + stream en vivo.
+    - `AiAssistantTrigger`: boton reusable (`WcButton`) que abre el modal seteando el target en el store.
+    - `MedicalRecordAiAssistant` y `EvolutionAiAssistant`: wrappers que cargan datos via hooks existentes (`useMedicalRecordByPatient`, `usePatient`, `useEvolutionsByMedicalRecord`, `useEvolution`), arman el payload anonimizado con la funcion correspondiente y montan el trigger + modal.
+    - `ChatBubble`: burbuja del mensaje. Para `role=assistant` renderiza con `MarkdownRenderer`; para `role=user` muestra texto plano. Incluye indicador animado de stream cuando `isStreaming`.
+    - `MarkdownRenderer`: renderer minimalista (sin dependencias) que soporta `#`/`##`/`###`, listas `-`/`*`, `**negrita**`, `*cursiva*` y `` `codigo` ``. Suficiente para los resumenes estructurados que produce el servicio.
+    - `ModelPreferenceSelector`: radio-group accesible para alternar entre `auto` (OpenRouter rotando modelos) y `deepseek` (modelo fijo).
+  - Hooks:
+    - `useLatestAiSummary(kind, entityId)`: `useQuery` con `staleTime: 5 min`, deshabilitado si `aiServiceConfigured` es `false`.
+    - `useGenerateAiSummary()`: `useMutation` que actualiza directamente el cache de `useLatestAiSummary` en `onSuccess`.
+    - `useAiConversations`, `useAiConversation`, `useStartAiConversation`, `useDeleteAiConversation`: capa CRUD de conversaciones contra TanStack Query.
+    - `useStreamAiChat(conversationId)`: hook especializado para el streaming. Gestiona `AbortController`, escribe los chunks del LLM en el store y, al recibir el evento `completed`, agrega `userMessage` y `assistantMessage` al cache de `useAiConversation` deduplicando por `id`. Cancela limpiamente en unmount.
+  - Store: `useAiAssistantStore` (Zustand sin `persist`). Mantiene `isOpen`, `target` (`{ kind, entityId, label }`), `preference`, `activeConversationId`, `streamingDraft`, `isStreaming`. Expone `open`, `close`, `setPreference`, `setActiveConversation`, `appendStreamingChunk`, `resetStreaming`, `setStreaming`, `reset` (este ultimo se invoca desde `useAuth` en el logout).
+  - Schemas: `ai.schema.ts` con `aiChatMessageSchema` (Zod, 1-4000 chars trim).
+  - Utils:
+    - `anonymizePatient(patient)`: convierte `Patient` en `AnonymizedPatient`. Calcula `ageYears` a partir de `birthDate`, conserva `gender`, `bloodType`, `maritalStatus`, `culturalGroup`, `educationLevel`, `occupation.name`, ubicacion (`province`, `canton`, `parish`) y antecedentes clinicos completos con CIE-10. **No envia** `firstName`, `lastName`, `idNumber`, `email`, `phone`, `homeAddress`, `birthDate`, `emergencyContacts`, ni cualquier campo de empresa con datos personales.
+    - `anonymizeEvolution(evolution)`: convierte `MedicalEvolution` en `AnonymizedEvolution`. Conserva signos vitales, examen fisico, lesiones, diagnosticos CIE-10, plan, descargas, datos obstetricos (cuando aplica). **No envia** `informationSource`, `referringPerson`, `contactNumber`, `eventAddress`, `referralFacility` ni nada que pueda identificar al paciente o a terceros.
+    - `anonymizeMedicalRecord(record, patient, evolutions)`: combina las dos anteriores para el resumen de HC, agregando `evolutionCount`, `createdAt`, `updatedAt`. El servidor recibe la HC anonimizada con TODAS sus EM anonimizadas.
+
+#### Integracion en las paginas existentes
+- `MedicalRecordPage`: monta `<MedicalRecordAiAssistant patientId={patientId} />` cuando el medical record existe. El boton aparece sobre la lista de evoluciones, alineado a la derecha.
+- `EvolutionWorkspacePage`: monta `<EvolutionAiAssistant evolutionId={evolution.id} />` debajo del banner del paciente, antes de los tabs. El asistente trabaja con la EM cargada por `useEvolution`.
+
+#### Variables de entorno (`.env.example`)
+```
+VITE_AI_SERVICE_URL=https://ai.tudominio.com
+VITE_AI_SERVICE_API_KEY=eai_xxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+Ambas son opcionales: si faltan, los botones siguen visibles pero el modal informa "Configuracion incompleta" en lugar de fallar. Permite que el repo principal compile y funcione sin el servicio desplegado.
+
+#### Receta: agregar el asistente IA a una nueva entidad clinica
+Si en el futuro se desea sumar resumenes para una nueva entidad (ej. una "consulta especializada"):
+1. **Crear el anonymizer** en `src/presentation/modules/ai/utils/anonymize<Entity>.ts`. Solo campos clinicos + IDs internos; nunca PII.
+2. **Crear un wrapper** `<Entity>AiAssistant.tsx` siguiendo el patron de `MedicalRecordAiAssistant` o `EvolutionAiAssistant`: usar los hooks de datos existentes y construir el payload con el nuevo anonymizer.
+3. **Montar** el wrapper en la pagina destino. Si el `target.kind` ya esta cubierto por backend (`medical_record` o `evolution`), no se requieren cambios en el AI service. Si la entidad es nueva, hace falta extender el enum en `emr-ai-service` y agregar el prompt versionado correspondiente.
+4. **Cero PII**: ningun anonymizer puede leer `firstName`, `lastName`, `idNumber`, `email`, `phone`, `address`, ni campos de contactos de emergencia. Si se requiere referenciar a un tercero (ej. medico tratante), usar su `id` o `role`, nunca su nombre.
 
 ## Patrones Convencionales del Proyecto
 

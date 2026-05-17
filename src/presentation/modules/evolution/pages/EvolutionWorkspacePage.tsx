@@ -24,6 +24,7 @@ import type { EvolutionNavTab } from "../components/EvolutionTabsNav";
 import "./EvolutionWorkspacePage.css";
 import { PatientDetailsDrawer } from "@/presentation/modules/patient/components/Patients/PatientDetailsDrawer";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
+import { EvolutionAiAssistant } from "@/presentation/modules/ai/components/EvolutionAiAssistant";
 
 import { TabAdmision } from "../components/form/TabAdmision";
 import { TabMotivo } from "../components/form/TabMotivo";
@@ -613,6 +614,16 @@ export function EvolutionWorkspacePage() {
           firmarla y cerrarla.
         </p>
       )}
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          margin: "0 0 var(--space-3) 0",
+        }}
+      >
+        <EvolutionAiAssistant evolutionId={evolution.id} />
+      </div>
 
       {Object.keys(validationErrors).length > 0 && (
         <div
