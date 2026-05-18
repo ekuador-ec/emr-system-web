@@ -5,7 +5,9 @@ import { useToastStore } from "@/presentation/modules/shared/components/Toaster"
 import {
   USER_ROLE_LABELS,
   ACCOUNT_STATUS_LABELS,
+  PRESENCE_STATUS_LABELS,
   type AccountStatus,
+  type PresenceStatus,
   type UserFilters,
   type UserProfile,
 } from "@/domain/modules/users/models/User";
@@ -21,7 +23,6 @@ import WcUserCard from "@/presentation/modules/users/components/Cards/wcUserCard
 import {
   UsersQuickFilterPopover,
   type UsersQuickFilterState,
-  type OnlineFilter,
 } from "@/presentation/modules/users/components/UsersQuickFilterPopover";
 import {
   WcTables,
@@ -46,6 +47,7 @@ type UserTableRow = WcTableRow & {
   accountStatus: AccountStatus;
   phone: string;
   lastSeen: string | null;
+  presenceStatus: PresenceStatus;
   isSelf: boolean;
   isDeleted: boolean;
 };
@@ -59,7 +61,7 @@ const USERS_VIEW_MODE_STORAGE_KEY = "users-management:view-mode";
 const DEFAULT_USER_FILTERS: UsersQuickFilterState = {
   role: [],
   status: ["active"],
-  online: "all",
+  presence: [],
 };
 
 function areArraysEqual(a: string[], b: string[]): boolean {
@@ -82,7 +84,7 @@ function countAppliedFilters(
   } else if (!areArraysEqual(filters.status, DEFAULT_USER_FILTERS.status)) {
     count += 1;
   }
-  if (filters.online !== DEFAULT_USER_FILTERS.online) count += 1;
+  if (filters.presence.length > 0) count += 1;
 
   return count;
 }
@@ -93,11 +95,6 @@ function hasNonDefaultFilters(
 ): boolean {
   return countAppliedFilters(filters) > 0 || searchTerm.length > 0;
 }
-
-const ONLINE_LABELS: Record<string, string> = {
-  online: "En linea",
-  offline: "Fuera de linea",
-};
 
 function getActiveFilterTags(
   filters: UsersQuickFilterState,
@@ -125,11 +122,13 @@ function getActiveFilterTags(
     });
   }
 
-  if (filters.online !== "all") {
-    tags.push({
-      id: "online",
-      label: "Estado Online",
-      value: ONLINE_LABELS[filters.online] ?? filters.online,
+  if (filters.presence.length > 0) {
+    filters.presence.forEach((presence) => {
+      tags.push({
+        id: `presence-${presence}`,
+        label: "Conexion",
+        value: PRESENCE_STATUS_LABELS[presence] ?? presence,
+      });
     });
   }
 
@@ -160,10 +159,8 @@ function buildServerFilters(
       normalizedStatuses.length > 0
         ? (normalizedStatuses as UserFilters["statuses"])
         : undefined,
-    online:
-      uiFilters.online === "all"
-        ? null
-        : (uiFilters.online as "online" | "offline"),
+    presenceStatuses:
+      uiFilters.presence.length > 0 ? uiFilters.presence : undefined,
     searchTerm: searchTerm || null,
     includeDeleted: true,
   };
@@ -230,6 +227,28 @@ function getStatusTagVariant(
   }
 
   return "info";
+}
+
+function getPresenceTagVariant(
+  status: PresenceStatus,
+): "success" | "warning" | "danger" | "neutral" {
+  switch (status) {
+    case "online":
+      return "success";
+    case "away":
+      return "warning";
+    case "busy":
+      return "danger";
+    default:
+      return "neutral";
+  }
+}
+
+function toPresenceStatusOrOffline(value: unknown): PresenceStatus {
+  if (value === "online" || value === "away" || value === "busy" || value === "offline") {
+    return value;
+  }
+  return "offline";
 }
 
 function isUsersViewMode(value: unknown): value is UsersViewMode {
@@ -546,6 +565,7 @@ export function UsersManagementPage() {
         accountStatus: user.accountStatus,
         phone: user.phone ?? "--",
         lastSeen: user.lastSeen,
+        presenceStatus: user.presenceStatus,
         isSelf: user.id === currentUser?.id,
         isDeleted: Boolean(user.deletedAt),
         avatarUrl: user.avatarUrl || undefined,
@@ -628,6 +648,20 @@ export function UsersManagementPage() {
         const roleValue = typeof row.role === "string" ? row.role : "";
         if (!isUserRole(roleValue)) return "--";
         return USER_ROLE_LABELS[roleValue];
+      },
+    },
+    {
+      key: "presenceStatus",
+      name: "Conexion",
+      align: "center",
+      width: "130px",
+      render: (row) => {
+        const presence = toPresenceStatusOrOffline(row.presenceStatus);
+        return (
+          <WcTag variant={getPresenceTagVariant(presence)} size="sm">
+            {PRESENCE_STATUS_LABELS[presence]}
+          </WcTag>
+        );
       },
     },
     {
@@ -812,8 +846,12 @@ export function UsersManagementPage() {
       return;
     }
 
-    if (filterId === "online") {
-      const next = { ...appliedFilters, online: "all" as OnlineFilter };
+    if (filterId.startsWith("presence-")) {
+      const value = filterId.replace("presence-", "") as PresenceStatus;
+      const next = {
+        ...appliedFilters,
+        presence: appliedFilters.presence.filter((p) => p !== value),
+      };
       setAppliedFilters(next);
       setDraftFilters(next);
       return;
@@ -1187,6 +1225,7 @@ export function UsersManagementPage() {
                             roleLabel={roleLabel}
                             statusLabel={statusLabel}
                             statusTone={statusTone}
+                            presenceStatus={toPresenceStatusOrOffline(row.presenceStatus)}
                             phone={
                               typeof row.phone === "string" ? row.phone : "--"
                             }

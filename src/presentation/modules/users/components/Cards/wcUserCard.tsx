@@ -1,6 +1,10 @@
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
 import WcTag from "@/presentation/modules/shared/components/ui/webcomponents/Tags/wcTag";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
+import {
+  PRESENCE_STATUS_LABELS,
+  type PresenceStatus,
+} from "@/domain/modules/users/models/User";
 import "@/presentation/modules/users/components/Cards/wcUserCard.css";
 
 export type WcUserCardProps = {
@@ -9,6 +13,7 @@ export type WcUserCardProps = {
   roleLabel: string;
   statusLabel: string;
   statusTone: WcUserCardStatusTone;
+  presenceStatus?: PresenceStatus;
   phone: string;
   whatsappUrl?: string | null;
   lastSeen: string;
@@ -57,6 +62,21 @@ function getStatusVariant(
   return "neutral";
 }
 
+function getPresenceVariant(
+  status: PresenceStatus,
+): "success" | "warning" | "danger" | "neutral" {
+  switch (status) {
+    case "online":
+      return "success";
+    case "away":
+      return "warning";
+    case "busy":
+      return "danger";
+    default:
+      return "neutral";
+  }
+}
+
 function WcUserCard(props: WcUserCardProps) {
   const fallback = getAvatarFallback(props.fullName);
   const statusTone = props.statusTone;
@@ -66,6 +86,7 @@ function WcUserCard(props: WcUserCardProps) {
     typeof props.whatsappUrl === "string" &&
     props.whatsappUrl.length > 0 &&
     props.phone !== "--";
+  const presenceStatus: PresenceStatus = props.presenceStatus ?? "offline";
 
   return (
     <article className={`wc-user-card wc-user-card--${statusTone}`}>
@@ -102,6 +123,13 @@ function WcUserCard(props: WcUserCardProps) {
           className="wc-user-card__tag"
         >
           {props.statusLabel}
+        </WcTag>
+        <WcTag
+          variant={getPresenceVariant(presenceStatus)}
+          size="sm"
+          className="wc-user-card__tag"
+        >
+          {PRESENCE_STATUS_LABELS[presenceStatus]}
         </WcTag>
       </div>
 

@@ -1,4 +1,8 @@
-import { USER_ROLE_LABELS } from "@/domain/modules/users/models/User";
+import {
+  PRESENCE_STATUS_LABELS,
+  USER_ROLE_LABELS,
+  type PresenceStatus,
+} from "@/domain/modules/users/models/User";
 import {
   WcFilterPopover,
 } from "@/presentation/modules/shared/components/ui/webcomponents/Filters/wcFilterPopover";
@@ -6,12 +10,10 @@ import type {
   WcFilterField,
 } from "@/presentation/modules/shared/components/ui/webcomponents/Filters/wcFilterPopover";
 
-export type OnlineFilter = "all" | "online" | "offline";
-
 export type UsersQuickFilterState = {
   role: string[];
   status: string[];
-  online: OnlineFilter;
+  presence: PresenceStatus[];
 };
 
 type UsersQuickFilterPopoverProps = {
@@ -47,14 +49,16 @@ export const USERS_QUICK_FILTER_FIELDS: Array<WcFilterField<UsersQuickFilterStat
     ],
   },
   {
-    key: "online",
-    id: "users-filter-online",
-    label: "Conexion",
-    options: [
-      { value: "all", label: "Todos" },
-      { value: "online", label: "En linea" },
-      { value: "offline", label: "Fuera de linea" },
-    ],
+    key: "presence",
+    id: "users-filter-presence",
+    label: "Estado de conexion",
+    multiSelect: true,
+    options: (["online", "away", "busy", "offline"] as PresenceStatus[]).map(
+      (value) => ({
+        value,
+        label: PRESENCE_STATUS_LABELS[value],
+      }),
+    ),
   },
 ];
 
