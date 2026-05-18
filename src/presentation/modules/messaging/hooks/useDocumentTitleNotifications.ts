@@ -1,16 +1,23 @@
 import { useEffect, useRef } from "react";
 import { useUnreadMessagesTotal } from "@/presentation/modules/messaging/hooks/useUnreadMessagesTotal";
 
+const DECORATED_TITLE_REGEX =
+  /^\(\d+\+?\)\s*(?:Nuevos?\s+mensajes?\s*[·\-]\s*)?/i;
+
 /**
  * useDocumentTitleNotifications — prepends an unread message count
- * to `document.title` so the user can spot pending messages from the
- * OS tab bar, similar to WhatsApp Web.
+ * and a localised label to `document.title` so the user can spot
+ * pending messages from the OS tab bar, similar to WhatsApp Web.
  *
- * Format: `(3) EMR | Gestion de Historias Clinicas`.
+ * Format:
+ *   - 1 unread:  `(1) Nuevo mensaje · EMR | Gestion...`
+ *   - N unread:  `(3) Nuevos mensajes · EMR | Gestion...`
+ *   - 0 unread:  the original title is restored
  *
- * When the unread total drops to zero the original title is restored
- * (also on unmount and logout, since the hook is mounted in AppLayout
- * and unmounts together with the authenticated shell).
+ * The hook captures the original title once on mount (stripping any
+ * stale decoration so the prefix never doubles up after a re-mount).
+ * The cleanup also restores the title, which protects against logout
+ * leaving the tab decorated.
  */
 export function useDocumentTitleNotifications(
   userId: string | undefined | null,
@@ -21,12 +28,13 @@ export function useDocumentTitleNotifications(
   useEffect(() => {
     if (typeof document === "undefined") return;
     if (originalTitleRef.current === null) {
-      originalTitleRef.current = document.title.replace(/^\(\d+\)\s*/, "");
+      originalTitleRef.current = document.title.replace(DECORATED_TITLE_REGEX, "");
     }
     const base = originalTitleRef.current;
     if (total > 0) {
       const counter = total > 99 ? "99+" : String(total);
-      document.title = `(${counter}) ${base}`;
+      const noun = total === 1 ? "Nuevo mensaje" : "Nuevos mensajes";
+      document.title = `(${counter}) ${noun} · ${base}`;
     } else {
       document.title = base;
     }
@@ -41,3 +49,4 @@ export function useDocumentTitleNotifications(
     };
   }, []);
 }
+
