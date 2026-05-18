@@ -78,8 +78,14 @@ export function useMessagingSubscription(userId: string | undefined | null) {
               .openBubble(message.conversationId, { minimized: true });
           }
 
+          const isWindowActive =
+            typeof document !== "undefined" &&
+            document.visibilityState === "visible" &&
+            (typeof document.hasFocus !== "function" || document.hasFocus());
+          const shouldNotify = !openSomewhere || !isWindowActive;
+
           const soundEnabled = useMessagingUIStore.getState().isSoundEnabled;
-          if (soundEnabled && !openSomewhere) {
+          if (soundEnabled && shouldNotify) {
             const conversations = queryClient.getQueryData<Conversation[]>(
               conversationsKey(userId),
             );
