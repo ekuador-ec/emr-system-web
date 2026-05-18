@@ -12,6 +12,7 @@ import {
   useMessagingContacts,
 } from "@/presentation/modules/messaging/hooks/useConversations";
 import { useMessagingUIStore } from "@/presentation/modules/messaging/stores/useMessagingUIStore";
+import { buildPresenceMap } from "@/presentation/modules/messaging/utils/presenceMap";
 import "@/presentation/modules/messaging/components/Messaging.css";
 
 export function MessagesPage() {
@@ -27,13 +28,10 @@ export function MessagesPage() {
     setNewChatPickerOpen,
   } = useMessagingUIStore();
 
-  const onlineUserIds = useMemo(() => {
-    const set = new Set<string>();
-    (contactsQuery.data ?? []).forEach((c) => {
-      if (c.isOnline) set.add(c.id);
-    });
-    return set;
-  }, [contactsQuery.data]);
+  const presenceByUserId = useMemo(
+    () => buildPresenceMap(contactsQuery.data),
+    [contactsQuery.data],
+  );
 
   useEffect(() => {
     const fromUrl = searchParams.get("c");
@@ -96,7 +94,7 @@ export function MessagesPage() {
           currentUserId={user.id}
           activeConversationId={activeConversationId}
           onSelect={handleSelect}
-          onlineUserIds={onlineUserIds}
+          presenceByUserId={presenceByUserId}
           onNewChat={() => setNewChatPickerOpen(true)}
           isLoading={conversationsQuery.isLoading}
         />
@@ -105,7 +103,7 @@ export function MessagesPage() {
           <ChatWindow
             conversation={activeConversation}
             currentUserId={user.id}
-            onlineUserIds={onlineUserIds}
+            presenceByUserId={presenceByUserId}
             onClose={() => {
               setActiveConversation(null);
               const next = new URLSearchParams(searchParams);

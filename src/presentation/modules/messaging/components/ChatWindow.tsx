@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import type { Conversation } from "@/domain/modules/messaging/models/Conversation";
-import { USER_ROLE_LABELS } from "@/domain/modules/users/models/User";
+import { PRESENCE_STATUS_LABELS, USER_ROLE_LABELS } from "@/domain/modules/users/models/User";
 import { UserAvatar } from "@/presentation/modules/messaging/components/UserAvatar";
 import { MessageList } from "@/presentation/modules/messaging/components/MessageList";
 import { MessageComposer } from "@/presentation/modules/messaging/components/MessageComposer";
@@ -19,11 +19,15 @@ import {
   formatRelativeShort,
   fullName,
 } from "@/presentation/modules/messaging/utils/formatMessageTime";
+import {
+  presenceOf,
+  type PresenceByUserId,
+} from "@/presentation/modules/messaging/utils/presenceMap";
 
 interface ChatWindowProps {
   conversation: Conversation;
   currentUserId: string;
-  onlineUserIds: Set<string>;
+  presenceByUserId: PresenceByUserId;
   onClose?: () => void;
   onMinimize?: () => void;
   compact?: boolean;
@@ -32,7 +36,7 @@ interface ChatWindowProps {
 export function ChatWindow({
   conversation,
   currentUserId,
-  onlineUserIds,
+  presenceByUserId,
   onClose,
   onMinimize,
   compact = false,
@@ -42,7 +46,8 @@ export function ChatWindow({
     [conversation, currentUserId],
   );
 
-  const otherIsOnline = otherParticipant ? onlineUserIds.has(otherParticipant.userId) : false;
+  const otherPresence = presenceOf(presenceByUserId, otherParticipant?.userId);
+  const otherIsOnline = otherPresence !== "offline";
   const otherName = fullName(otherParticipant?.firstName ?? null, otherParticipant?.lastName ?? null);
   const otherRole = otherParticipant?.role ? USER_ROLE_LABELS[otherParticipant.role] : null;
 
@@ -85,7 +90,7 @@ export function ChatWindow({
           firstName={otherParticipant?.firstName ?? null}
           lastName={otherParticipant?.lastName ?? null}
           avatarUrl={otherParticipant?.avatarUrl ?? null}
-          isOnline={otherIsOnline}
+          presenceStatus={otherPresence}
           size={compact ? "sm" : "md"}
         />
         <div className="msg-chat-header-info">
@@ -96,11 +101,11 @@ export function ChatWindow({
           <p className={`msg-chat-header-status${otherIsOnline ? " online" : ""}`}>
             {someoneIsTyping
               ? "Escribiendo..."
-              : otherIsOnline
-                ? "En linea"
+              : otherPresence !== "offline"
+                ? PRESENCE_STATUS_LABELS[otherPresence]
                 : otherParticipant?.lastReadAt
                   ? `Visto ${formatRelativeShort(otherParticipant.lastReadAt)}`
-                  : "Desconectado"}
+                  : PRESENCE_STATUS_LABELS.offline}
           </p>
         </div>
         <div className="msg-chat-header-actions">

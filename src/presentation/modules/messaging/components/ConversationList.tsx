@@ -3,13 +3,14 @@ import type { Conversation } from "@/domain/modules/messaging/models/Conversatio
 import { ConversationListItem } from "@/presentation/modules/messaging/components/ConversationListItem";
 import WcSearchInput from "@/presentation/modules/shared/components/ui/webcomponents/Searchs/wcSearchInput";
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
+import type { PresenceByUserId } from "@/presentation/modules/messaging/utils/presenceMap";
 
 interface ConversationListProps {
   conversations: Conversation[];
   currentUserId: string;
   activeConversationId: string | null;
   onSelect: (conversationId: string) => void;
-  onlineUserIds: Set<string>;
+  presenceByUserId: PresenceByUserId;
   onNewChat: () => void;
   isLoading: boolean;
 }
@@ -19,7 +20,7 @@ export function ConversationList({
   currentUserId,
   activeConversationId,
   onSelect,
-  onlineUserIds,
+  presenceByUserId,
   onNewChat,
   isLoading,
 }: ConversationListProps) {
@@ -77,7 +78,7 @@ export function ConversationList({
             currentUserId={currentUserId}
             isActive={conv.id === activeConversationId}
             onSelect={onSelect}
-            onlineUserIds={onlineUserIds}
+            presenceByUserId={presenceByUserId}
           />
         ))}
       </div>

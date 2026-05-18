@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { USER_ROLE_LABELS } from "@/domain/modules/users/models/User";
+import { PRESENCE_STATUS_LABELS, USER_ROLE_LABELS } from "@/domain/modules/users/models/User";
 import type { MessagingContact } from "@/domain/modules/messaging/models/Conversation";
 import {
   useMessagingContacts,
@@ -93,7 +93,7 @@ export function NewChatPicker({
               firstName={contact.firstName}
               lastName={contact.lastName}
               avatarUrl={contact.avatarUrl}
-              isOnline={contact.isOnline}
+              presenceStatus={contact.presenceStatus}
             />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="msg-picker-item-name">
@@ -101,9 +101,12 @@ export function NewChatPicker({
               </div>
               <div className="msg-picker-item-meta">
                 {contact.role ? USER_ROLE_LABELS[contact.role] : "Usuario"}
-                {contact.isOnline && (
-                  <span style={{ color: "var(--color-success)", marginLeft: 8 }}>
-                    En linea
+                {contact.presenceStatus !== "offline" && (
+                  <span
+                    className={`msg-picker-item-presence msg-picker-item-presence--${contact.presenceStatus}`}
+                    style={{ marginLeft: 8 }}
+                  >
+                    {PRESENCE_STATUS_LABELS[contact.presenceStatus]}
                   </span>
                 )}
               </div>

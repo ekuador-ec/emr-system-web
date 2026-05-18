@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { USER_ROLE_LABELS } from "@/domain/modules/users/models/User";
+import { PRESENCE_STATUS_LABELS, USER_ROLE_LABELS } from "@/domain/modules/users/models/User";
 import { useAuth } from "@/presentation/modules/auth/hooks/useAuth";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import { UserAvatar } from "@/presentation/modules/messaging/components/UserAvatar";
@@ -16,6 +16,11 @@ import {
   formatRelativeShort,
   fullName,
 } from "@/presentation/modules/messaging/utils/formatMessageTime";
+import {
+  buildPresenceMap,
+  presenceOf,
+  type PresenceByUserId,
+} from "@/presentation/modules/messaging/utils/presenceMap";
 import "@/presentation/modules/messaging/components/Messaging.css";
 
 export function FloatingChatHub() {
@@ -39,7 +44,11 @@ export function FloatingChatHub() {
 
   const conversations = conversationsQuery.data ?? [];
   const contacts = contactsQuery.data ?? [];
-  const onlineContacts = useMemo(() => contacts.filter((c) => c.isOnline), [contacts]);
+  const onlineContacts = useMemo(
+    () => contacts.filter((c) => c.presenceStatus !== "offline"),
+    [contacts],
+  );
+  const presenceByUserId = useMemo(() => buildPresenceMap(contacts), [contacts]);
   const totalUnread = useMemo(
     () => conversations.reduce((sum, c) => sum + c.unreadCount, 0),
     [conversations],
@@ -122,7 +131,7 @@ export function FloatingChatHub() {
                 <ChatsPanel
                   conversations={conversations}
                   currentUserId={user.id}
-                  onlineUserIds={new Set(onlineContacts.map((c) => c.id))}
+                  presenceByUserId={presenceByUserId}
                   onSelect={handleSelectConversation}
                   onNewChat={() => {
                     setHubOpen(false);
@@ -176,7 +185,7 @@ interface ChatsPanelProps {
       : never
     : never;
   currentUserId: string;
-  onlineUserIds: Set<string>;
+  presenceByUserId: PresenceByUserId;
   onSelect: (conversationId: string) => void;
   onNewChat: () => void;
 }
@@ -184,7 +193,7 @@ interface ChatsPanelProps {
 function ChatsPanel({
   conversations,
   currentUserId,
-  onlineUserIds,
+  presenceByUserId,
   onSelect,
   onNewChat,
 }: ChatsPanelProps) {
@@ -235,7 +244,7 @@ function ChatsPanel({
       {conversations.map((conv) => {
         const other = conv.participants.find((p) => p.userId !== currentUserId);
         const name = fullName(other?.firstName ?? null, other?.lastName ?? null);
-        const isOnline = other ? onlineUserIds.has(other.userId) : false;
+        const otherPresence = presenceOf(presenceByUserId, other?.userId);
         return (
           <button
             key={conv.id}
@@ -247,7 +256,7 @@ function ChatsPanel({
               firstName={other?.firstName ?? null}
               lastName={other?.lastName ?? null}
               avatarUrl={other?.avatarUrl ?? null}
-              isOnline={isOnline}
+              presenceStatus={otherPresence}
               size="sm"
             />
             <div className="msg-conv-item-body">
@@ -305,7 +314,7 @@ function UsersPanel({ contacts, onSelect, isOpening }: UsersPanelProps) {
             firstName={contact.firstName}
             lastName={contact.lastName}
             avatarUrl={contact.avatarUrl}
-            isOnline={contact.isOnline}
+            presenceStatus={contact.presenceStatus}
             size="sm"
           />
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -314,8 +323,13 @@ function UsersPanel({ contacts, onSelect, isOpening }: UsersPanelProps) {
             </div>
             <div className="msg-picker-item-meta">
               {contact.role ? USER_ROLE_LABELS[contact.role] : "Usuario"}
-              {contact.isOnline ? (
-                <span style={{ color: "var(--color-success)", marginLeft: 8 }}>En linea</span>
+              {contact.presenceStatus !== "offline" ? (
+                <span
+                  className={`msg-picker-item-presence msg-picker-item-presence--${contact.presenceStatus}`}
+                  style={{ marginLeft: 8 }}
+                >
+                  {PRESENCE_STATUS_LABELS[contact.presenceStatus]}
+                </span>
               ) : (
                 <span style={{ marginLeft: 8 }}>
                   {contact.lastSeen ? formatRelativeShort(contact.lastSeen) : "Desconectado"}

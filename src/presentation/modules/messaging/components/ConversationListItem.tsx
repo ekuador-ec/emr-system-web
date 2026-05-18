@@ -4,13 +4,17 @@ import {
   formatRelativeShort,
   fullName,
 } from "@/presentation/modules/messaging/utils/formatMessageTime";
+import {
+  presenceOf,
+  type PresenceByUserId,
+} from "@/presentation/modules/messaging/utils/presenceMap";
 
 interface ConversationListItemProps {
   conversation: Conversation;
   currentUserId: string;
   isActive: boolean;
   onSelect: (conversationId: string) => void;
-  onlineUserIds: Set<string>;
+  presenceByUserId: PresenceByUserId;
 }
 
 export function ConversationListItem({
@@ -18,11 +22,11 @@ export function ConversationListItem({
   currentUserId,
   isActive,
   onSelect,
-  onlineUserIds,
+  presenceByUserId,
 }: ConversationListItemProps) {
   const other = conversation.participants.find((p) => p.userId !== currentUserId);
   const name = fullName(other?.firstName ?? null, other?.lastName ?? null);
-  const isOnline = other ? onlineUserIds.has(other.userId) : false;
+  const presenceStatus = presenceOf(presenceByUserId, other?.userId);
   const preview = conversation.lastMessagePreview ?? "Sin mensajes todavia";
   const time = formatRelativeShort(conversation.lastMessageAt ?? conversation.updatedAt);
   const hasUnread = conversation.unreadCount > 0;
@@ -37,7 +41,7 @@ export function ConversationListItem({
         firstName={other?.firstName ?? null}
         lastName={other?.lastName ?? null}
         avatarUrl={other?.avatarUrl ?? null}
-        isOnline={isOnline}
+        presenceStatus={presenceStatus}
       />
       <div className="msg-conv-item-body">
         <div className="msg-conv-item-top">

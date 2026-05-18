@@ -225,6 +225,42 @@
   box-shadow: 0 0 4px var(--color-success);
 }
 
+.msg-avatar-dot--online {
+  background: var(--color-success);
+  box-shadow: 0 0 4px var(--color-success);
+}
+
+.msg-avatar-dot--away {
+  background: var(--color-warning, #f59e0b);
+  box-shadow: 0 0 4px var(--color-warning, #f59e0b);
+}
+
+.msg-avatar-dot--busy {
+  background: var(--color-danger);
+  box-shadow: 0 0 4px var(--color-danger);
+}
+
+.msg-avatar-dot--offline {
+  background: var(--color-text-muted, #94a3b8);
+  box-shadow: none;
+}
+
+.msg-picker-item-presence {
+  font-weight: 600;
+}
+
+.msg-picker-item-presence--online {
+  color: var(--color-success);
+}
+
+.msg-picker-item-presence--away {
+  color: var(--color-warning, #f59e0b);
+}
+
+.msg-picker-item-presence--busy {
+  color: var(--color-danger);
+}
+
 .msg-avatar.sm .msg-avatar-dot {
   width: 8px;
   height: 8px;
@@ -770,6 +806,27 @@
   }
 }
 
+/* Mobile-left anchored: avoids overlap with the FloatingChatHub
+   trigger on the bottom-right corner. The stack moves to the
+   bottom-left and the deck fans out toward the right (away from
+   the screen edge). On mobile we also snap the stack closer to
+   the actual bottom edge since there is no neighbour to align
+   with on the left side.                                            */
+.msg-bubbles-stack--mobile-left {
+  right: auto;
+  left: var(--space-2);
+  bottom: var(--space-3);
+  align-items: flex-start;
+}
+
+/* When the chat window is rendered (a bubble is expanded), lift
+   the whole stack above the FloatingChatHub trigger and popover
+   so the user can read and interact with the active conversation
+   without anything overlapping it.                                  */
+.msg-bubbles-stack--expanded {
+  z-index: 1000;
+}
+
 /* Deck of minimized bubbles: avatars overlap like playing cards.
    On hover (desktop) or tap (mobile, controlled via .fanned) they
    fan out horizontally so the user can pick one.                    */
@@ -782,7 +839,7 @@
 .msg-bubble-deck-item {
   position: absolute;
   top: 0;
-  transition: right 250ms ease;
+  transition: right 250ms ease, left 250ms ease;
 }
 
 .msg-bubble-icon {
