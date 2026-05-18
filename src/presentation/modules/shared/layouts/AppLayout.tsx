@@ -10,6 +10,7 @@ import { Sidebar } from "@/presentation/modules/shared/components/Sidebar";
 import { FloatingChatHub } from "@/presentation/modules/messaging/components/FloatingChatHub";
 import { FloatingChatBubbles } from "@/presentation/modules/messaging/components/FloatingChatBubbles";
 import { useMessagingSubscription } from "@/presentation/modules/messaging/hooks/useMessagingSubscription";
+import { useDocumentTitleNotifications } from "@/presentation/modules/messaging/hooks/useDocumentTitleNotifications";
 import { FloatingProfileHub } from "@/presentation/modules/shared/components/FloatingProfileHub";
 import {
   FloatingQuickActions,
@@ -51,6 +52,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   usePatientSubscription();
   useEvolutionSubscription();
   useMessagingSubscription(user?.id);
+  useDocumentTitleNotifications(user?.id);
 
   const quickActionsModules: QuickActionsModule[] = [
     {

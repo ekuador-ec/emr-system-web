@@ -35,6 +35,8 @@ export function FloatingChatHub() {
     hubTab,
     setHubTab,
     openBubble,
+    isSoundEnabled,
+    setSoundEnabled,
   } = useMessagingUIStore();
 
   const conversationsQuery = useConversations(user?.id);
@@ -90,23 +92,39 @@ export function FloatingChatHub() {
           <div className="msg-float-hub">
             <div className="msg-float-hub-header">
               <strong style={{ fontSize: "var(--font-size-sm)" }}>Mensajeria</strong>
-              <button
-                type="button"
-                onClick={() => {
-                  setHubOpen(false);
-                  navigate("/mensajes");
-                }}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "var(--color-primary)",
-                  fontSize: "var(--font-size-xs)",
-                  fontWeight: 600,
-                }}
-              >
-                Ver todos
-              </button>
+              <div className="msg-float-hub-header-actions">
+                <button
+                  type="button"
+                  className={`msg-float-hub-sound-toggle${isSoundEnabled ? "" : " is-muted"}`}
+                  onClick={() => setSoundEnabled(!isSoundEnabled)}
+                  title={
+                    isSoundEnabled
+                      ? "Silenciar sonido de mensajes"
+                      : "Activar sonido de mensajes"
+                  }
+                  aria-label={
+                    isSoundEnabled
+                      ? "Silenciar sonido de mensajes"
+                      : "Activar sonido de mensajes"
+                  }
+                  aria-pressed={isSoundEnabled}
+                >
+                  <Icon
+                    name={isSoundEnabled ? "icon-bell" : "icon-bell-off"}
+                    size={14}
+                  />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHubOpen(false);
+                    navigate("/mensajes");
+                  }}
+                  className="msg-float-hub-header-link"
+                >
+                  Ver todos
+                </button>
+              </div>
             </div>
 
             <div className="msg-float-hub-tabs">

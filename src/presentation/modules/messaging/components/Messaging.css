@@ -755,6 +755,58 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+.msg-float-hub-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.msg-float-hub-header-link {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.msg-float-hub-header-link:hover {
+  text-decoration: underline;
+}
+
+.msg-float-hub-sound-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.msg-float-hub-sound-toggle:hover {
+  background-color: color-mix(in srgb, var(--color-text) 5%, transparent);
+  color: var(--color-text);
+}
+
+.msg-float-hub-sound-toggle.is-muted {
+  color: var(--color-danger, #ef4444);
+  border-color: color-mix(in srgb, var(--color-danger, #ef4444) 40%, transparent);
+  background-color: color-mix(in srgb, var(--color-danger, #ef4444) 8%, transparent);
+}
+
+.msg-float-hub-sound-toggle:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .msg-float-hub-tabs {
   display: flex;
   border-bottom: 1px solid var(--color-border);

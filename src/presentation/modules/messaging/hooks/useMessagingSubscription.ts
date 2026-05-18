@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/infrastructure/core/supabaseClient";
+import type { Conversation } from "@/domain/modules/messaging/models/Conversation";
 import type { Message } from "@/domain/modules/messaging/models/Message";
 import { mapMessageRow, type MessageRow } from "@/infrastructure/modules/messaging/mappers/messageMapper";
 import {
@@ -15,6 +16,7 @@ import {
   useMessagingUIStore,
 } from "@/presentation/modules/messaging/stores/useMessagingUIStore";
 import { conversationRepository } from "@/infrastructure/modules/messaging/config";
+import { playMessageSound } from "@/presentation/modules/messaging/utils/playMessageSound";
 
 interface ParticipationCache {
   conversationIds: Set<string>;
@@ -74,6 +76,19 @@ export function useMessagingSubscription(userId: string | undefined | null) {
             useMessagingUIStore
               .getState()
               .openBubble(message.conversationId, { minimized: true });
+          }
+
+          const soundEnabled = useMessagingUIStore.getState().isSoundEnabled;
+          if (soundEnabled && !openSomewhere) {
+            const conversations = queryClient.getQueryData<Conversation[]>(
+              conversationsKey(userId),
+            );
+            const conv = conversations?.find((c) => c.id === message.conversationId);
+            const myParticipant = conv?.participants.find((p) => p.userId === userId);
+            const isMuted = myParticipant?.muted ?? false;
+            if (!isMuted) {
+              playMessageSound();
+            }
           }
         },
       )

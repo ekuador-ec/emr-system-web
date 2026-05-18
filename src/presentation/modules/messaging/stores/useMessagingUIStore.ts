@@ -1,6 +1,27 @@
 import { create } from "zustand";
 
 const MAX_BUBBLES = 5;
+const SOUND_PREFERENCE_STORAGE_KEY = "messaging:sound-enabled";
+
+function readSoundPreference(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    const raw = window.localStorage.getItem(SOUND_PREFERENCE_STORAGE_KEY);
+    if (raw === null) return true;
+    return raw === "true";
+  } catch {
+    return true;
+  }
+}
+
+function writeSoundPreference(value: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(SOUND_PREFERENCE_STORAGE_KEY, String(value));
+  } catch {
+    /* localStorage may be unavailable in private mode; ignore. */
+  }
+}
 
 interface BubbleState {
   conversationId: string;
@@ -35,7 +56,7 @@ const initialState = {
   isHubOpen: false,
   hubTab: "chats" as const,
   isNewChatPickerOpen: false,
-  isSoundEnabled: false,
+  isSoundEnabled: readSoundPreference(),
 };
 
 function capStack(bubbles: BubbleState[]): BubbleState[] {
@@ -54,7 +75,10 @@ export const useMessagingUIStore = create<MessagingUIState>((set) => ({
   setHubOpen: (open) => set({ isHubOpen: open }),
   setHubTab: (tab) => set({ hubTab: tab }),
   setNewChatPickerOpen: (open) => set({ isNewChatPickerOpen: open }),
-  setSoundEnabled: (enabled) => set({ isSoundEnabled: enabled }),
+  setSoundEnabled: (enabled) => {
+    writeSoundPreference(enabled);
+    set({ isSoundEnabled: enabled });
+  },
 
   openBubble: (conversationId, options) =>
     set((state) => {
@@ -146,7 +170,7 @@ export const useMessagingUIStore = create<MessagingUIState>((set) => ({
       };
     }),
 
-  reset: () => set({ ...initialState }),
+  reset: () => set({ ...initialState, isSoundEnabled: readSoundPreference() }),
 }));
 
 export function isConversationOpenSomewhere(conversationId: string): boolean {
