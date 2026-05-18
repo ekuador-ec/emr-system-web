@@ -1,6 +1,9 @@
 import type {
   AccountStatus,
   InviteUserPayload,
+  ManualPresenceStatus,
+  MyPresenceSnapshot,
+  PresenceActivitySignal,
   PresenceEntry,
   UserFilters,
   UserProfile,
@@ -28,6 +31,24 @@ export interface UserRepository {
   restoreDeletedUser(userId: string): Promise<void>;
 
   updateProfile(userId: string, data: Partial<UserProfile>): Promise<UserProfile>;
+
+  /**
+   * Pushes a heartbeat for the given user with the current activity signal.
+   * Server keeps `manual_status` untouched. Used every 30/60 seconds.
+   */
+  sendPresenceHeartbeat(userId: string, activitySignal: PresenceActivitySignal): Promise<void>;
+
+  /**
+   * Persists the manual presence preference chosen by the user.
+   * Available across sessions and devices.
+   */
+  setManualPresence(userId: string, manualStatus: ManualPresenceStatus): Promise<void>;
+
+  /**
+   * Reads the current user's own presence snapshot (manual preference
+   * included). Returns null when the row has not been created yet.
+   */
+  getMyPresence(): Promise<MyPresenceSnapshot | null>;
 
   /**
    * Subscribe to presence updates.

@@ -14,7 +14,7 @@ export class GetFilteredUsers {
     const sanitized: UserFilters = {
       roles: filters.roles?.length ? filters.roles : undefined,
       statuses: filters.statuses?.length ? filters.statuses : undefined,
-      online: filters.online ?? null,
+      presenceStatuses: filters.presenceStatuses?.length ? filters.presenceStatuses : undefined,
       searchTerm: this.sanitizeSearchTerm(filters.searchTerm),
       includeDeleted: filters.includeDeleted ?? false,
     };

@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/infrastructure/core/supabaseClient";
+import { ADMIN_USERS_QUERY_KEY } from "@/presentation/modules/users/hooks/useAdminUsers";
+import { MESSAGING_QUERY_KEY } from "@/presentation/modules/messaging/hooks/useConversations";
 
 export function usePresenceSubscription(enabled = true) {
   const queryClient = useQueryClient();
@@ -18,7 +20,8 @@ export function usePresenceSubscription(enabled = true) {
           table: "presence_status",
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+          queryClient.invalidateQueries({ queryKey: ADMIN_USERS_QUERY_KEY });
+          queryClient.invalidateQueries({ queryKey: MESSAGING_QUERY_KEY });
         },
       )
       .subscribe();

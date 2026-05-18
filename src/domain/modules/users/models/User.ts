@@ -38,12 +38,31 @@ export interface UserProfile {
 }
 
 /**
+ * Effective presence status that the rest of the system consumes.
+ * Calculated server-side based on `manual_status`, `activity_signal`
+ * and `last_seen` (see migration 53_presence_status_extended.sql).
+ */
+export type PresenceStatus = "online" | "away" | "busy" | "offline";
+
+/**
+ * Manual preference explicitly chosen by the user. Persists across
+ * sessions and devices via `presence_status.manual_status`.
+ */
+export type ManualPresenceStatus = "available" | "busy" | "invisible";
+
+/**
+ * Activity signal reported by the client based on tab visibility
+ * and input idle time. Drives the transition online <-> away.
+ */
+export type PresenceActivitySignal = "active" | "idle";
+
+/**
  * Presence entry combining profile and presence_status data.
- * Used in admin panels to show online/offline status.
+ * Used in admin panels to show the effective presence status.
  */
 export interface PresenceEntry {
   userId: string;
-  isOnline: boolean;
+  presenceStatus: PresenceStatus;
   lastSeen: string | null;
 }
 
@@ -51,7 +70,19 @@ export interface PresenceEntry {
  * Full user data with presence info, as returned by get_all_users_admin RPC.
  */
 export interface UserWithPresence extends UserProfile {
-  isOnline: boolean;
+  presenceStatus: PresenceStatus;
+  lastSeen: string | null;
+}
+
+/**
+ * The current user's own presence snapshot, including the manual
+ * preference (only readable for self).
+ */
+export interface MyPresenceSnapshot {
+  userId: string;
+  presenceStatus: PresenceStatus;
+  manualStatus: ManualPresenceStatus;
+  activitySignal: PresenceActivitySignal;
   lastSeen: string | null;
 }
 
@@ -72,7 +103,7 @@ export interface InviteUserPayload {
 export interface UserFilters {
   roles?: UserRole[];
   statuses?: AccountStatus[];
-  online?: "online" | "offline" | null;
+  presenceStatuses?: PresenceStatus[];
   searchTerm?: string | null;
   includeDeleted?: boolean;
 }
@@ -96,4 +127,23 @@ export const ACCOUNT_STATUS_LABELS: Record<AccountStatus, string> = {
   active: "Activo",
   inactive: "Inactivo",
   suspended: "Suspendido",
+};
+
+/**
+ * Human-readable labels for the effective presence status.
+ */
+export const PRESENCE_STATUS_LABELS: Record<PresenceStatus, string> = {
+  online: "Disponible",
+  away: "Ausente",
+  busy: "Ocupado",
+  offline: "Desconectado",
+};
+
+/**
+ * Human-readable labels for the manual presence preference.
+ */
+export const MANUAL_PRESENCE_LABELS: Record<ManualPresenceStatus, string> = {
+  available: "Disponible",
+  busy: "Ocupado",
+  invisible: "Aparecer desconectado",
 };

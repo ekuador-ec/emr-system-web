@@ -6,6 +6,7 @@ import { LogoutUser } from "@/application/modules/auth/use-cases/logoutUser";
 import { clearAllDrafts } from "@/infrastructure/core/draftCache";
 import { useMessagingUIStore } from "@/presentation/modules/messaging/stores/useMessagingUIStore";
 import { useAiAssistantStore } from "@/presentation/modules/ai/stores/useAiAssistantStore";
+import { usePresenceStore } from "@/presentation/modules/users/stores/usePresenceStore";
 
 const authRepository = new SupabaseAuthRepository();
 const loginUseCase = new LoginUser(authRepository);
@@ -48,6 +49,7 @@ export function useAuth() {
       clearAllDrafts();
       useMessagingUIStore.getState().reset();
       useAiAssistantStore.getState().reset();
+      usePresenceStore.getState().reset();
       queryClient.clear();
     },
   });

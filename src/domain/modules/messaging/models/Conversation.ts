@@ -1,4 +1,4 @@
-import type { UserRole } from "@/domain/modules/users/models/User";
+import type { PresenceStatus, UserRole } from "@/domain/modules/users/models/User";
 
 export type ConversationType = "direct" | "group";
 
@@ -30,6 +30,6 @@ export interface MessagingContact {
   lastName: string | null;
   role: UserRole | null;
   avatarUrl: string | null;
-  isOnline: boolean;
+  presenceStatus: PresenceStatus;
   lastSeen: string | null;
 }

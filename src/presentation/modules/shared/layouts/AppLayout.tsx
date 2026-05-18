@@ -1,4 +1,5 @@
 import { usePresenceTracker } from "@/presentation/modules/users/hooks/usePresenceTracker";
+import { usePresenceSubscription } from "@/presentation/modules/users/hooks/usePresenceSubscription";
 import { useUserStore } from "@/presentation/modules/users/stores/useUserStore";
 import { useAdminUsers } from "@/presentation/modules/users/hooks/useAdminUsers";
 import { InviteUserModal } from "@/presentation/modules/users/components/InviteUserModal";
@@ -45,6 +46,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { readOnlyTarget, closeReadOnlyEvolution } = useEvolutionUIStore();
 
   usePresenceTracker(user?.id);
+  usePresenceSubscription(Boolean(user?.id));
   useNotificationSubscription(user?.id);
   usePatientSubscription();
   useEvolutionSubscription();

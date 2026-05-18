@@ -2,14 +2,33 @@ import type { UserRepository } from "@/domain/modules/users/repositories/UserRep
 import type {
   AccountStatus,
   InviteUserPayload,
+  ManualPresenceStatus,
+  MyPresenceSnapshot,
+  PresenceActivitySignal,
   PresenceEntry,
+  PresenceStatus,
   UserFilters,
   UserProfile,
   UserWithPresence,
 } from "@/domain/modules/users/models/User";
 import { supabase } from "@/infrastructure/core/supabaseClient";
-import { mapProfileRow, mapProfileWithPresenceRow } from "@/infrastructure/modules/users/mappers/profileMapper";
-import type { ProfileRow, ProfileWithPresenceRow } from "@/infrastructure/modules/users/mappers/profileMapper";
+import {
+  mapProfileRow,
+  mapProfileWithPresenceRow,
+  toPresenceStatus,
+} from "@/infrastructure/modules/users/mappers/profileMapper";
+import type {
+  ProfileRow,
+  ProfileWithPresenceRow,
+} from "@/infrastructure/modules/users/mappers/profileMapper";
+
+interface MyPresenceRow {
+  user_id: string;
+  manual_status: string | null;
+  activity_signal: string | null;
+  last_seen: string | null;
+  presence_status: string | null;
+}
 
 export class SupabaseUserRepository implements UserRepository {
   async getAllUsers(): Promise<UserWithPresence[]> {
@@ -31,8 +50,8 @@ export class SupabaseUserRepository implements UserRepository {
     if (filters.statuses?.length) {
       params.filter_statuses = filters.statuses;
     }
-    if (filters.online) {
-      params.filter_online = filters.online;
+    if (filters.presenceStatuses?.length) {
+      params.filter_presence = filters.presenceStatuses;
     }
     if (filters.searchTerm) {
       params.search_term = filters.searchTerm;
@@ -171,6 +190,57 @@ export class SupabaseUserRepository implements UserRepository {
     return mapProfileRow(data);
   }
 
+  async sendPresenceHeartbeat(
+    userId: string,
+    activitySignal: PresenceActivitySignal,
+  ): Promise<void> {
+    const { error } = await supabase.rpc("upsert_presence_heartbeat", {
+      p_user_id: userId,
+      p_activity_signal: activitySignal,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  async setManualPresence(
+    userId: string,
+    manualStatus: ManualPresenceStatus,
+  ): Promise<void> {
+    const { error } = await supabase.rpc("set_manual_presence", {
+      p_user_id: userId,
+      p_manual_status: manualStatus,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  async getMyPresence(): Promise<MyPresenceSnapshot | null> {
+    const { data, error } = await supabase.rpc("get_my_presence");
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const rows = (data as MyPresenceRow[] | null) ?? [];
+    if (rows.length === 0) return null;
+
+    const row = rows[0];
+    const manualStatus = (row.manual_status ?? "available") as ManualPresenceStatus;
+    const activitySignal = (row.activity_signal ?? "active") === "idle" ? "idle" : "active";
+
+    return {
+      userId: row.user_id,
+      manualStatus,
+      activitySignal,
+      lastSeen: row.last_seen,
+      presenceStatus: toPresenceStatus(row.presence_status, "online"),
+    };
+  }
+
   subscribeToPresence(callback: (entries: PresenceEntry[]) => void): () => void {
     const channel = supabase.channel("online-users", {
       config: { presence: { key: "user_id" } },
@@ -179,11 +249,18 @@ export class SupabaseUserRepository implements UserRepository {
     channel
       .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
-        const entries: PresenceEntry[] = Object.entries(state).map(([userId, presences]) => ({
-          userId,
-          isOnline: true,
-          lastSeen: (presences[0] as { last_seen?: string })?.last_seen ?? null,
-        }));
+        const entries: PresenceEntry[] = Object.entries(state).map(([userId, presences]) => {
+          const meta = presences[0] as { last_seen?: string; presence_status?: string } | undefined;
+          const presenceStatus = toPresenceStatus(
+            meta?.presence_status ?? null,
+            "online",
+          ) as PresenceStatus;
+          return {
+            userId,
+            presenceStatus,
+            lastSeen: meta?.last_seen ?? null,
+          };
+        });
         callback(entries);
       })
       .subscribe();

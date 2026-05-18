@@ -2,7 +2,11 @@
  * Maps a raw Supabase profiles row (snake_case) to the domain UserProfile (camelCase).
  */
 
-import type { UserProfile, UserWithPresence } from "@/domain/modules/users/models/User";
+import type {
+  PresenceStatus,
+  UserProfile,
+  UserWithPresence,
+} from "@/domain/modules/users/models/User";
 
 export interface ProfileRow {
   id: string;
@@ -23,8 +27,18 @@ export interface ProfileRow {
 }
 
 export interface ProfileWithPresenceRow extends ProfileRow {
-  is_online: boolean;
+  is_online: boolean | null;
   last_seen: string | null;
+  presence_status: string | null;
+}
+
+const VALID_PRESENCE_STATUSES: PresenceStatus[] = ["online", "away", "busy", "offline"];
+
+export function toPresenceStatus(value: string | null | undefined, fallback: PresenceStatus = "offline"): PresenceStatus {
+  if (typeof value === "string" && (VALID_PRESENCE_STATUSES as string[]).includes(value)) {
+    return value as PresenceStatus;
+  }
+  return fallback;
 }
 
 export function mapProfileRow(row: ProfileRow): UserProfile {
@@ -48,9 +62,10 @@ export function mapProfileRow(row: ProfileRow): UserProfile {
 }
 
 export function mapProfileWithPresenceRow(row: ProfileWithPresenceRow): UserWithPresence {
+  const fallback: PresenceStatus = row.is_online ? "online" : "offline";
   return {
     ...mapProfileRow(row),
-    isOnline: row.is_online,
+    presenceStatus: toPresenceStatus(row.presence_status, fallback),
     lastSeen: row.last_seen,
   };
 }
