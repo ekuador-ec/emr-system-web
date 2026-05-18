@@ -255,16 +255,24 @@ Centro de notificaciones in-app con conteo de no leídas, marcar como leída ind
 4. **NO** modificar `NotificationBell.tsx` ni `useNotificationSubscription.ts`: ambos consumen el registry y soportan tipos nuevos automáticamente.
 
 ### 8. Users (`users`)
-Administración de usuarios solo para `admin`: invitación (Edge Function), edición de perfil con avatar (Storage + crop), cambio de estado (`active` / `inactive` / `suspended`), soft delete y restore, presencia online en tiempo real (presence channel), vista en tabla y cards.
+Administración de usuarios solo para `admin`: invitación (Edge Function), edición de perfil con avatar (Storage + crop), cambio de estado (`active` / `inactive` / `suspended`), soft delete y restore, presencia en tiempo real con cuatro estados (online/away/busy/offline), vista en tabla y cards.
 
-- Domain: `UserProfile`, `UserWithPresence`, `PresenceEntry`, `InviteUserPayload`, `UserFilters` y enums (`UserRole`: admin, doctor, nurse, receptionist, lab_technician, pharmacist; `AccountStatus`: active, inactive, suspended). Constantes `USER_ROLE_LABELS` y `ACCOUNT_STATUS_LABELS` para etiquetas en español.
-- Application: `GetFilteredUsers`, `InviteUser`, `ToggleUserStatus`, `SoftDeleteUser`, `RestoreDeletedUser`, `UpdateUserProfileUseCase` (orquesta subida/borrado de avatar vía `StorageRepository` con path `{userId}/{timestamp}.{ext}`).
-- Infrastructure: `SupabaseUserRepository` (RPCs de admin, edge function `invite-user`, presence channel `online-users`).
+- Domain: `UserProfile`, `UserWithPresence`, `PresenceEntry`, `MyPresenceSnapshot`, `InviteUserPayload`, `UserFilters` y enums (`UserRole`: admin, doctor, nurse, receptionist, lab_technician, pharmacist; `AccountStatus`: active, inactive, suspended; `PresenceStatus`: online | away | busy | offline; `ManualPresenceStatus`: available | busy | invisible; `PresenceActivitySignal`: active | idle). Constantes `USER_ROLE_LABELS`, `ACCOUNT_STATUS_LABELS`, `PRESENCE_STATUS_LABELS`, `MANUAL_PRESENCE_LABELS` para etiquetas en español.
+- Application: `GetFilteredUsers` (acepta `presenceStatuses: PresenceStatus[]`), `InviteUser`, `ToggleUserStatus`, `SoftDeleteUser`, `RestoreDeletedUser`, `UpdateUserProfileUseCase`, `SendPresenceHeartbeat`, `SetManualPresence`, `GetMyPresence`.
+- Infrastructure: `SupabaseUserRepository` (RPCs de admin, edge function `invite-user`, RPCs de presencia `upsert_presence_heartbeat`, `set_manual_presence`, `get_my_presence`).
+- Backend de presencia (`supabase/migrations/`):
+  - `05_presence_tracking.sql`: tabla original `presence_status` con `user_id`, `is_online`, `last_seen`.
+  - `53_presence_status_extended.sql`: amplia la tabla con `manual_status` (`available|busy|invisible`) y `activity_signal` (`active|idle`). Helper `effective_presence_status(last_seen, manual, activity)` calcula el estado efectivo (online/away/busy/offline). RPCs nuevas: `upsert_presence_heartbeat(p_user_id, p_activity_signal)`, `set_manual_presence(p_user_id, p_manual_status)`, `get_my_presence()` (solo expone la fila del caller, incluye `manual_status`). El RPC legacy `upsert_presence(user_id, is_online)` queda como shim de compatibilidad. RPCs admin (`get_all_users_admin`, `get_filtered_users_admin`) y `list_messaging_contacts` se refactorizaron para devolver `presence_status TEXT` derivado por SQL; `get_filtered_users_admin` acepta el parámetro nuevo `filter_presence TEXT[]`. Reaper `reap_stale_presence()` programado con `pg_cron` cada minuto: marca `activity_signal = idle` cuando `last_seen < now() - 2min` y `is_online = false` cuando `last_seen < now() - 5min`, garantizando que el cierre abrupto del navegador se propague en menos de 5 minutos sin depender del cliente.
 - Presentation:
-  - Pages: `UsersManagementPage` (tabla / cards, filtros, acciones).
-  - Components: `InviteUserModal`, `UserProfileModal`, `UserUpdatePasswordModal`, `UsersQuickFilterPopover`, `wcUserCard`. (El antiguo `ActiveUsersFloat` fue reemplazado por `FloatingChatHub` del módulo `messaging`, que ahora muestra usuarios en línea a todos los roles, no solo a admin.)
-  - Hooks: `useAdminUsers`, `useUpdateProfile`, `usePresenceTracker`, `usePresenceSubscription`, `useProfilesSubscription`.
-  - Store: `useUserStore`.
+  - Pages: `UsersManagementPage` (tabla / cards, filtros, acciones). El filtro de conexión ahora es multi-select sobre los 4 `PresenceStatus` (`presence` en `UsersQuickFilterState`).
+  - Components: `InviteUserModal`, `UserProfileModal`, `UserUpdatePasswordModal`, `UsersQuickFilterPopover` (con campo `presence: PresenceStatus[]`), `wcUserCard` (chip de presencia adicional). El selector de estado manual vive en `FloatingProfileHub` (shared) como un grupo dentro del menú del avatar: Disponible / Ocupado / Aparecer desconectado (Ausente NO se elige manualmente, se deriva de la inactividad).
+  - Hooks:
+    - `useAdminUsers`, `useUpdateProfile`, `useProfilesSubscription`.
+    - `usePresenceTracker(userId)` (montado en `AppLayout`): FSM con heartbeat 30s focus / 60s hidden, idle por 10 min sin input, idle por 2 min con `document.hidden`, sin marcar offline desde cliente (el reaper se encarga). Listeners pasivos en `mousemove/keydown/wheel/touchstart/scroll` con throttle 1s. Cleanup en logout/unmount manda un heartbeat final con `activity_signal = idle` e invalida queries de admin y mensajería.
+    - `usePresenceSubscription(enabled)` (montado en `AppLayout`): escucha `postgres_changes` sobre `presence_status` e invalida `["admin","users"]` + `MESSAGING_QUERY_KEY` para que el reaper propague a la UI sin reload.
+    - `useSetManualPresence(userId)`: mutación TanStack Query con update optimista del `usePresenceStore`, rollback en error, invalidación de admin + mensajería en éxito.
+  - Store: `useUserStore` (UI), `usePresenceStore` (Zustand sin `persist`: `manualStatus`, `activitySignal`, `effectiveStatus`, `isHydrated`). Helper `deriveEffectivePresence(manual, activity)` espeja la fórmula SQL para optimismo cliente. El store se resetea en `useAuth.logout` junto con los demás stores de PII.
+  - Utils: `presenceMap.ts` en `messaging/utils/` (`buildPresenceMap`, `presenceOf`) para que componentes de mensajería consuman el estado efectivo de cada contacto desde una sola fuente.
   - Schemas: `user.schema.ts`, `admin.schema.ts`.
 
 ### 9. Messaging (`messaging`)
