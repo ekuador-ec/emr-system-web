@@ -241,6 +241,16 @@ export class SupabaseUserRepository implements UserRepository {
     };
   }
 
+  async markPresenceOffline(userId: string): Promise<void> {
+    const { error } = await supabase.rpc("mark_presence_offline", {
+      p_user_id: userId,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
   subscribeToPresence(callback: (entries: PresenceEntry[]) => void): () => void {
     const channel = supabase.channel("online-users", {
       config: { presence: { key: "user_id" } },

@@ -51,6 +51,13 @@ export interface UserRepository {
   getMyPresence(): Promise<MyPresenceSnapshot | null>;
 
   /**
+   * Marks the user as offline immediately in response to an explicit
+   * logout. Backdates `last_seen` server-side so the effective status
+   * propagates without waiting for the reaper.
+   */
+  markPresenceOffline(userId: string): Promise<void>;
+
+  /**
    * Subscribe to presence updates.
    * @param callback Callback function that receives presence entries.
    * @returns Unsubscribe function.
