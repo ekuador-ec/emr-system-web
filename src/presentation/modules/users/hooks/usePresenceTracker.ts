@@ -16,41 +16,63 @@ import { ADMIN_USERS_QUERY_KEY } from "@/presentation/modules/users/hooks/useAdm
 
 const FOCUSED_HEARTBEAT_MS = 30_000;
 const HIDDEN_HEARTBEAT_MS = 60_000;
-const HIDDEN_TO_IDLE_MS = 120_000;
-const INPUT_IDLE_THRESHOLD_MS = 10 * 60_000;
+const INACTIVE_TO_IDLE_MS = 180_000;
+const INPUT_IDLE_THRESHOLD_MS = 5 * 60_000;
 const INTERACTION_THROTTLE_MS = 1_000;
+const INTERACTION_EVENTS = [
+  "mousemove",
+  "keydown",
+  "wheel",
+  "touchstart",
+  "scroll",
+] as const;
 
 const userRepository = new SupabaseUserRepository();
 const sendHeartbeat = new SendPresenceHeartbeat(userRepository);
 const getMyPresence = new GetMyPresence(userRepository);
 
+function computeIsWindowActive(): boolean {
+  if (typeof document === "undefined") return true;
+  if (document.visibilityState !== "visible") return false;
+  if (typeof document.hasFocus === "function" && !document.hasFocus()) return false;
+  return true;
+}
+
 /**
  * usePresenceTracker — Global hook for tracking user presence.
  *
- * Runs for ALL authenticated users (mounted in AppLayout).
+ * Runs for ALL authenticated users (mounted in AppLayout). It uses
+ * two independent triggers for the away signal and takes whichever
+ * fires first:
  *
- * Responsibilities:
- *   - Heartbeat: every 30s when the tab is visible, 60s when hidden.
- *   - Idle detection: 10 minutes without input -> activity_signal = 'idle'.
- *   - Visibility: tab hidden for 2 minutes -> activity_signal = 'idle'.
- *   - On unmount/logout: marks the user offline via the legacy shim.
- *   - On pagehide: best-effort beacon flagged as idle so the server
- *     reaper can demote the user faster than the 5-minute fallback.
+ *  1. Window inactivity (visibility OR focus). The tab is hidden or
+ *     the browser window lost OS focus for 3 minutes uninterrupted.
+ *     Covers tab switching, alt-tab, minimised browsers and screen
+ *     locks.
+ *  2. Input inactivity. The window is currently active but no
+ *     mousemove, keydown, wheel, touchstart or scroll event has
+ *     fired for 5 minutes. Covers the user walking away from a
+ *     workstation without minimising the EMR.
  *
- * The hook never sets the user offline by itself. The server-side
- * reaper (pg_cron `reap_stale_presence`) takes care of users who
- * closed the browser without logging out.
+ * Heartbeats use an adaptive cadence: 30s when the window is active,
+ * 60s otherwise. The cleanup sends a final heartbeat flagged as idle
+ * so the server-side pg_cron reaper does not need to wait the full
+ * 4-minute offline window after a logout or unmount.
+ *
+ * The client never marks itself offline: that decision belongs to
+ * `public.reap_stale_presence`, which is the ultimate safety net for
+ * abrupt browser closures.
  */
 export function usePresenceTracker(userId: string | undefined) {
   const queryClient = useQueryClient();
   const userIdRef = useRef(userId);
   userIdRef.current = userId;
 
-  const lastInteractionRef = useRef<number>(Date.now());
-  const lastInteractionFlushRef = useRef<number>(0);
   const activitySignalRef = useRef<PresenceActivitySignal>("active");
-  const hiddenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inactiveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastInteractionFlushRef = useRef<number>(0);
   const manualStatusRef = useRef<ManualPresenceStatus>("available");
 
   const setManualStatus = usePresenceStore((state) => state.setManualStatus);
@@ -75,62 +97,79 @@ export function usePresenceTracker(userId: string | undefined) {
       await sendHeartbeat.execute(currentUserId, signal);
     };
 
-    const setActivitySignal = (signal: PresenceActivitySignal) => {
-      if (activitySignalRef.current === signal) return;
-      void pushHeartbeat(signal);
+    const transitionToActive = () => {
+      if (activitySignalRef.current === "active") return;
+      void pushHeartbeat("active");
     };
 
-    const handleInteraction = () => {
-      const now = Date.now();
-      lastInteractionRef.current = now;
-      if (activitySignalRef.current === "idle") {
-        setActivitySignal("active");
-        return;
-      }
-      if (now - lastInteractionFlushRef.current < INTERACTION_THROTTLE_MS) return;
-      lastInteractionFlushRef.current = now;
-    };
-
-    const evaluateIdleByInactivity = () => {
+    const transitionToIdle = () => {
       if (activitySignalRef.current === "idle") return;
-      if (document.visibilityState === "hidden") return;
-      if (Date.now() - lastInteractionRef.current >= INPUT_IDLE_THRESHOLD_MS) {
-        setActivitySignal("idle");
+      void pushHeartbeat("idle");
+    };
+
+    const clearInactiveTimer = () => {
+      if (inactiveTimerRef.current) {
+        clearTimeout(inactiveTimerRef.current);
+        inactiveTimerRef.current = null;
       }
     };
 
-    const scheduleHeartbeat = () => {
+    const clearInputIdleTimer = () => {
+      if (inputIdleTimerRef.current) {
+        clearTimeout(inputIdleTimerRef.current);
+        inputIdleTimerRef.current = null;
+      }
+    };
+
+    const armInactiveTimer = () => {
+      if (inactiveTimerRef.current) return;
+      inactiveTimerRef.current = setTimeout(() => {
+        inactiveTimerRef.current = null;
+        transitionToIdle();
+      }, INACTIVE_TO_IDLE_MS);
+    };
+
+    const armInputIdleTimer = () => {
+      clearInputIdleTimer();
+      inputIdleTimerRef.current = setTimeout(() => {
+        inputIdleTimerRef.current = null;
+        transitionToIdle();
+      }, INPUT_IDLE_THRESHOLD_MS);
+    };
+
+    const scheduleHeartbeat = (isActive: boolean) => {
       if (heartbeatIntervalRef.current) {
         clearInterval(heartbeatIntervalRef.current);
       }
-      const intervalMs =
-        document.visibilityState === "hidden"
-          ? HIDDEN_HEARTBEAT_MS
-          : FOCUSED_HEARTBEAT_MS;
+      const intervalMs = isActive ? FOCUSED_HEARTBEAT_MS : HIDDEN_HEARTBEAT_MS;
       heartbeatIntervalRef.current = setInterval(() => {
-        evaluateIdleByInactivity();
         void pushHeartbeat(activitySignalRef.current);
       }, intervalMs);
     };
 
-    const clearHiddenTimer = () => {
-      if (hiddenTimerRef.current) {
-        clearTimeout(hiddenTimerRef.current);
-        hiddenTimerRef.current = null;
+    const applyWindowState = () => {
+      const isActive = computeIsWindowActive();
+      scheduleHeartbeat(isActive);
+
+      if (isActive) {
+        clearInactiveTimer();
+        armInputIdleTimer();
+        transitionToActive();
+      } else {
+        clearInputIdleTimer();
+        armInactiveTimer();
       }
     };
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        hiddenTimerRef.current = setTimeout(() => {
-          setActivitySignal("idle");
-        }, HIDDEN_TO_IDLE_MS);
-      } else {
-        clearHiddenTimer();
-        lastInteractionRef.current = Date.now();
-        setActivitySignal("active");
-      }
-      scheduleHeartbeat();
+    const handleInteraction = () => {
+      const now = Date.now();
+      if (now - lastInteractionFlushRef.current < INTERACTION_THROTTLE_MS) return;
+      lastInteractionFlushRef.current = now;
+
+      if (!computeIsWindowActive()) return;
+
+      armInputIdleTimer();
+      transitionToActive();
     };
 
     const handlePageHide = () => {
@@ -143,8 +182,10 @@ export function usePresenceTracker(userId: string | undefined) {
       const snapshot = await getMyPresence.execute();
       if (cancelled) return;
 
+      const isActive = computeIsWindowActive();
+      const initialActivity: PresenceActivitySignal = isActive ? "active" : "idle";
+
       if (snapshot) {
-        const initialActivity: PresenceActivitySignal = "active";
         activitySignalRef.current = initialActivity;
         hydratePresence({
           manualStatus: snapshot.manualStatus,
@@ -154,38 +195,36 @@ export function usePresenceTracker(userId: string | undefined) {
       } else {
         hydratePresence({
           manualStatus: "available",
-          activitySignal: "active",
-          effectiveStatus: "online",
+          activitySignal: initialActivity,
+          effectiveStatus: deriveEffectivePresence("available", initialActivity),
         });
       }
 
-      void pushHeartbeat("active");
+      void pushHeartbeat(initialActivity);
     };
 
     void bootstrap();
-    scheduleHeartbeat();
+    applyWindowState();
 
-    const interactionEvents: Array<keyof WindowEventMap> = [
-      "mousemove",
-      "keydown",
-      "wheel",
-      "touchstart",
-      "scroll",
-    ];
-    interactionEvents.forEach((event) => {
+    document.addEventListener("visibilitychange", applyWindowState);
+    window.addEventListener("focus", applyWindowState);
+    window.addEventListener("blur", applyWindowState);
+    window.addEventListener("pagehide", handlePageHide);
+    INTERACTION_EVENTS.forEach((event) => {
       window.addEventListener(event, handleInteraction, { passive: true });
     });
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("pagehide", handlePageHide);
 
     return () => {
       cancelled = true;
-      interactionEvents.forEach((event) => {
+      document.removeEventListener("visibilitychange", applyWindowState);
+      window.removeEventListener("focus", applyWindowState);
+      window.removeEventListener("blur", applyWindowState);
+      window.removeEventListener("pagehide", handlePageHide);
+      INTERACTION_EVENTS.forEach((event) => {
         window.removeEventListener(event, handleInteraction);
       });
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("pagehide", handlePageHide);
-      clearHiddenTimer();
+      clearInactiveTimer();
+      clearInputIdleTimer();
       if (heartbeatIntervalRef.current) {
         clearInterval(heartbeatIntervalRef.current);
         heartbeatIntervalRef.current = null;
