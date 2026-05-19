@@ -10,6 +10,7 @@ import { MedicalRecordsPage } from "@/presentation/modules/medical-record/pages/
 import { EvolutionWorkspacePage } from "@/presentation/modules/evolution/pages/EvolutionWorkspacePage";
 import { EvolutionsPage } from "@/presentation/modules/evolution/pages/EvolutionsPage";
 import { MessagesPage } from "@/presentation/modules/messaging/pages/MessagesPage";
+import { AiAssistantPage } from "@/presentation/modules/ai/pages/AiAssistantPage";
 import { ProtectedRoute } from "@/presentation/modules/auth/components/ProtectedRoute";
 import { AppLayout } from "@/presentation/modules/shared/layouts/AppLayout";
 
@@ -121,6 +122,16 @@ const router = createBrowserRouter([
           <Suspense fallback={<ReportsPageFallback />}>
             <ReportsPage />
           </Suspense>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/asistente-ia",
+    element: (
+      <ProtectedRoute>
+        <AppLayout>
+          <AiAssistantPage />
         </AppLayout>
       </ProtectedRoute>
     ),

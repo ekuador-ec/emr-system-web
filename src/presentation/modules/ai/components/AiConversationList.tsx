@@ -1,0 +1,182 @@
+import { useMemo } from "react";
+import type { AiConversation } from "@/domain/modules/ai/models/Conversation";
+import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
+import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
+
+interface AiConversationListProps {
+  conversations: AiConversation[];
+  activeConversationId: string | null;
+  onSelect: (conversationId: string) => void;
+  onDelete: (conversationId: string) => void;
+  isLoading?: boolean;
+}
+
+interface ConversationGroup {
+  key: string;
+  label: string;
+  items: AiConversation[];
+}
+
+function kindIcon(kind: AiConversation["kind"]): string {
+  if (kind === "medical_record") return "icon-medical-record";
+  if (kind === "evolution") return "icon-medical-evolution";
+  return "icon-stethoscope";
+}
+
+function kindLabel(kind: AiConversation["kind"]): string {
+  if (kind === "medical_record") return "Historia clinica";
+  if (kind === "evolution") return "Evolucion";
+  return "Consulta general";
+}
+
+function groupConversations(items: AiConversation[]): ConversationGroup[] {
+  const groups: Record<string, AiConversation[]> = {
+    general: [],
+    medical_record: [],
+    evolution: [],
+  };
+  for (const c of items) {
+    const bucket = groups[c.kind];
+    if (bucket) bucket.push(c);
+  }
+  const result: ConversationGroup[] = [];
+  if (groups["general"]?.length) {
+    result.push({ key: "general", label: "Consultas generales", items: groups["general"] });
+  }
+  if (groups["medical_record"]?.length) {
+    result.push({ key: "medical_record", label: "Historias clinicas", items: groups["medical_record"] });
+  }
+  if (groups["evolution"]?.length) {
+    result.push({ key: "evolution", label: "Evoluciones", items: groups["evolution"] });
+  }
+  return result;
+}
+
+function formatRelative(iso: string): string {
+  const now = Date.now();
+  const then = new Date(iso).getTime();
+  const diffMs = now - then;
+  const minutes = Math.floor(diffMs / 60_000);
+  if (minutes < 1) return "ahora";
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d`;
+  return new Date(iso).toLocaleDateString();
+}
+
+export function AiConversationList({
+  conversations,
+  activeConversationId,
+  onSelect,
+  onDelete,
+  isLoading,
+}: AiConversationListProps) {
+  const groups = useMemo(() => groupConversations(conversations), [conversations]);
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: "var(--space-4)", color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>
+        Cargando conversaciones...
+      </div>
+    );
+  }
+
+  if (conversations.length === 0) {
+    return (
+      <div
+        style={{
+          padding: "var(--space-4)",
+          color: "var(--color-text-secondary)",
+          fontSize: "0.85rem",
+          textAlign: "center",
+        }}
+      >
+        Sin conversaciones aun. Inicia una con el boton de arriba.
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+      {groups.map((group) => (
+        <div key={group.key}>
+          <div
+            style={{
+              padding: "0 var(--space-3)",
+              fontSize: "0.7rem",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              color: "var(--color-text-secondary)",
+              marginBottom: "var(--space-1)",
+            }}
+          >
+            {group.label}
+          </div>
+          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+            {group.items.map((c) => {
+              const isActive = c.id === activeConversationId;
+              return (
+                <li key={c.id}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "var(--space-2)",
+                      padding: "var(--space-2) var(--space-3)",
+                      borderRadius: "var(--radius-md, 8px)",
+                      backgroundColor: isActive ? "var(--color-bg)" : "transparent",
+                      border: isActive ? "1px solid var(--color-border)" : "1px solid transparent",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => onSelect(c.id)}
+                  >
+                    <Icon name={kindIcon(c.kind)} size={16} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontSize: "0.85rem",
+                          fontWeight: isActive ? 600 : 500,
+                          color: "var(--color-text)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {c.title ?? kindLabel(c.kind)}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.7rem",
+                          color: "var(--color-text-secondary)",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: "var(--space-2)",
+                        }}
+                      >
+                        <span>{kindLabel(c.kind)}</span>
+                        <span>{formatRelative(c.updatedAt)}</span>
+                      </div>
+                    </div>
+                    <WcButtonIcon
+                      icon="icon-trash"
+                      title="Eliminar conversacion"
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        onDelete(c.id);
+                      }}
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}

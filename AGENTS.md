@@ -130,6 +130,7 @@ Módulos activos: `ai`, `auth`, `catalog`, `dashboard`, `evolution`, `medical-re
 | `/evoluciones` | `EvolutionsPage` | Autenticado |
 | `/mensajes` | `MessagesPage` | Autenticado |
 | `/reportes` | `ReportsPage` | Autenticado |
+| `/asistente-ia` | `AiAssistantPage` | Autenticado |
 | `/admin/users` | `UsersManagementPage` | `admin` |
 | `*` | Redirección a `/` | - |
 
@@ -449,6 +450,27 @@ Si en el futuro se desea sumar resumenes para una nueva entidad (ej. una "consul
 2. **Crear un wrapper** `<Entity>AiAssistant.tsx` siguiendo el patron de `MedicalRecordAiAssistant` o `EvolutionAiAssistant`: usar los hooks de datos existentes y construir el payload con el nuevo anonymizer.
 3. **Montar** el wrapper en la pagina destino. Si el `target.kind` ya esta cubierto por backend (`medical_record` o `evolution`), no se requieren cambios en el AI service. Si la entidad es nueva, hace falta extender el enum en `emr-ai-service` y agregar el prompt versionado correspondiente.
 4. **Cero PII**: ningun anonymizer puede leer `firstName`, `lastName`, `idNumber`, `email`, `phone`, `address`, ni campos de contactos de emergencia. Si se requiere referenciar a un tercero (ej. medico tratante), usar su `id` o `role`, nunca su nombre.
+
+#### Conversaciones generales (`kind = 'general'`)
+Ademas de las conversaciones atadas a HC/EM, el modulo soporta consultas medicas libres ("dudas medicas del medico" sin paciente especifico). Estas viven en la pagina dedicada `/asistente-ia` y se accionan con el boton "Nueva" del sidebar de conversaciones.
+
+- Backend (`emr-ai-service`): el enum `ConversationKind` extiende `SummaryKind` con `general`. Para `kind=general` el AI service exige `entityId=null` y `summaryId=null`, y aplica el prompt versionado `general-chat-v1` que incluye el bloque `MEDICAL_DOMAIN_GUARDRAIL`: si el usuario consulta algo NO medico, el asistente responde EXACTAMENTE con la frase de rechazo "Soy un asistente clinico especializado y solo puedo responder consultas relacionadas con medicina y salud..." y nada mas. Ese bloque tambien refuerza el prompt `chat-system-v1` de conversaciones HC/EM.
+- Domain frontend: `AiConversationKind = AiSummaryKind | 'general'`. `AiConversation.entityId` y `AiConversation.summaryId` ambos `string | null`. `AiAssistantTarget.kind` usa el tipo extendido.
+- Pagina `AiAssistantPage` (`/asistente-ia`):
+  - Layout 2-paneles: sidebar con `AiConversationList` (agrupa por kind: "Consultas generales" -> "Historias clinicas" -> "Evoluciones") + main con `ChatPanel`.
+  - Boton "Nueva" arriba del sidebar: crea una conversacion `kind=general` con `entityId=null` y abre el chat vacio.
+  - Cada item del sidebar tiene icono segun kind, titulo, etiqueta del kind y tiempo relativo. Click selecciona; boton trash con confirm dialog elimina.
+  - Deep link: la URL refleja `?c=<conversationId>` y se actualiza al cambiar de conversacion.
+  - Banner permanente con el aviso de dominio medico y la recordacion explicita de no enviar datos identificables.
+
+#### ChatPanel reutilizable y persistencia de borradores
+- `ChatPanel.tsx` aisla la UI del chat (lista de mensajes + composer + indicador de streaming). Se usa tanto dentro del `AiAssistantModal` (flujo HC/EM con resumen previo) como en la pagina dedicada `/asistente-ia`. Solo recibe `conversationId` (string | null) y un `emptyHint` opcional.
+- Borradores del composer cifrados en localStorage via `useAiMessageDraft(conversationId)`:
+  - Reusa la infraestructura existente `infrastructure/core/draftCache` (AES-GCM con clave derivada del access_token, prefix registrado para que `clearAllDrafts()` los borre en logout).
+  - Prefix dedicado: `emr:ai-chat-draft:<conversationId>`.
+  - Hook expone `{ draft, setDraft, clear, isHydrating }`. `setDraft` hace debounce de 500ms antes de cifrar y guardar. Al enviar el mensaje se llama `clear()` que purga la entrada.
+  - Al cambiar de `conversationId` la hidratacion es transparente (solicita el borrador del nuevo id, descarta el anterior si el componente sigue montado).
+
 
 ## Patrones Convencionales del Proyecto
 

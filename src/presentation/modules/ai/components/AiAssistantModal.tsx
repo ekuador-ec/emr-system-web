@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback } from "react";
 import { WcModal } from "@/presentation/modules/shared/components/ui/webcomponents/Modals/WcModal";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
@@ -8,16 +8,15 @@ import {
   useGenerateAiSummary,
   useLatestAiSummary,
 } from "@/presentation/modules/ai/hooks/useAiSummary";
-import {
-  useAiConversation,
-  useStartAiConversation,
-} from "@/presentation/modules/ai/hooks/useAiConversations";
-import { useStreamAiChat } from "@/presentation/modules/ai/hooks/useStreamAiChat";
+import { useStartAiConversation } from "@/presentation/modules/ai/hooks/useAiConversations";
 import { aiServiceConfigured } from "@/infrastructure/modules/ai/config";
 import { MarkdownRenderer } from "@/presentation/modules/ai/components/MarkdownRenderer";
 import { ModelPreferenceSelector } from "@/presentation/modules/ai/components/ModelPreferenceSelector";
-import { ChatBubble } from "@/presentation/modules/ai/components/ChatBubble";
-import type { GenerateSummaryInput } from "@/domain/modules/ai/repositories/AiServiceRepository";
+import { ChatPanel } from "@/presentation/modules/ai/components/ChatPanel";
+import type {
+  GenerateSummaryInput,
+} from "@/domain/modules/ai/repositories/AiServiceRepository";
+import type { AiSummaryKind } from "@/domain/modules/ai/models/Summary";
 import "@/presentation/modules/ai/components/AiAssistantModal.css";
 
 interface AiAssistantModalProps {
@@ -35,29 +34,24 @@ export function AiAssistantModal({ payloadBuilder }: AiAssistantModalProps) {
 
   const { addToast } = useToastStore();
 
-  const latestSummary = useLatestAiSummary(target?.kind ?? "medical_record", target?.entityId);
+  const isContextBound = !!target && target.kind !== "general" && !!target.entityId;
+  const summaryKind: AiSummaryKind | null = isContextBound
+    ? (target.kind as AiSummaryKind)
+    : null;
+  const summaryEntityId = isContextBound ? target.entityId : null;
+
+  const latestSummary = useLatestAiSummary(
+    summaryKind ?? "medical_record",
+    summaryEntityId,
+  );
   const generateMutation = useGenerateAiSummary();
   const startConversationMutation = useStartAiConversation();
-  const conversationQuery = useAiConversation(activeConversationId);
 
-  const chat = useStreamAiChat(activeConversationId);
-  const [draft, setDraft] = useState("");
-  const messagesRef = useRef<HTMLDivElement | null>(null);
-
-  const summary = latestSummary.data ?? null;
-
-  useEffect(() => {
-    if (!isOpen) setDraft("");
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!messagesRef.current) return;
-    messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-  }, [conversationQuery.data?.messages.length, chat.streamingDraft]);
+  const summary = isContextBound ? latestSummary.data ?? null : null;
 
   const handleGenerate = useCallback(
     async (forceRefresh: boolean) => {
-      if (!target) return;
+      if (!target || !summaryKind || !summaryEntityId) return;
       const payload = payloadBuilder();
       if (!payload) {
         addToast({
@@ -69,8 +63,8 @@ export function AiAssistantModal({ payloadBuilder }: AiAssistantModalProps) {
       }
       try {
         const input: GenerateSummaryInput = {
-          kind: target.kind,
-          entityId: target.entityId,
+          kind: summaryKind,
+          entityId: summaryEntityId,
           payload,
           preference,
           forceRefresh,
@@ -86,15 +80,15 @@ export function AiAssistantModal({ payloadBuilder }: AiAssistantModalProps) {
         addToast({ type: "error", message, duration: 6000 });
       }
     },
-    [target, payloadBuilder, preference, generateMutation, addToast],
+    [target, summaryKind, summaryEntityId, payloadBuilder, preference, generateMutation, addToast],
   );
 
   const handleStartConversation = useCallback(async () => {
-    if (!target || !summary) return;
+    if (!target || !summary || !summaryKind || !summaryEntityId) return;
     try {
       const conversation = await startConversationMutation.mutateAsync({
-        kind: target.kind,
-        entityId: target.entityId,
+        kind: summaryKind,
+        entityId: summaryEntityId,
         summaryId: summary.id,
         modelPreference: preference,
         title: `Chat ${target.label}`,
@@ -104,23 +98,16 @@ export function AiAssistantModal({ payloadBuilder }: AiAssistantModalProps) {
       const message = error instanceof Error ? error.message : "Error desconocido";
       addToast({ type: "error", message, duration: 6000 });
     }
-  }, [target, summary, preference, startConversationMutation, setActiveConversation, addToast]);
-
-  const handleSendMessage = useCallback(async () => {
-    const trimmed = draft.trim();
-    if (!trimmed || !activeConversationId || chat.isStreaming) return;
-    setDraft("");
-    await chat.send(trimmed);
-  }, [draft, activeConversationId, chat]);
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      void handleSendMessage();
-    }
-  };
-
-  const messages = useMemo(() => conversationQuery.data?.messages ?? [], [conversationQuery.data]);
+  }, [
+    target,
+    summary,
+    summaryKind,
+    summaryEntityId,
+    preference,
+    startConversationMutation,
+    setActiveConversation,
+    addToast,
+  ]);
 
   if (!isOpen || !target) return null;
 
@@ -153,11 +140,19 @@ export function AiAssistantModal({ payloadBuilder }: AiAssistantModalProps) {
       maxWidth="720px"
     >
       <div className="ai-assistant-modal">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "var(--space-3)" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "var(--space-3)",
+          }}
+        >
           <ModelPreferenceSelector
             value={preference}
             onChange={setPreference}
-            disabled={generateMutation.isPending || chat.isStreaming}
+            disabled={generateMutation.isPending}
           />
           {summary && (
             <div className="ai-assistant-meta">
@@ -219,69 +214,10 @@ export function AiAssistantModal({ payloadBuilder }: AiAssistantModalProps) {
 
         {activeConversationId && (
           <div className="ai-assistant-chat">
-            <div className="ai-assistant-chat__messages" ref={messagesRef}>
-              {conversationQuery.isLoading ? (
-                <div style={{ color: "var(--color-text-secondary)", padding: "var(--space-3)" }}>
-                  Cargando mensajes...
-                </div>
-              ) : messages.length === 0 && !chat.isStreaming ? (
-                <div
-                  style={{
-                    color: "var(--color-text-secondary)",
-                    padding: "var(--space-3)",
-                    fontSize: "0.85rem",
-                  }}
-                >
-                  Empieza a preguntar lo que necesites profundizar del caso.
-                </div>
-              ) : (
-                <>
-                  {messages.map((m) => (
-                    <ChatBubble key={m.id} role={m.role} content={m.content} />
-                  ))}
-                  {chat.isStreaming && chat.streamingDraft && (
-                    <ChatBubble role="assistant" content={chat.streamingDraft} isStreaming />
-                  )}
-                  {chat.isStreaming && !chat.streamingDraft && (
-                    <div style={{ padding: "var(--space-2)", color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>
-                      Procesando respuesta...
-                    </div>
-                  )}
-                </>
-              )}
-              {chat.error && (
-                <div
-                  style={{
-                    margin: "var(--space-2) 0",
-                    padding: "var(--space-2)",
-                    color: "var(--color-danger)",
-                    fontSize: "0.85rem",
-                  }}
-                >
-                  {chat.error}
-                </div>
-              )}
-            </div>
-
-            <div className="ai-assistant-chat__composer">
-              <textarea
-                className="ai-assistant-chat__textarea"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Pregunta algo sobre este caso..."
-                disabled={chat.isStreaming}
-                rows={1}
-              />
-              <WcButton
-                variant="primary"
-                onClick={() => void handleSendMessage()}
-                disabled={chat.isStreaming || draft.trim().length === 0}
-              >
-                <Icon name="icon-send" size={16} />
-                Enviar
-              </WcButton>
-            </div>
+            <ChatPanel
+              conversationId={activeConversationId}
+              emptyHint="Empieza a preguntar lo que necesites profundizar del caso."
+            />
           </div>
         )}
       </div>

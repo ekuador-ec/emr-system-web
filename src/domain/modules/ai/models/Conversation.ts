@@ -2,6 +2,8 @@ import type { AiModelPreference, AiProviderName, AiSummaryKind } from "./Summary
 
 export type AiMessageRole = "system" | "user" | "assistant";
 
+export type AiConversationKind = AiSummaryKind | "general";
+
 export interface AiMessage {
   id: string;
   conversationId: string;
@@ -17,8 +19,8 @@ export interface AiMessage {
 export interface AiConversation {
   id: string;
   summaryId: string | null;
-  kind: AiSummaryKind;
-  entityId: string;
+  kind: AiConversationKind;
+  entityId: string | null;
   userId: string;
   title: string | null;
   modelPreference: AiModelPreference;

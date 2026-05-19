@@ -1,9 +1,10 @@
 import { create } from "zustand";
-import type { AiModelPreference, AiSummaryKind } from "@/domain/modules/ai/models/Summary";
+import type { AiModelPreference } from "@/domain/modules/ai/models/Summary";
+import type { AiConversationKind } from "@/domain/modules/ai/models/Conversation";
 
 export interface AiAssistantTarget {
-  kind: AiSummaryKind;
-  entityId: string;
+  kind: AiConversationKind;
+  entityId: string | null;
   label: string;
 }
 

@@ -6,6 +6,7 @@ import type {
 } from "@/domain/modules/ai/models/Summary";
 import type {
   AiConversation,
+  AiConversationKind,
   AiConversationWithMessages,
   AiMessage,
 } from "@/domain/modules/ai/models/Conversation";
@@ -19,8 +20,8 @@ export interface GenerateSummaryInput {
 }
 
 export interface CreateConversationInput {
-  kind: AiSummaryKind;
-  entityId: string;
+  kind: AiConversationKind;
+  entityId: string | null;
   summaryId?: string | null;
   title?: string | null;
   modelPreference: AiModelPreference;
