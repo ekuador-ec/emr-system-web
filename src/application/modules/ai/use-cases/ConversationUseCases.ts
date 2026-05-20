@@ -13,7 +13,14 @@ export class StartAiConversationUseCase {
     this.repo = repo;
   }
   async execute(input: CreateConversationInput): Promise<AiConversation> {
-    if (!input.entityId) {
+    if (input.kind === "general") {
+      if (input.entityId) {
+        throw new Error("Las conversaciones generales no deben incluir un identificador de entidad");
+      }
+      if (input.summaryId) {
+        throw new Error("Las conversaciones generales no se asocian a un resumen previo");
+      }
+    } else if (!input.entityId) {
       throw new Error("Identificador de la entidad invalido");
     }
     return this.repo.createConversation(input);
