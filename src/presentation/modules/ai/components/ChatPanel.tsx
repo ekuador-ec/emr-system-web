@@ -1,31 +1,51 @@
 import { useCallback, useEffect, useRef } from "react";
-import type { KeyboardEvent } from "react";
-import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import { ChatBubble } from "@/presentation/modules/ai/components/ChatBubble";
-import { useAiConversation } from "@/presentation/modules/ai/hooks/useAiConversations";
+import { ChatComposer } from "@/presentation/modules/ai/components/ChatComposer";
+import {
+  useAiConversation,
+  useUpdateAiConversationPreference,
+} from "@/presentation/modules/ai/hooks/useAiConversations";
 import { useStreamAiChat } from "@/presentation/modules/ai/hooks/useStreamAiChat";
 import { useAiMessageDraft } from "@/presentation/modules/ai/hooks/useAiMessageDraft";
+import { useAiAssistantStore } from "@/presentation/modules/ai/stores/useAiAssistantStore";
+import type { AiModelPreference } from "@/domain/modules/ai/models/Summary";
 
 interface ChatPanelProps {
   conversationId: string | null;
+  emptyTitle?: string;
   emptyHint?: string;
+  emptySuggestions?: string[];
+  allowModelChange?: boolean;
 }
 
-export function ChatPanel({ conversationId, emptyHint }: ChatPanelProps) {
+const OPTIMISTIC_PREFIX = "optimistic-";
+
+export function ChatPanel({
+  conversationId,
+  emptyTitle = "Hola, en que puedo ayudarte?",
+  emptyHint = "Pregunta lo que necesites profundizar.",
+  emptySuggestions,
+  allowModelChange = true,
+}: ChatPanelProps) {
   const conversationQuery = useAiConversation(conversationId);
   const chat = useStreamAiChat(conversationId);
   const { draft, setDraft, clear: clearDraft } = useAiMessageDraft(conversationId);
+  const updatePrefMutation = useUpdateAiConversationPreference();
+
+  const globalPreference = useAiAssistantStore((s) => s.preference);
+  const setGlobalPreference = useAiAssistantStore((s) => s.setPreference);
 
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
+  const conversation = conversationQuery.data?.conversation ?? null;
+  const messages = conversationQuery.data?.messages ?? [];
+
   useEffect(() => {
     if (!messagesRef.current) return;
     messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-  }, [conversationQuery.data?.messages.length, chat.streamingDraft]);
-
-  const messages = conversationQuery.data?.messages ?? [];
+  }, [messages.length, chat.streamingDraft, chat.isStreaming]);
 
   const handleSend = useCallback(async () => {
     const trimmed = draft.trim();
@@ -35,35 +55,45 @@ export function ChatPanel({ conversationId, emptyHint }: ChatPanelProps) {
     textareaRef.current?.focus();
   }, [draft, conversationId, chat, clearDraft]);
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      void handleSend();
-    }
+  const handleChangePreference = useCallback(
+    async (preference: AiModelPreference) => {
+      if (!conversationId) {
+        setGlobalPreference(preference);
+        return;
+      }
+      try {
+        await updatePrefMutation.mutateAsync({ conversationId, modelPreference: preference });
+        setGlobalPreference(preference);
+      } catch {
+        // toast is optional; if the user sees no effect on the dropdown they'll retry
+      }
+    },
+    [conversationId, updatePrefMutation, setGlobalPreference],
+  );
+
+  const handleSuggestion = (text: string) => {
+    setDraft(text);
+    textareaRef.current?.focus();
   };
 
   if (!conversationId) {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "var(--space-8)",
-          color: "var(--color-text-secondary)",
-          textAlign: "center",
-          gap: "var(--space-3)",
-          height: "100%",
-        }}
-      >
-        <Icon name="icon-messages" size={36} />
-        <div style={{ fontSize: "0.95rem", maxWidth: "420px" }}>
-          {emptyHint ?? "Selecciona una conversacion existente o inicia una nueva para comenzar."}
+      <div className="ai-chat-empty">
+        <div className="ai-chat-empty__icon">
+          <Icon name="icon-stethoscope" size={26} />
         </div>
+        <div className="ai-chat-empty__title">{emptyTitle}</div>
+        <div className="ai-chat-empty__hint">{emptyHint}</div>
       </div>
     );
   }
+
+  const activePreference: AiModelPreference =
+    conversation?.modelPreference ?? globalPreference;
+
+  const realMessageCount = messages.filter((m) => !m.id.startsWith(OPTIMISTIC_PREFIX)).length;
+  const showSuggestions =
+    realMessageCount === 0 && !chat.isStreaming && (emptySuggestions?.length ?? 0) > 0;
 
   return (
     <div
@@ -79,7 +109,7 @@ export function ChatPanel({ conversationId, emptyHint }: ChatPanelProps) {
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: "var(--space-3) var(--space-2)",
+          padding: "12px 16px 0 16px",
           minHeight: 0,
         }}
       >
@@ -88,33 +118,43 @@ export function ChatPanel({ conversationId, emptyHint }: ChatPanelProps) {
             Cargando mensajes...
           </div>
         ) : messages.length === 0 && !chat.isStreaming ? (
-          <div
-            style={{
-              color: "var(--color-text-secondary)",
-              padding: "var(--space-3)",
-              fontSize: "0.85rem",
-            }}
-          >
-            Empieza a preguntar lo que necesites profundizar.
+          <div className="ai-chat-empty" style={{ height: "auto", padding: "var(--space-6) 0" }}>
+            <div className="ai-chat-empty__icon">
+              <Icon name="icon-stethoscope" size={26} />
+            </div>
+            <div className="ai-chat-empty__title">{emptyTitle}</div>
+            <div className="ai-chat-empty__hint">{emptyHint}</div>
+            {showSuggestions && (
+              <div className="ai-chat-suggestions">
+                {emptySuggestions!.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className="ai-chat-suggestion"
+                    onClick={() => handleSuggestion(s)}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <>
             {messages.map((m) => (
-              <ChatBubble key={m.id} role={m.role} content={m.content} />
+              <ChatBubble
+                key={m.id}
+                role={m.role}
+                content={m.content}
+                isOptimistic={m.id.startsWith(OPTIMISTIC_PREFIX)}
+              />
             ))}
-            {chat.isStreaming && chat.streamingDraft && (
-              <ChatBubble role="assistant" content={chat.streamingDraft} isStreaming />
-            )}
-            {chat.isStreaming && !chat.streamingDraft && (
-              <div
-                style={{
-                  padding: "var(--space-2)",
-                  color: "var(--color-text-secondary)",
-                  fontSize: "0.85rem",
-                }}
-              >
-                Procesando respuesta...
-              </div>
+            {chat.isStreaming && (
+              <ChatBubble
+                role="assistant"
+                content={chat.streamingDraft || ""}
+                isStreaming
+              />
             )}
           </>
         )}
@@ -122,8 +162,11 @@ export function ChatPanel({ conversationId, emptyHint }: ChatPanelProps) {
           <div
             style={{
               margin: "var(--space-2) 0",
-              padding: "var(--space-2)",
+              padding: "var(--space-2) var(--space-3)",
               color: "var(--color-danger)",
+              backgroundColor: "color-mix(in srgb, var(--color-danger) 8%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--color-danger) 30%, transparent)",
+              borderRadius: 8,
               fontSize: "0.85rem",
             }}
           >
@@ -132,46 +175,18 @@ export function ChatPanel({ conversationId, emptyHint }: ChatPanelProps) {
         )}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          gap: "var(--space-2)",
-          alignItems: "flex-end",
-          padding: "var(--space-3) var(--space-2) 0 var(--space-2)",
-          borderTop: "1px solid var(--color-border)",
-        }}
-      >
-        <textarea
-          ref={textareaRef}
+      <div style={{ padding: "12px 16px 14px 16px" }}>
+        <ChatComposer
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Escribe tu pregunta..."
-          disabled={chat.isStreaming}
-          rows={1}
-          style={{
-            flex: 1,
-            minHeight: "44px",
-            maxHeight: "160px",
-            resize: "vertical",
-            padding: "var(--space-2) var(--space-3)",
-            border: "1px solid var(--color-border)",
-            borderRadius: "var(--radius-md, 8px)",
-            backgroundColor: "var(--color-surface)",
-            color: "var(--color-text)",
-            fontFamily: "inherit",
-            fontSize: "0.9rem",
-            lineHeight: 1.5,
-          }}
+          onChange={setDraft}
+          onSubmit={handleSend}
+          onAbort={chat.abort}
+          isStreaming={chat.isStreaming}
+          preference={activePreference}
+          onChangePreference={allowModelChange ? handleChangePreference : undefined}
+          isUpdatingPreference={updatePrefMutation.isPending}
+          textareaRef={textareaRef}
         />
-        <WcButton
-          variant="primary"
-          onClick={() => void handleSend()}
-          disabled={chat.isStreaming || draft.trim().length === 0}
-        >
-          <Icon name="icon-send" size={16} />
-          Enviar
-        </WcButton>
       </div>
     </div>
   );

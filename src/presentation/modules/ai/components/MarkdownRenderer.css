@@ -1,0 +1,140 @@
+.ai-md {
+  color: var(--color-text);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.ai-md > *:first-child {
+  margin-top: 0 !important;
+}
+
+.ai-md > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+.ai-md__h1 {
+  margin: 22px 0 10px 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.ai-md__h2 {
+  margin: 20px 0 8px 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.ai-md__h3 {
+  margin: 16px 0 6px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.ai-md__h4 {
+  margin: 14px 0 4px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.ai-md__p {
+  margin: 0 0 12px 0;
+}
+
+.ai-md__ul,
+.ai-md__ol {
+  margin: 0 0 12px 0;
+  padding-left: 22px;
+}
+
+.ai-md__li {
+  margin-bottom: 4px;
+}
+
+.ai-md__li > p {
+  margin: 0;
+}
+
+.ai-md__quote {
+  margin: 12px 0;
+  padding: 4px 12px;
+  border-left: 3px solid var(--color-primary);
+  background-color: var(--color-bg);
+  color: var(--color-text-secondary);
+  border-radius: 0 4px 4px 0;
+}
+
+.ai-md__link {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.ai-md__code-inline {
+  background-color: var(--color-bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.82em;
+}
+
+.ai-md__pre {
+  margin: 12px 0;
+  padding: 12px 14px;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  overflow-x: auto;
+}
+
+.ai-md__code-block {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.82em;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+
+.ai-md__hr {
+  margin: 16px 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.ai-md__table-wrap {
+  margin: 12px 0;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  background-color: var(--color-surface);
+}
+
+.ai-md__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.ai-md__thead {
+  background-color: var(--color-bg);
+}
+
+.ai-md__th {
+  text-align: left;
+  padding: 8px 12px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.ai-md__td {
+  padding: 8px 12px;
+  border-top: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.ai-md__table tbody tr:nth-child(even) {
+  background-color: color-mix(in srgb, var(--color-bg) 60%, transparent);
+}

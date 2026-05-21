@@ -622,7 +622,7 @@ export function EvolutionWorkspacePage() {
           margin: "0 0 var(--space-3) 0",
         }}
       >
-        <EvolutionAiAssistant evolutionId={evolution.id} />
+        <EvolutionAiAssistant evolutionId={evolution.id} patientId={patient?.id} />
       </div>
 
       {Object.keys(validationErrors).length > 0 && (

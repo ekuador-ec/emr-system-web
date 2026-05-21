@@ -1,5 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { AiConversationWithMessages } from "@/domain/modules/ai/models/Conversation";
+import type {
+  AiConversation,
+  AiConversationWithMessages,
+} from "@/domain/modules/ai/models/Conversation";
+import type { AiModelPreference } from "@/domain/modules/ai/models/Summary";
 import type { CreateConversationInput } from "@/domain/modules/ai/repositories/AiServiceRepository";
 import {
   aiServiceConfigured,
@@ -7,6 +11,7 @@ import {
   getAiConversationUseCase,
   listAiConversationsUseCase,
   startAiConversationUseCase,
+  updateAiConversationPreferenceUseCase,
 } from "@/infrastructure/modules/ai/config";
 import { AI_QUERY_KEY } from "@/presentation/modules/ai/hooks/useAiSummary";
 
@@ -52,6 +57,29 @@ export function useDeleteAiConversation() {
       deleteAiConversationUseCase.execute(conversationId),
     onSuccess: (_data, conversationId) => {
       queryClient.removeQueries({ queryKey: aiConversationByIdKey(conversationId) });
+      queryClient.invalidateQueries({ queryKey: aiConversationsKey() });
+    },
+  });
+}
+
+export function useUpdateAiConversationPreference() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      conversationId,
+      modelPreference,
+    }: {
+      conversationId: string;
+      modelPreference: AiModelPreference;
+    }) => updateAiConversationPreferenceUseCase.execute(conversationId, modelPreference),
+    onSuccess: (conversation: AiConversation) => {
+      queryClient.setQueryData(
+        aiConversationByIdKey(conversation.id),
+        (current: AiConversationWithMessages | null | undefined) => {
+          if (!current) return current;
+          return { ...current, conversation };
+        },
+      );
       queryClient.invalidateQueries({ queryKey: aiConversationsKey() });
     },
   });

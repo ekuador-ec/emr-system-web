@@ -6,7 +6,7 @@ import { useToastStore } from "@/presentation/modules/shared/components/Toaster"
 import { useConfirmDialog } from "@/presentation/modules/shared/components/ui/useConfirmDialog";
 import { ChatPanel } from "@/presentation/modules/ai/components/ChatPanel";
 import { AiConversationList } from "@/presentation/modules/ai/components/AiConversationList";
-import { ModelPreferenceSelector } from "@/presentation/modules/ai/components/ModelPreferenceSelector";
+import { AiContextBanner } from "@/presentation/modules/ai/components/AiContextBanner";
 import {
   useAiConversation,
   useAiConversations,
@@ -23,6 +23,13 @@ const KIND_LABEL: Record<string, string> = {
   general: "Consulta general",
 };
 
+const GENERAL_SUGGESTIONS = [
+  "Manejo inicial del shock septico en adulto",
+  "Criterios de Sgarbossa en BRIHH",
+  "Antibiotico empirico para neumonia adquirida en comunidad",
+  "Dosis de adrenalina en anafilaxia pediatrica",
+];
+
 export function AiAssistantPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -30,7 +37,6 @@ export function AiAssistantPage() {
   const { confirm, DialogComponent } = useConfirmDialog();
 
   const preference = useAiAssistantStore((s) => s.preference);
-  const setPreference = useAiAssistantStore((s) => s.setPreference);
 
   const initialIdFromUrl = searchParams.get("c");
   const [activeConversationId, setActiveConversationId] = useState<string | null>(
@@ -126,12 +132,38 @@ export function AiAssistantPage() {
     );
   }
 
+  const emptyTitleForActive = activeConversation
+    ? activeConversation.kind === "general"
+      ? "Pregunta lo que necesites sobre medicina"
+      : "Continua la conversacion clinica"
+    : "Hola, en que puedo ayudarte?";
+  const emptyHintForActive = activeConversation
+    ? activeConversation.kind === "general"
+      ? "Diagnosticos diferenciales, farmacologia, protocolos, CIE-10."
+      : "El asistente tiene el contexto del resumen clinico cargado. Pregunta lo que quieras profundizar."
+    : "Selecciona una conversacion o inicia una nueva.";
+
   return (
     <div className="ai-assistant-page">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--space-3)", flexWrap: "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "var(--space-3)",
+          flexWrap: "wrap",
+        }}
+      >
         <div>
           <h2 style={{ margin: 0, color: "var(--color-text)" }}>Asistente IA clinico</h2>
-          <p style={{ margin: 0, marginTop: "4px", fontSize: "0.85rem", color: "var(--color-text-secondary)" }}>
+          <p
+            style={{
+              margin: 0,
+              marginTop: "4px",
+              fontSize: "0.85rem",
+              color: "var(--color-text-secondary)",
+            }}
+          >
             Consulta dudas medicas o continua conversaciones abiertas sobre historias clinicas y evoluciones.
           </p>
         </div>
@@ -176,8 +208,17 @@ export function AiAssistantPage() {
 
         <section className="ai-assistant-page__main">
           <div className="ai-assistant-page__main-header">
-            <div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--color-text)" }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div
+                style={{
+                  fontSize: "0.95rem",
+                  fontWeight: 600,
+                  color: "var(--color-text)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {activeConversation?.title ?? "Selecciona una conversacion"}
               </div>
               {activeConversation && (
@@ -186,17 +227,15 @@ export function AiAssistantPage() {
                 </div>
               )}
             </div>
-            {!activeConversation && (
-              <ModelPreferenceSelector value={preference} onChange={setPreference} />
-            )}
           </div>
+          {activeConversation && <AiContextBanner conversation={activeConversation} />}
           <div className="ai-assistant-page__main-body">
             <ChatPanel
               conversationId={activeConversationId}
-              emptyHint={
-                conversations.length === 0
-                  ? "Inicia tu primera consulta general con el boton 'Nueva' del panel izquierdo."
-                  : "Selecciona una conversacion para continuar o inicia una nueva."
+              emptyTitle={emptyTitleForActive}
+              emptyHint={emptyHintForActive}
+              emptySuggestions={
+                activeConversation?.kind === "general" ? GENERAL_SUGGESTIONS : undefined
               }
             />
           </div>

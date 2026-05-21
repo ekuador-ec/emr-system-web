@@ -48,6 +48,10 @@ export interface AiServiceRepository {
   listConversations(params: { limit: number; offset: number }): Promise<AiConversation[]>;
   getConversation(conversationId: string): Promise<AiConversationWithMessages>;
   deleteConversation(conversationId: string): Promise<void>;
+  updateConversationPreference(
+    conversationId: string,
+    modelPreference: AiModelPreference,
+  ): Promise<AiConversation>;
 
   streamChatMessage(
     input: SendChatMessageInput,

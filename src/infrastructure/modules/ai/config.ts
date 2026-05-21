@@ -7,6 +7,7 @@ import {
   GetAiConversationUseCase,
   ListAiConversationsUseCase,
   StartAiConversationUseCase,
+  UpdateAiConversationPreferenceUseCase,
 } from "@/application/modules/ai/use-cases/ConversationUseCases";
 import { StreamAiChatMessageUseCase } from "@/application/modules/ai/use-cases/StreamAiChatMessageUseCase";
 
@@ -32,4 +33,6 @@ export const startAiConversationUseCase = new StartAiConversationUseCase(aiServi
 export const listAiConversationsUseCase = new ListAiConversationsUseCase(aiServiceRepository);
 export const getAiConversationUseCase = new GetAiConversationUseCase(aiServiceRepository);
 export const deleteAiConversationUseCase = new DeleteAiConversationUseCase(aiServiceRepository);
+export const updateAiConversationPreferenceUseCase =
+  new UpdateAiConversationPreferenceUseCase(aiServiceRepository);
 export const streamAiChatMessageUseCase = new StreamAiChatMessageUseCase(aiServiceRepository);

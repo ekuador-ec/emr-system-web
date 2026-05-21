@@ -10,16 +10,31 @@ interface MedicalRecordAiAssistantProps {
   patientId: string;
 }
 
+function buildConversationLabel(
+  patient: { firstName: string; lastName: string; idNumber: string } | null,
+  medicalRecord: { id: string } | null,
+): string {
+  if (patient) {
+    return `HC ${patient.firstName} ${patient.lastName} - ${patient.idNumber}`;
+  }
+  if (medicalRecord) {
+    return `HC ${medicalRecord.id.slice(0, 8)}`;
+  }
+  return "Historia clinica";
+}
+
 export function MedicalRecordAiAssistant({ patientId }: MedicalRecordAiAssistantProps) {
   const { data: medicalRecord } = useMedicalRecordByPatient(patientId);
   const { data: patient } = usePatient(patientId, { enabled: !!patientId });
   const { data: evolutions } = useEvolutionsByMedicalRecord(medicalRecord?.id ?? "");
 
+  const label = buildConversationLabel(patient ?? null, medicalRecord ?? null);
+
   const target = medicalRecord
     ? {
         kind: "medical_record" as const,
         entityId: medicalRecord.id,
-        label: "Historia clinica",
+        label,
       }
     : null;
 

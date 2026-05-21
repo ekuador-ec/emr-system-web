@@ -6,6 +6,7 @@ import type {
   AiConversation,
   AiConversationWithMessages,
 } from "@/domain/modules/ai/models/Conversation";
+import type { AiModelPreference } from "@/domain/modules/ai/models/Summary";
 
 export class StartAiConversationUseCase {
   private readonly repo: AiServiceRepository;
@@ -54,5 +55,16 @@ export class DeleteAiConversationUseCase {
   }
   execute(conversationId: string): Promise<void> {
     return this.repo.deleteConversation(conversationId);
+  }
+}
+
+export class UpdateAiConversationPreferenceUseCase {
+  private readonly repo: AiServiceRepository;
+  constructor(repo: AiServiceRepository) {
+    this.repo = repo;
+  }
+  execute(conversationId: string, modelPreference: AiModelPreference): Promise<AiConversation> {
+    if (!conversationId) throw new Error("Conversacion no valida");
+    return this.repo.updateConversationPreference(conversationId, modelPreference);
   }
 }

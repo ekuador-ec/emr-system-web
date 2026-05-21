@@ -8,6 +8,7 @@ import type {
 import type {
   AiSummary,
   AiSummaryKind,
+  AiModelPreference,
   GenerateAiSummaryResult,
 } from "@/domain/modules/ai/models/Summary";
 import type {
@@ -96,6 +97,18 @@ export class HttpAiServiceRepository implements AiServiceRepository {
 
   async deleteConversation(conversationId: string): Promise<void> {
     await this.client.request<void>("DELETE", `/v1/conversations/${conversationId}`);
+  }
+
+  async updateConversationPreference(
+    conversationId: string,
+    modelPreference: AiModelPreference,
+  ): Promise<AiConversation> {
+    const response = await this.client.request<{ conversation: AiConversation }>(
+      "PATCH",
+      `/v1/conversations/${conversationId}/preference`,
+      { modelPreference },
+    );
+    return response.conversation;
   }
 
   async streamChatMessage(

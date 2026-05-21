@@ -91,7 +91,7 @@ export function AiAssistantModal({ payloadBuilder }: AiAssistantModalProps) {
         entityId: summaryEntityId,
         summaryId: summary.id,
         modelPreference: preference,
-        title: `Chat ${target.label}`,
+        title: target.label,
       });
       setActiveConversation(conversation.id);
     } catch (error) {
