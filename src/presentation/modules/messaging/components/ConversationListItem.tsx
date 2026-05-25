@@ -34,7 +34,7 @@ export function ConversationListItem({
   return (
     <button
       type="button"
-      className={`msg-conv-item${isActive ? " active" : ""}`}
+      className={`msg-conv-item${isActive ? " active" : ""}${hasUnread ? " unread" : ""}`}
       onClick={() => onSelect(conversation.id)}
     >
       <UserAvatar
