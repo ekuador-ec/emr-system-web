@@ -6,12 +6,21 @@
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast),
+    border-color var(--transition-fast);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  border: none;
+  border: 1px solid transparent;
+}
+
+.wc-button:active:not(:disabled) {
+  transform: translateY(1.5px) scale(0.98);
 }
 
 .wc-button svg {
@@ -26,57 +35,225 @@
   transform: translateY(0.5px);
 }
 
+/* Primary Button (Tactile/3D) */
 .wc-button.is-primary {
   background-color: var(--color-primary);
   color: var(--color-surface);
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow:
+    1px 2px 4px rgba(0, 0, 0, 0.08),
+    2px 4px 8px -2px rgba(0, 0, 52, 0.15),
+    inset 1px 1.5px 0 rgba(255, 255, 255, 0.15),
+    inset -1px -2px 0 rgba(0, 0, 0, 0.35);
 }
 
-.wc-button.is-primary:hover {
+.wc-button.is-primary:hover:not(:disabled) {
   background-color: var(--color-primary-hover);
   color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.25);
+  box-shadow:
+    2px 4px 8px rgba(0, 0, 0, 0.12),
+    3px 8px 16px -4px rgba(0, 65, 245, 0.25),
+    inset 1px 1.5px 0 rgba(255, 255, 255, 0.2),
+    inset -1px -2px 0 rgba(0, 0, 0, 0.3);
 }
 
+.wc-button.is-primary:active:not(:disabled) {
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Primary Button in Dark Mode */
+.dark .wc-button.is-primary {
+  background-color: #ffffff;
+  color: #09090b;
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow:
+    1px 2px 4px rgba(0, 0, 0, 0.2),
+    2px 4px 8px rgba(0, 0, 0, 0.15),
+    inset 1px 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset -1px -1.5px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dark .wc-button.is-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow:
+    2px 4px 8px rgba(0, 0, 0, 0.25),
+    3px 8px 16px rgba(0, 0, 0, 0.2),
+    inset 1px 1.5px 0 rgba(255, 255, 255, 0.25),
+    inset -1px -1.5px 0 rgba(0, 0, 0, 0.25);
+}
+
+.dark .wc-button.is-primary:active:not(:disabled) {
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.35),
+    inset 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+/* Secondary Button (Tactile/3D - Outline/Surface style) */
 .wc-button.is-secondary {
   background-color: var(--color-surface);
   color: var(--color-text);
-  border: 1px solid var(--color-border);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    1px 1.5px 3px rgba(15, 23, 42, 0.03),
+    0.5px 0.5px 1.5px rgba(15, 23, 42, 0.02),
+    inset 1px 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset -1px -1px 0 rgba(15, 23, 42, 0.04);
 }
 
-.wc-button.is-secondary:hover {
+.wc-button.is-secondary:hover:not(:disabled) {
   background-color: var(--color-danger);
   color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow:
+    2px 3px 6px rgba(220, 38, 38, 0.15),
+    1px 1px 3px rgba(0, 0, 0, 0.1),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.25),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.2);
 }
 
+.wc-button.is-secondary:active:not(:disabled) {
+  box-shadow:
+    inset 0 2px 4px rgba(15, 23, 42, 0.08),
+    inset 0 1px 1.5px rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+/* Tertiary Button (Tactile/3D - Outline/Surface style with blue hover) */
 .wc-button.is-terciary {
   background-color: var(--color-surface);
   color: var(--color-text);
-  border: 1px solid var(--color-border);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    1px 1.5px 3px rgba(15, 23, 42, 0.03),
+    0.5px 0.5px 1.5px rgba(15, 23, 42, 0.02),
+    inset 1px 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset -1px -1px 0 rgba(15, 23, 42, 0.04);
 }
 
-.wc-button.is-terciary:hover {
+.wc-button.is-terciary:hover:not(:disabled) {
   background-color: var(--color-primary-hover);
   color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow:
+    2px 3px 6px rgba(0, 65, 245, 0.2),
+    1px 1px 3px rgba(0, 0, 0, 0.15),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.25),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.2);
 }
 
+.wc-button.is-terciary:active:not(:disabled) {
+  box-shadow:
+    inset 0 2px 4px rgba(15, 23, 42, 0.08),
+    inset 0 1px 1.5px rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+/* Secondary & Tertiary buttons in Dark Mode */
+.dark .wc-button.is-secondary,
+.dark .wc-button.is-terciary {
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    1px 1.5px 3px rgba(0, 0, 0, 0.2),
+    0.5px 0.5px 1.5px rgba(0, 0, 0, 0.15),
+    inset 1px 1.5px 0 rgba(255, 255, 255, 0.05),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.dark .wc-button.is-secondary:hover:not(:disabled) {
+  background-color: var(--color-danger);
+  color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow:
+    2px 3px 6px rgba(220, 38, 38, 0.25),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.15),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.dark .wc-button.is-terciary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow:
+    2px 3px 6px rgba(0, 65, 245, 0.3),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.15),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.dark .wc-button.is-secondary:active:not(:disabled),
+.dark .wc-button.is-terciary:active:not(:disabled) {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+  border-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Danger Button (Tactile/3D) */
 .wc-button.is-danger {
   background-color: var(--color-danger);
   color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow:
+    1px 2px 4px rgba(220, 38, 38, 0.1),
+    1px 4px 8px -2px rgba(0, 0, 0, 0.12),
+    inset 1px 1.5px 0 rgba(255, 255, 255, 0.25),
+    inset -1px -1.5px 0 rgba(0, 0, 0, 0.3);
 }
 
-.wc-button.is-danger:hover {
-  opacity: 0.9;
+.wc-button.is-danger:hover:not(:disabled) {
+  opacity: 1;
+  background-color: var(--color-danger);
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow:
+    2px 4px 8px rgba(220, 38, 38, 0.15),
+    3px 8px 16px -4px rgba(0, 0, 0, 0.2),
+    inset 1px 1.5px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1.5px 0 rgba(0, 0, 0, 0.25);
 }
 
+.wc-button.is-danger:active:not(:disabled) {
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.35);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Success Button (Tactile/3D) */
 .wc-button.is-success {
   background-color: var(--color-success);
   color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow:
+    1px 2px 4px rgba(13, 148, 136, 0.1),
+    1px 4px 8px -2px rgba(0, 0, 0, 0.12),
+    inset 1px 1.5px 0 rgba(255, 255, 255, 0.25),
+    inset -1px -1.5px 0 rgba(0, 0, 0, 0.3);
 }
 
-.wc-button.is-success:hover {
-  opacity: 0.9;
+.wc-button.is-success:hover:not(:disabled) {
+  opacity: 1;
+  background-color: var(--color-success);
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow:
+    2px 4px 8px rgba(13, 148, 136, 0.15),
+    3px 8px 16px -4px rgba(0, 0, 0, 0.2),
+    inset 1px 1.5px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1.5px 0 rgba(0, 0, 0, 0.25);
+}
+
+.wc-button.is-success:active:not(:disabled) {
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.35);
+  border-color: rgba(0, 0, 0, 0.3);
 }
 
 .wc-button:disabled {
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: 0.6;
+  box-shadow: none !important;
+  transform: none !important;
 }
+
