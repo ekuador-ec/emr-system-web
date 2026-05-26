@@ -9,18 +9,18 @@
 .wc-tabs-folder__header-row {
   width: 100%;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--space-2);
   position: relative;
   z-index: 2;
-  margin-bottom: -1px;
+  margin-bottom: var(--space-3); /* Premium 12px gap between tabs and folder body */
 }
 
 .wc-tabs-folder__header {
   display: flex;
   flex-wrap: nowrap;
-  align-items: flex-end;
-  gap: var(--space-1);
+  align-items: center;
+  gap: var(--space-2); /* Clean gap between tabs */
   flex: 1;
   min-width: 0;
   overflow-x: auto;
@@ -28,6 +28,7 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   scroll-behavior: smooth;
+  padding: 0 var(--space-4); /* Align beautifully with folder body contents */
 }
 
 .wc-tabs-folder__header::-webkit-scrollbar {
@@ -38,14 +39,12 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  padding-bottom: 2px;
 }
 
 /* Default: icon-only (narrow containers) */
 .wc-tabs-folder__tab {
   border: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-primary-light);
+  background: color-mix(in srgb, var(--color-surface) 93%, var(--color-text));
   color: var(--color-text-secondary);
   display: inline-flex;
   align-items: center;
@@ -54,16 +53,16 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   padding: var(--space-2);
-  min-height: 40px;
-  width: 40px;
+  min-height: 44px;
+  width: 44px;
   flex-shrink: 0;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  border-radius: var(--radius-lg); /* Rounded all around for floating capsule look */
   cursor: pointer;
   overflow: hidden;
   white-space: nowrap;
   line-height: 1;
   position: relative;
-  z-index: 0;
+  z-index: 1;
   transition:
     width var(--transition-fast, 150ms ease),
     gap var(--transition-fast, 150ms ease),
@@ -71,6 +70,12 @@
     color var(--transition-fast, 150ms ease),
     background-color var(--transition-fast, 150ms ease),
     border-color var(--transition-fast, 150ms ease);
+}
+
+.wc-tabs-folder__tab:not(.wc-tabs-folder__tab--active):hover {
+  background: color-mix(in srgb, var(--color-surface) 86%, var(--color-text));
+  color: var(--color-text);
+  border-color: var(--color-border);
 }
 
 .wc-tabs-folder__tab-label {
@@ -84,22 +89,41 @@
   white-space: nowrap;
 }
 
-/* Active tab always shows its label */
+/* Active tab always shows its label and has folder styling */
 .wc-tabs-folder__tab--active {
   color: var(--color-text);
   background: var(--color-surface);
-  border-color: var(--color-border);
-  border-bottom-color: var(--color-surface);
-  margin-bottom: -1px;
-  z-index: 2;
-  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border); /* Full clean border all around */
+  z-index: 5;
+  padding: var(--space-2) var(--space-5);
   width: auto;
   gap: var(--space-2);
+  overflow: visible;
+  border-radius: var(--radius-lg); /* Rounded all around */
+  box-shadow: var(--shadow-sm);
 }
 
 .wc-tabs-folder__tab--active .wc-tabs-folder__tab-label {
   max-width: 120px;
   opacity: 1;
+  position: relative;
+  font-weight: var(--font-weight-bold);
+  padding-bottom: 4px;
+}
+
+/* Active tab text premium short underline */
+.wc-tabs-folder__tab--active .wc-tabs-folder__tab-label::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  min-width: 12px;
+  max-width: 24px;
+  height: 3px;
+  background-color: var(--color-text);
+  border-radius: var(--radius-full);
 }
 
 .wc-tabs-folder__tab--error {
@@ -110,13 +134,19 @@
 @container tabs-folder (min-width: 860px) {
   .wc-tabs-folder__tab {
     width: auto;
-    padding: var(--space-2) var(--space-4);
+    padding: var(--space-3) var(--space-4);
     gap: var(--space-2);
+    border-radius: var(--radius-lg);
   }
 
   .wc-tabs-folder__tab-label {
     max-width: 140px;
     opacity: 1;
+  }
+
+  .wc-tabs-folder__tab--active {
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-lg);
   }
 }
 
@@ -146,8 +176,8 @@
 
 .wc-tabs-folder__body {
   border: 1px solid var(--color-border);
-  border-radius: 0 var(--radius-md) var(--radius-md) var(--radius-md);
-  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg);
   margin-top: 0;
   padding: var(--space-5);
   min-height: 220px;
