@@ -9,6 +9,7 @@ interface UserAvatarProps {
   presenceStatus?: PresenceStatus;
   size?: "sm" | "md" | "lg";
   showStatusDot?: boolean;
+  showOfflineDot?: boolean;
   placeholder?: boolean;
 }
 
@@ -19,11 +20,12 @@ export function UserAvatar({
   presenceStatus = "offline",
   size = "md",
   showStatusDot = true,
+  showOfflineDot = true,
   placeholder = false,
 }: UserAvatarProps) {
   const initials = userInitials(firstName, lastName);
   const fullName = `${firstName ?? ""} ${lastName ?? ""}`.trim() || "Usuario";
-  const showDot = showStatusDot && presenceStatus !== "offline";
+  const showDot = showStatusDot && (presenceStatus !== "offline" || showOfflineDot);
 
   return (
     <div className={`msg-avatar ${size}${placeholder ? " placeholder" : ""}`}>
