@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/presentation/modules/auth/hooks/useAuth'
 import { useUnreadMessagesTotal } from '@/presentation/modules/messaging/hooks/useUnreadMessagesTotal'
+import ekIcon from '@/assets/ek_icon.webp'
 import './Sidebar.css'
 import { Icon } from './icons/Icon'
 
@@ -129,7 +130,9 @@ function SidebarContent({ isExpanded }: { isExpanded: boolean }) {
       </nav>
 
       <div className="sidebar-footer">
-        <div className="sidebar-brand-mark" title="EMR System">E</div>
+        <div className="sidebar-brand-mark" title="EMR System">
+          <img src={ekIcon} alt="EK Logo" className="sidebar-brand-logo" />
+        </div>
         <div className="sidebar-system-text">
           <span className="sidebar-brand-text">EMR System</span>
           <span className="sidebar-copyright">ek.software v1.2.0</span>
