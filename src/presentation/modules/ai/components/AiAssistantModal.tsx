@@ -137,89 +137,97 @@ export function AiAssistantModal({ payloadBuilder }: AiAssistantModalProps) {
       onClose={close}
       title={`Asistente IA - ${target.label}`}
       subtitle="Los datos enviados a la IA estan anonimizados. Solo se envia informacion clinica y identificadores internos."
-      maxWidth="720px"
+      maxWidth="1200px"
     >
-      <div className="ai-assistant-modal">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "var(--space-3)",
-          }}
-        >
-          <ModelPreferenceSelector
-            value={preference}
-            onChange={setPreference}
-            disabled={generateMutation.isPending}
-          />
-          {summary && (
-            <div className="ai-assistant-meta">
-              <span className="ai-assistant-meta__pill">Modelo: {summary.model}</span>
-              <span className="ai-assistant-meta__pill">
-                {new Date(summary.createdAt).toLocaleString()}
-              </span>
-              {summary.tokensOutput !== null && (
-                <span className="ai-assistant-meta__pill">{summary.tokensOutput} tokens</span>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="ai-assistant-summary">
-          {latestSummary.isLoading ? (
-            <div style={{ color: "var(--color-text-secondary)" }}>Cargando resumen previo...</div>
-          ) : summary ? (
-            <>
-              <MarkdownRenderer source={summary.content} />
-              <div style={{ display: "flex", gap: "var(--space-2)", marginTop: "var(--space-3)" }}>
-                <WcButton
-                  variant="secondary"
-                  onClick={() => void handleGenerate(true)}
-                  disabled={generateMutation.isPending}
-                >
-                  <Icon name="icon-refresh" size={16} />
-                  Regenerar
-                </WcButton>
-                {!activeConversationId && (
-                  <WcButton
-                    variant="primary"
-                    onClick={() => void handleStartConversation()}
-                    disabled={startConversationMutation.isPending}
-                  >
-                    <Icon name="icon-messages" size={16} />
-                    {startConversationMutation.isPending ? "Iniciando..." : "Iniciar conversacion"}
-                  </WcButton>
+      <div className="ai-modal-layout">
+        {/* Left Column: Summary, actions, and selector */}
+        <div className="ai-modal-layout__left">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "var(--space-3)",
+            }}
+          >
+            <ModelPreferenceSelector
+              value={preference}
+              onChange={setPreference}
+              disabled={generateMutation.isPending}
+            />
+            {summary && (
+              <div className="ai-assistant-meta">
+                <span className="ai-assistant-meta__pill">Modelo: {summary.model}</span>
+                <span className="ai-assistant-meta__pill">
+                  {new Date(summary.createdAt).toLocaleString()}
+                </span>
+                {summary.tokensOutput !== null && (
+                  <span className="ai-assistant-meta__pill">{summary.tokensOutput} tokens</span>
                 )}
               </div>
-            </>
-          ) : (
-            <div className="ai-assistant-summary--empty">
-              <Icon name="icon-stethoscope" size={36} />
-              <div style={{ fontSize: "0.9rem", maxWidth: "440px" }}>
-                Aun no hay un resumen para {target.label}. Genera uno para que el sistema pueda
-                ofrecer apoyo clinico basado en los datos anonimizados.
+            )}
+          </div>
+
+          <div className="ai-assistant-summary">
+            {latestSummary.isLoading ? (
+              <div style={{ color: "var(--color-text-secondary)" }}>Cargando resumen previo...</div>
+            ) : summary ? (
+              <>
+                <MarkdownRenderer source={summary.content} />
+                <div style={{ display: "flex", gap: "var(--space-2)", marginTop: "var(--space-3)" }}>
+                  <WcButton
+                    variant="secondary"
+                    onClick={() => void handleGenerate(true)}
+                    disabled={generateMutation.isPending}
+                  >
+                    <Icon name="icon-refresh" size={16} />
+                    Regenerar
+                  </WcButton>
+                  {!activeConversationId && (
+                    <WcButton
+                      variant="primary"
+                      onClick={() => void handleStartConversation()}
+                      disabled={startConversationMutation.isPending}
+                    >
+                      <Icon name="icon-messages" size={16} />
+                      {startConversationMutation.isPending ? "Iniciando..." : "Iniciar conversacion"}
+                    </WcButton>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="ai-assistant-summary--empty">
+                <Icon name="icon-stethoscope" size={36} />
+                <div style={{ fontSize: "0.9rem", maxWidth: "440px" }}>
+                  Aun no hay un resumen para {target.label}. Genera uno para que el sistema pueda
+                  ofrecer apoyo clinico basado en los datos anonimizados.
+                </div>
+                <WcButton
+                  variant="primary"
+                  onClick={() => void handleGenerate(false)}
+                  disabled={generateMutation.isPending}
+                >
+                  {generateMutation.isPending ? "Generando..." : "Generar resumen"}
+                </WcButton>
               </div>
-              <WcButton
-                variant="primary"
-                onClick={() => void handleGenerate(false)}
-                disabled={generateMutation.isPending}
-              >
-                {generateMutation.isPending ? "Generando..." : "Generar resumen"}
-              </WcButton>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        {activeConversationId && (
-          <div className="ai-assistant-chat">
-            <ChatPanel
-              conversationId={activeConversationId}
-              emptyHint="Empieza a preguntar lo que necesites profundizar del caso."
-            />
-          </div>
-        )}
+        {/* Right Column: Chat Panel */}
+        <div className="ai-modal-layout__right">
+          <ChatPanel
+            conversationId={activeConversationId}
+            emptyHint={
+              activeConversationId
+                ? "Escribe tu pregunta sobre el caso..."
+                : "Haz clic en 'Iniciar conversacion' a la izquierda para empezar a profundizar en este caso."
+            }
+            emptyTitle="Pregunta al Asistente"
+            allowModelChange={false}
+          />
+        </div>
       </div>
     </WcModal>
   );

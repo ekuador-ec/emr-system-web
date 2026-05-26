@@ -6,12 +6,18 @@
 }
 
 .ai-assistant-summary {
-  background-color: var(--color-surface);
+  background-color: var(--color-bg);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md, 8px);
-  padding: var(--space-4);
-  max-height: 45vh;
+  border-radius: var(--radius-xl, 12px);
+  padding: var(--space-5);
+  max-height: 40vh;
   overflow-y: auto;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+  line-height: 1.6;
+}
+
+.dark .ai-assistant-summary {
+  background-color: color-mix(in srgb, var(--color-surface) 95%, white);
 }
 
 .ai-assistant-summary--empty {
@@ -28,9 +34,10 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-height: 280px;
+  min-height: 320px;
   border-top: 1px solid var(--color-border);
-  padding-top: var(--space-3);
+  padding-top: var(--space-4);
+  margin-top: var(--space-2);
 }
 
 .ai-assistant-chat__messages {
@@ -77,8 +84,15 @@
 .ai-assistant-meta__pill {
   background-color: var(--color-bg);
   border: 1px solid var(--color-border);
-  padding: 2px var(--space-2);
+  padding: 4px 12px;
   border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.dark .ai-assistant-meta__pill {
+  background-color: color-mix(in srgb, var(--color-surface) 90%, white);
 }
 
 .ai-assistant-warning {
@@ -101,3 +115,187 @@
     transform: scale(1);
   }
 }
+
+/* Compact dropdown model preference selector */
+.ai-model-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.ai-model-dropdown__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 14px;
+  border-radius: var(--radius-lg, 10px);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+}
+
+.ai-model-dropdown__trigger:hover:not(:disabled) {
+  border-color: var(--color-primary-hover);
+  background-color: color-mix(in srgb, var(--color-primary-hover) 4%, var(--color-surface));
+}
+
+.ai-model-dropdown__trigger:focus {
+  outline: none;
+  border-color: var(--color-primary-hover);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-hover) 15%, transparent);
+}
+
+.ai-model-dropdown__trigger-icon {
+  color: var(--color-primary-hover);
+  display: inline-flex;
+  align-items: center;
+}
+
+.ai-model-dropdown__trigger-caret {
+  font-size: 0.65rem;
+  color: var(--color-text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.ai-model-dropdown__trigger--open .ai-model-dropdown__trigger-caret {
+  transform: rotate(180deg);
+}
+
+.ai-model-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 100;
+  min-width: 240px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl, 12px);
+  padding: var(--space-2);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: ai-dropdown-slide-in 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .ai-model-dropdown__menu {
+  background-color: color-mix(in srgb, var(--color-surface) 96%, white);
+}
+
+@keyframes ai-dropdown-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-model-dropdown__option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius-lg, 10px);
+  border: none;
+  background-color: transparent;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.ai-model-dropdown__option:hover {
+  background-color: color-mix(in srgb, var(--color-primary-hover) 6%, var(--color-surface));
+}
+
+.dark .ai-model-dropdown__option:hover {
+  background-color: color-mix(in srgb, var(--color-primary-hover) 8%, var(--color-surface));
+}
+
+.ai-model-dropdown__option--active {
+  background-color: color-mix(in srgb, var(--color-primary-hover) 8%, var(--color-bg));
+  color: var(--color-primary-hover);
+}
+
+.dark .ai-model-dropdown__option--active {
+  background-color: color-mix(in srgb, var(--color-primary-hover) 12%, var(--color-surface));
+  color: var(--color-primary-hover);
+}
+
+.ai-model-dropdown__option-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.ai-model-dropdown__option-desc {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+}
+
+/* Two-column layout for modern clinical split assistant */
+.ai-modal-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-height: 80vh;
+  padding: var(--space-5) var(--space-6);
+}
+
+.ai-modal-layout__left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1;
+  min-height: 0;
+}
+
+.ai-modal-layout__right {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 380px;
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-4);
+}
+
+@media (min-width: 850px) {
+  .ai-modal-layout {
+    flex-direction: row;
+    height: 70vh;
+    min-height: 580px;
+    max-height: 720px;
+    gap: var(--space-6);
+    padding: var(--space-5) var(--space-6);
+  }
+
+  .ai-modal-layout__left {
+    width: 480px;
+    flex: 0 0 480px;
+    border-right: 1px solid var(--color-border);
+    padding-right: var(--space-6);
+    gap: var(--space-4);
+  }
+
+  .ai-modal-layout__right {
+    flex: 1;
+    border-top: none;
+    padding-top: 0;
+    padding-left: var(--space-2);
+    min-height: 0;
+  }
+
+  .ai-assistant-summary {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
+}
+

@@ -62,13 +62,17 @@ export function ChatComposer({
 
   useEffect(() => {
     if (!menuOpen) return;
-    const handler = (event: MouseEvent) => {
+    const handler = (event: MouseEvent | TouchEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("mousedown", handler, true);
+    document.addEventListener("touchstart", handler, true);
+    return () => {
+      document.removeEventListener("mousedown", handler, true);
+      document.removeEventListener("touchstart", handler, true);
+    };
   }, [menuOpen]);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -108,44 +112,51 @@ export function ChatComposer({
           >
             <Icon name="icon-clip" size={18} />
           </button>
-          <div className="ai-composer__model-wrap" ref={menuRef} style={{ position: "relative" }}>
-            <button
-              type="button"
-              className="ai-composer__model"
-              onClick={() => setMenuOpen((v) => !v)}
-              disabled={!onChangePreference || isUpdatingPreference}
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-              title="Modelo del asistente"
-            >
-              <Icon name="icon-stethoscope" size={14} />
+          {onChangePreference ? (
+            <div className="ai-composer__model-wrap" ref={menuRef} style={{ position: "relative" }}>
+              <button
+                type="button"
+                className="ai-composer__model"
+                onClick={() => setMenuOpen((v) => !v)}
+                disabled={isUpdatingPreference}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                title="Modelo del asistente"
+              >
+                <Icon name="icon-stethoscope" size={14} />
+                <span>{modelLabel(preference)}</span>
+                <span className="ai-composer__model-caret">{menuOpen ? "▴" : "▾"}</span>
+              </button>
+              {menuOpen && (
+                <div className="ai-composer__model-menu" role="menu">
+                  {MODEL_OPTIONS.map((opt) => {
+                    const isActive = opt.value === preference;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`ai-composer__model-option ${isActive ? "ai-composer__model-option--active" : ""}`}
+                        onClick={() => {
+                          if (!isActive) onChangePreference(opt.value);
+                          setMenuOpen(false);
+                        }}
+                        role="menuitemradio"
+                        aria-checked={isActive}
+                      >
+                        <span style={{ fontWeight: isActive ? 600 : 500 }}>{opt.label}</span>
+                        <span className="ai-composer__model-option-desc">{opt.description}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="ai-composer__model-badge" title="Modelo activo">
+              <Icon name="icon-stethoscope" size={13} />
               <span>{modelLabel(preference)}</span>
-              <span className="ai-composer__model-caret">{menuOpen ? "▴" : "▾"}</span>
-            </button>
-            {menuOpen && onChangePreference && (
-              <div className="ai-composer__model-menu" role="menu">
-                {MODEL_OPTIONS.map((opt) => {
-                  const isActive = opt.value === preference;
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      className={`ai-composer__model-option ${isActive ? "ai-composer__model-option--active" : ""}`}
-                      onClick={() => {
-                        if (!isActive) onChangePreference(opt.value);
-                        setMenuOpen(false);
-                      }}
-                      role="menuitemradio"
-                      aria-checked={isActive}
-                    >
-                      <span style={{ fontWeight: isActive ? 600 : 500 }}>{opt.label}</span>
-                      <span className="ai-composer__model-option-desc">{opt.description}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         <div className="ai-composer__toolbar-right">
@@ -156,8 +167,9 @@ export function ChatComposer({
               onClick={() => onAbort?.()}
               title="Detener respuesta"
               aria-label="Detener respuesta"
+              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
             >
-              <span style={{ width: 10, height: 10, background: "currentColor", borderRadius: 2 }} />
+              <span style={{ display: "block", width: 12, height: 12, backgroundColor: "currentColor", borderRadius: 2 }} />
             </button>
           ) : (
             <button
@@ -168,7 +180,7 @@ export function ChatComposer({
               title="Enviar"
               aria-label="Enviar"
             >
-              <Icon name="icon-send" size={16} className="ai-composer__send-icon" />
+              <Icon name="icon-send" size={22} className="ai-composer__send-icon" />
             </button>
           )}
         </div>

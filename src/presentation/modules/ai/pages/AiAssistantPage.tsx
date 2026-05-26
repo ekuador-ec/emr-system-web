@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
@@ -23,13 +23,6 @@ const KIND_LABEL: Record<string, string> = {
   general: "Consulta general",
 };
 
-const GENERAL_SUGGESTIONS = [
-  "Manejo inicial del shock septico en adulto",
-  "Criterios de Sgarbossa en BRIHH",
-  "Antibiotico empirico para neumonia adquirida en comunidad",
-  "Dosis de adrenalina en anafilaxia pediatrica",
-];
-
 export function AiAssistantPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -42,6 +35,32 @@ export function AiAssistantPage() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(
     initialIdFromUrl,
   );
+  const [isMobileListOpen, setIsMobileListOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const [isGuardrailDismissed, setIsGuardrailDismissed] = useState(() => {
+    return localStorage.getItem("emr:ai-assistant:guardrail-dismissed") === "true";
+  });
+
+  const handleDismissGuardrail = () => {
+    setIsGuardrailDismissed(true);
+    localStorage.setItem("emr:ai-assistant:guardrail-dismissed", "true");
+  };
+
+  useEffect(() => {
+    if (!isMobileListOpen) return;
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
+        setIsMobileListOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler, true);
+    document.addEventListener("touchstart", handler, true);
+    return () => {
+      document.removeEventListener("mousedown", handler, true);
+      document.removeEventListener("touchstart", handler, true);
+    };
+  }, [isMobileListOpen]);
 
   const conversationsQuery = useAiConversations(aiServiceConfigured);
   const activeQuery = useAiConversation(activeConversationId);
@@ -173,12 +192,38 @@ export function AiAssistantPage() {
         </WcButton>
       </div>
 
-      <div className="ai-assistant-page__guardrail">
-        <strong style={{ color: "var(--color-text)" }}>Aviso:</strong> el asistente solo responde
-        consultas medicas, clinicas y de salud. No reemplaza el juicio clinico ni la evaluacion
-        presencial del paciente. Las conversaciones generales no se vinculan a ningun paciente y
-        no deben contener datos identificables (nombres, cedulas, direcciones).
-      </div>
+      {!isGuardrailDismissed && (
+        <div className="ai-assistant-page__guardrail">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--space-4)" }}>
+            <div style={{ flex: 1 }}>
+              <strong style={{ color: "var(--color-text)" }}>Aviso importante:</strong> el asistente solo responde
+              consultas médicas, clínicas y de salud. No reemplaza el juicio clínico ni la evaluación
+              presencial del paciente. Las conversaciones generales no se vinculan a ningún paciente y
+              no deben contener datos identificables (nombres, cédulas, direcciones).
+            </div>
+            <button
+              type="button"
+              onClick={handleDismissGuardrail}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "var(--color-text-secondary)",
+                cursor: "pointer",
+                padding: "2px",
+                display: "inline-flex",
+                alignItems: "center",
+                opacity: 0.7,
+                transition: "opacity 0.15s ease",
+              }}
+              title="Cerrar aviso"
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.7")}
+            >
+              <Icon name="icon-x" size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="ai-assistant-page__layout">
         <aside className="ai-assistant-page__sidebar">
@@ -208,24 +253,71 @@ export function AiAssistantPage() {
 
         <section className="ai-assistant-page__main">
           <div className="ai-assistant-page__main-header">
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div
-                style={{
-                  fontSize: "0.95rem",
-                  fontWeight: 600,
-                  color: "var(--color-text)",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {activeConversation?.title ?? "Selecciona una conversacion"}
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0, flex: 1 }}>
+              {/* Dropdown for conversations on mobile */}
+              <div className="ai-mobile-conversations-dropdown" ref={mobileMenuRef}>
+                <button
+                  type="button"
+                  className={`ai-mobile-conversations-btn ${isMobileListOpen ? "is-open" : ""}`}
+                  onClick={() => setIsMobileListOpen((v) => !v)}
+                  title="Listado de conversaciones"
+                >
+                  <Icon name="icon-messages" size={16} />
+                  <span>Chats</span>
+                  <span className="ai-mobile-conversations-caret">{isMobileListOpen ? "▴" : "▾"}</span>
+                </button>
+                {isMobileListOpen && (
+                  <div className="ai-mobile-conversations-popover card">
+                    <div className="ai-mobile-conversations-popover__header">
+                      <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Conversaciones</span>
+                      <WcButton
+                        variant="primary"
+                        onClick={() => {
+                          void handleNewGeneralChat();
+                          setIsMobileListOpen(false);
+                        }}
+                        disabled={startMutation.isPending}
+                        style={{ padding: "4px 8px", fontSize: "0.75rem", minHeight: "28px" }}
+                      >
+                        <Icon name="icon-plus-solid" size={10} />
+                        Nueva
+                      </WcButton>
+                    </div>
+                    <div className="ai-mobile-conversations-popover__body">
+                      <AiConversationList
+                        conversations={conversations}
+                        activeConversationId={activeConversationId}
+                        onSelect={(id) => {
+                          handleSelect(id);
+                          setIsMobileListOpen(false);
+                        }}
+                        onDelete={(id) => void handleDelete(id)}
+                        isLoading={conversationsQuery.isLoading}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
-              {activeConversation && (
-                <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                  {KIND_LABEL[activeConversation.kind] ?? activeConversation.kind}
+
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div
+                  style={{
+                    fontSize: "0.95rem",
+                    fontWeight: 600,
+                    color: "var(--color-text)",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {activeConversation?.title ?? "Selecciona una conversacion"}
                 </div>
-              )}
+                {activeConversation && (
+                  <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
+                    {KIND_LABEL[activeConversation.kind] ?? activeConversation.kind}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           {activeConversation && <AiContextBanner conversation={activeConversation} />}
@@ -234,9 +326,6 @@ export function AiAssistantPage() {
               conversationId={activeConversationId}
               emptyTitle={emptyTitleForActive}
               emptyHint={emptyHintForActive}
-              emptySuggestions={
-                activeConversation?.kind === "general" ? GENERAL_SUGGESTIONS : undefined
-              }
             />
           </div>
         </section>

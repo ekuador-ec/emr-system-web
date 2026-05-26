@@ -99,77 +99,45 @@ export function AiConversationList({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+    <div className="ai-conversation-list">
       {groups.map((group) => (
-        <div key={group.key}>
-          <div
-            style={{
-              padding: "0 var(--space-3)",
-              fontSize: "0.7rem",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              color: "var(--color-text-secondary)",
-              marginBottom: "var(--space-1)",
-            }}
-          >
+        <div key={group.key} className="ai-conversation-list__group">
+          <div className="ai-conversation-list__group-title">
             {group.label}
           </div>
-          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+          <ul className="ai-conversation-list__items">
             {group.items.map((c) => {
               const isActive = c.id === activeConversationId;
               return (
                 <li key={c.id}>
                   <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "var(--space-2)",
-                      padding: "var(--space-2) var(--space-3)",
-                      borderRadius: "var(--radius-md, 8px)",
-                      backgroundColor: isActive ? "var(--color-bg)" : "transparent",
-                      border: isActive ? "1px solid var(--color-border)" : "1px solid transparent",
-                      cursor: "pointer",
-                    }}
+                    className={`ai-conversation-list__item ${isActive ? "ai-conversation-list__item--active" : ""}`}
                     onClick={() => onSelect(c.id)}
                   >
-                    <Icon name={kindIcon(c.kind)} size={16} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: "0.85rem",
-                          fontWeight: isActive ? 600 : 500,
-                          color: "var(--color-text)",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
+                    <div className="ai-conversation-list__item-icon">
+                      <Icon name={kindIcon(c.kind)} size={16} />
+                    </div>
+                    <div className="ai-conversation-list__item-content">
+                      <div className="ai-conversation-list__item-title">
                         {c.title ?? kindLabel(c.kind)}
                       </div>
-                      <div
-                        style={{
-                          fontSize: "0.7rem",
-                          color: "var(--color-text-secondary)",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: "var(--space-2)",
-                        }}
-                      >
+                      <div className="ai-conversation-list__item-meta">
                         <span>{kindLabel(c.kind)}</span>
                         <span>{formatRelative(c.updatedAt)}</span>
                       </div>
                     </div>
-                    <WcButtonIcon
-                      icon="icon-trash"
-                      title="Eliminar conversacion"
-                      size="sm"
-                      variant="ghost"
-                      onClick={(e: React.MouseEvent) => {
-                        e.stopPropagation();
-                        onDelete(c.id);
-                      }}
-                    />
+                    <div className="ai-conversation-list__item-delete">
+                      <WcButtonIcon
+                        icon="icon-trash"
+                        title="Eliminar conversacion"
+                        size="sm"
+                        variant="ghost"
+                        onClick={(e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          onDelete(c.id);
+                        }}
+                      />
+                    </div>
                   </div>
                 </li>
               );
@@ -180,3 +148,4 @@ export function AiConversationList({
     </div>
   );
 }
+

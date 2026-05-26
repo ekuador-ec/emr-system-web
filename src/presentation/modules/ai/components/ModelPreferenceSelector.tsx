@@ -1,4 +1,6 @@
+import { useState, useRef, useEffect } from "react";
 import type { AiModelPreference } from "@/domain/modules/ai/models/Summary";
+import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 
 interface ModelPreferenceSelectorProps {
   value: AiModelPreference;
@@ -10,7 +12,7 @@ const OPTIONS: Array<{ value: AiModelPreference; label: string; description: str
   {
     value: "auto",
     label: "Auto (OpenRouter)",
-    description: "Rotacion automatica entre varios LLMs",
+    description: "Rotación automática entre varios LLMs",
   },
   {
     value: "deepseek",
@@ -19,57 +21,78 @@ const OPTIONS: Array<{ value: AiModelPreference; label: string; description: str
   },
 ];
 
+function optionLabel(val: AiModelPreference): string {
+  return OPTIONS.find((o) => o.value === val)?.label ?? val;
+}
+
 export function ModelPreferenceSelector({
   value,
   onChange,
   disabled,
 }: ModelPreferenceSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler, true);
+    document.addEventListener("touchstart", handler, true);
+    return () => {
+      document.removeEventListener("mousedown", handler, true);
+      document.removeEventListener("touchstart", handler, true);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (preference: AiModelPreference) => {
+    onChange(preference);
+    setIsOpen(false);
+  };
+
   return (
-    <div
-      role="radiogroup"
-      aria-label="Preferencia de modelo"
-      style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}
-    >
-      {OPTIONS.map((option) => {
-        const isActive = value === option.value;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            role="radio"
-            aria-checked={isActive}
-            disabled={disabled}
-            onClick={() => onChange(option.value)}
-            style={{
-              padding: "var(--space-2) var(--space-3)",
-              borderRadius: "var(--radius-md, 8px)",
-              border: isActive
-                ? "1px solid var(--color-primary)"
-                : "1px solid var(--color-border)",
-              backgroundColor: isActive ? "var(--color-primary-soft, var(--color-bg))" : "var(--color-surface)",
-              color: isActive ? "var(--color-primary)" : "var(--color-text)",
-              cursor: disabled ? "not-allowed" : "pointer",
-              opacity: disabled ? 0.6 : 1,
-              fontSize: "0.85rem",
-              fontWeight: isActive ? 600 : 500,
-              textAlign: "left",
-              minWidth: "180px",
-            }}
-          >
-            <div>{option.label}</div>
-            <div
-              style={{
-                fontSize: "0.7rem",
-                fontWeight: 400,
-                color: "var(--color-text-secondary)",
-                marginTop: "2px",
-              }}
-            >
-              {option.description}
-            </div>
-          </button>
-        );
-      })}
+    <div className="ai-model-dropdown" ref={containerRef}>
+      <button
+        type="button"
+        className={`ai-model-dropdown__trigger ${isOpen ? "ai-model-dropdown__trigger--open" : ""}`}
+        onClick={() => setIsOpen((prev) => !prev)}
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        title="Modelo preferido para el asistente"
+      >
+        <span className="ai-model-dropdown__trigger-icon">
+          <Icon name="icon-stethoscope" size={14} />
+        </span>
+        <span>Modelo: {optionLabel(value)}</span>
+        <span className="ai-model-dropdown__trigger-caret">{isOpen ? "▴" : "▾"}</span>
+      </button>
+
+      {isOpen && (
+        <div className="ai-model-dropdown__menu" role="listbox">
+          {OPTIONS.map((option) => {
+            const isActive = value === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="option"
+                aria-selected={isActive}
+                className={`ai-model-dropdown__option ${
+                  isActive ? "ai-model-dropdown__option--active" : ""
+                }`}
+                onClick={() => handleSelect(option.value)}
+              >
+                <span className="ai-model-dropdown__option-title">{option.label}</span>
+                <span className="ai-model-dropdown__option-desc">{option.description}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
