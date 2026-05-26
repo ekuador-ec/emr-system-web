@@ -66,7 +66,7 @@ const TEXTAREA_STYLE = {
   padding: "var(--space-2) var(--space-3)",
   borderRadius: "var(--radius-md)",
   border: "1px solid var(--color-border)",
-  backgroundColor: "var(--color-surface)",
+  backgroundColor: "var(--color-bg)",
   color: "var(--color-text)",
   fontFamily: "var(--font-body)",
   fontSize: "var(--font-size-sm)",
