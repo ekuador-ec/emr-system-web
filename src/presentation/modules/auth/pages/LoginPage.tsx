@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Navigate, useNavigate } from 'react-router-dom'
@@ -23,10 +23,34 @@ export function LoginPage() {
   const [recoverySuccess, setRecoverySuccess] = useState(false)
   const { mutateAsync: requestPasswordReset, isPending: isResetting } = usePasswordReset()
 
+  // Step state for two-step login: 1 for email, 2 for password
+  const [step, setStep] = useState<1 | 2>(1)
+
+  // Cooldown & Brute force mitigation states
+  const [, setFailedAttempts] = useState(() => {
+    const saved = localStorage.getItem('emr:login:failures')
+    return saved ? parseInt(saved, 10) : 0
+  })
+  
+  const [lockoutTimeLeft, setLockoutTimeLeft] = useState(() => {
+    const until = localStorage.getItem('emr:login:lockout_until')
+    if (until) {
+      const remaining = Math.ceil((parseInt(until, 10) - Date.now()) / 1000)
+      return remaining > 0 ? remaining : 0
+    }
+    return 0
+  })
+
+  const [isLockedOut, setIsLockedOut] = useState(lockoutTimeLeft > 0)
+
   const {
     register: registerLogin,
     handleSubmit: handleLoginSubmit,
     formState: { errors: loginErrors },
+    trigger: triggerLogin,
+    getValues: getValuesLogin,
+    setValue: setValueLogin,
+    watch: watchLogin,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -39,6 +63,8 @@ export function LoginPage() {
     register: registerRecovery,
     handleSubmit: handleRecoverySubmit,
     formState: { errors: recoveryErrors },
+    watch: watchRecovery,
+    setValue: setValueRecovery,
   } = useForm<ResetPasswordRequestFormData>({
     resolver: zodResolver(resetPasswordRequestSchema),
     defaultValues: {
@@ -46,18 +72,63 @@ export function LoginPage() {
     },
   })
 
+  const emailValue = watchLogin('email')
+  const recoveryEmailValue = watchRecovery('email')
+
   if (isAuthenticated && !isLoading) {
     return <Navigate to="/" replace />
   }
   
   const loginErrorMessage = loginError instanceof Error ? loginError.message : null
 
+  // Timer for lockout countdown
+  useEffect(() => {
+    if (!isLockedOut || lockoutTimeLeft <= 0) {
+      if (isLockedOut) {
+        setIsLockedOut(false)
+        localStorage.removeItem('emr:login:lockout_until')
+      }
+      return
+    }
+
+    const timer = setInterval(() => {
+      setLockoutTimeLeft(prev => {
+        const next = prev - 1
+        if (next <= 0) {
+          setIsLockedOut(false)
+          localStorage.removeItem('emr:login:lockout_until')
+          return 0
+        }
+        return next
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [isLockedOut, lockoutTimeLeft])
+
   const onLogin = async (data: LoginFormData) => {
+    if (isLockedOut) return
+
     try {
       await login(data)
+      setFailedAttempts(0)
+      localStorage.removeItem('emr:login:failures')
+      localStorage.removeItem('emr:login:lockout_until')
       navigate('/', { replace: true })
     } catch {
-      // Error is captured in loginError via the mutation
+      setFailedAttempts(prev => {
+        const nextAttempts = prev + 1
+        localStorage.setItem('emr:login:failures', nextAttempts.toString())
+        
+        if (nextAttempts >= 3) {
+          const lockoutPeriod = 30 // 30 seconds
+          const untilTime = Date.now() + lockoutPeriod * 1000
+          localStorage.setItem('emr:login:lockout_until', untilTime.toString())
+          setIsLockedOut(true)
+          setLockoutTimeLeft(lockoutPeriod)
+        }
+        return nextAttempts
+      })
     }
   }
 
@@ -70,19 +141,267 @@ export function LoginPage() {
     }
   }
 
+  const handleEmailSubmit = async () => {
+    if (isLockedOut) return
+    const isEmailValid = await triggerLogin('email')
+    if (isEmailValid) {
+      setStep(2)
+    }
+  }
+
+  const handleEmailKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      await handleEmailSubmit()
+    }
+  }
+
+  const handleGoBack = () => {
+    setStep(1)
+    setValueLogin('password', '')
+  }
+
+  const handleToggleRecovering = (recovering: boolean) => {
+    setIsRecovering(recovering)
+    if (!recovering) {
+      setStep(1)
+    }
+  }
+
   const companyLogoUrl = import.meta.env.VITE_COMPANY_LOGO_URL || '/favicon.ico'
   const companyType = import.meta.env.VITE_COMPANY_TYPE || 'Centro Médico'
   const companyName = import.meta.env.VITE_COMPANY_NAME || 'Entorno de Pruebas'
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-      }}
-    >
+    <div className="premium-login-container">
+      <style>{`
+        .premium-login-container {
+          min-height: 100vh;
+          min-height: 100dvh;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          background: var(--color-bg);
+          overflow-x: hidden;
+          overflow-y: auto;
+          width: 100%;
+        }
+
+        .premium-login-card {
+          background: rgba(255, 255, 255, 0.45);
+          border: 1px solid rgba(255, 255, 255, 0.5);
+          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04), 
+                      inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                      0 1px 2px rgba(15, 23, 42, 0.05);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-radius: var(--radius-2xl);
+          padding: var(--space-8);
+          width: 100%;
+          max-width: 420px;
+          overflow: hidden;
+          transition: all var(--transition-normal);
+          z-index: 10;
+        }
+        .dark .premium-login-card {
+          background: rgba(30, 30, 35, 0.5);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+        .premium-login-card:hover {
+          box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.08), 
+                      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+        .dark .premium-login-card:hover {
+          box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        .premium-input {
+          background: rgba(255, 255, 255, 0.5) !important;
+          border: 1px solid rgba(40, 32, 84, 0.12) !important;
+          transition: all var(--transition-fast) !important;
+        }
+        .dark .premium-input {
+          background: rgba(22, 22, 22, 0.4) !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        .premium-input:focus {
+          background: #ffffff !important;
+          border-color: var(--color-primary) !important;
+          box-shadow: 0 0 0 4px rgba(68, 46, 242, 0.12) !important;
+          transform: translateY(-1px);
+        }
+        .dark .premium-input:focus {
+          background: #161616 !important;
+          border-color: #ffffff !important;
+          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08) !important;
+        }
+        .premium-input-error {
+          border-color: var(--color-danger) !important;
+        }
+        .premium-input-error:focus {
+          border-color: var(--color-danger) !important;
+          box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15) !important;
+        }
+
+        .btn-premium-action {
+          background: var(--color-primary);
+          color: var(--color-primary-foreground);
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          border-radius: var(--radius-xl);
+          padding: var(--space-3) var(--space-6);
+          font-weight: var(--font-weight-bold);
+          font-size: var(--font-size-base);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: var(--space-2);
+          box-shadow: 0 4px 12px 0 rgba(40, 32, 84, 0.15),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          cursor: pointer;
+        }
+        .btn-premium-action:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px 0 rgba(40, 32, 84, 0.22);
+          filter: brightness(1.08);
+        }
+        .btn-premium-action:active:not(:disabled) {
+          transform: translateY(0);
+        }
+        .dark .btn-premium-action {
+          background: #ffffff;
+          color: #09090b;
+          box-shadow: 0 4px 12px 0 rgba(255, 255, 255, 0.05);
+        }
+        .dark .btn-premium-action:hover:not(:disabled) {
+          box-shadow: 0 6px 20px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .capsule-badge {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: var(--space-2);
+          background: rgba(40, 32, 84, 0.04);
+          border: 1px solid rgba(40, 32, 84, 0.08);
+          padding: var(--space-2) var(--space-4);
+          border-radius: var(--radius-full);
+          width: fit-content;
+          margin: 0 auto var(--space-6) auto;
+          font-size: var(--font-size-sm);
+          color: var(--color-text-secondary);
+          transition: all 0.2s ease;
+        }
+        .dark .capsule-badge {
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .capsule-badge:hover {
+          background: rgba(40, 32, 84, 0.08);
+          transform: translateY(-1px);
+        }
+        .dark .capsule-badge:hover {
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        .recovery-link {
+          font-family: var(--font-body) !important;
+          color: var(--color-text-secondary) !important;
+          font-weight: var(--font-weight-regular) !important;
+          font-size: var(--font-size-xs) !important;
+          text-decoration: none !important;
+          transition: color var(--transition-fast) !important;
+        }
+        .recovery-link:hover:not(:disabled) {
+          color: var(--color-text) !important;
+          text-decoration: underline !important;
+        }
+
+        .btn-back-simple {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--space-1-5) !important;
+          background: none !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          font-size: var(--font-size-sm) !important;
+          color: var(--color-text-secondary) !important;
+          font-weight: var(--font-weight-regular) !important;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        .btn-back-simple:hover:not(:disabled) {
+          color: var(--color-text) !important;
+          transform: translateX(-2px);
+        }
+        .btn-back-simple:active:not(:disabled) {
+          transform: scale(0.96) translateX(-2px);
+        }
+
+        .btn-clear-field {
+          position: absolute !important;
+          right: 12px !important;
+          background: none !important;
+          border: none !important;
+          box-shadow: none !important;
+          color: var(--color-text-secondary) !important;
+          cursor: pointer !important;
+          padding: var(--space-1) !important;
+          border-radius: var(--radius-full) !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          opacity: 0.6 !important;
+          z-index: 10 !important;
+        }
+        .btn-clear-field:hover:not(:disabled) {
+          background: rgba(40, 32, 84, 0.06) !important;
+          color: var(--color-text) !important;
+          opacity: 1 !important;
+          transform: scale(1.05);
+        }
+        .dark .btn-clear-field:hover:not(:disabled) {
+          background: rgba(255, 255, 255, 0.08) !important;
+        }
+        .btn-clear-field:active:not(:disabled) {
+          transform: scale(0.92);
+        }
+      `}</style>
+
+      {/* Decorative ambient gradients */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '-15%',
+          left: '-10%',
+          width: '55vw',
+          height: '55vw',
+          background: 'radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(99, 102, 241, 0) 70%)',
+          borderRadius: '50%',
+          filter: 'blur(100px)',
+          zIndex: 0,
+          pointerEvents: 'none'
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '-15%',
+          right: '-10%',
+          width: '55vw',
+          height: '55vw',
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, rgba(168, 85, 247, 0) 70%)',
+          borderRadius: '50%',
+          filter: 'blur(100px)',
+          zIndex: 0,
+          pointerEvents: 'none'
+        }}
+      />
+
       {/* EK Logo - Desktop only */}
       <div
         style={{
@@ -92,6 +411,7 @@ export function LoginPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          zIndex: 10,
         }}
         className="hidden-mobile"
       >
@@ -99,7 +419,7 @@ export function LoginPage() {
       </div>
 
       {/* Theme toggle - All devices */}
-      <div style={{ position: 'absolute', top: 'var(--space-4)', right: 'var(--space-4)' }}>
+      <div style={{ position: 'absolute', top: 'var(--space-4)', right: 'var(--space-4)', zIndex: 10 }}>
         <ThemeToggle />
       </div>
 
@@ -113,6 +433,7 @@ export function LoginPage() {
           justifyContent: 'center',
           padding: 'var(--space-4)',
           gap: 'var(--space-6)',
+          zIndex: 5,
         }}
       >
         {/* Company header */}
@@ -143,6 +464,7 @@ export function LoginPage() {
                     objectFit: 'cover',
                     borderRadius: '50%',
                     display: 'block',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
                   }}
                 />
               </div>
@@ -254,16 +576,40 @@ export function LoginPage() {
           </div>
         )}
 
-        <div className="card" style={{ width: '100%', maxWidth: '420px' }}>
+        {/* Back button outside the card, below the company logo/header */}
+        {step === 2 && !isRecovering && (
+          <div style={{ width: '100%', maxWidth: '420px', display: 'flex', justifyContent: 'flex-start', marginTop: '-var(--space-3)', marginBottom: '-var(--space-3)' }}>
+            <button
+              type="button"
+              onClick={handleGoBack}
+              disabled={isLockedOut || isLoggingIn}
+              className="btn-back-simple"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              <span>Volver</span>
+            </button>
+          </div>
+        )}
+
+        <div className="premium-login-card" style={{ position: 'relative' }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 'var(--space-8)' }}>
+        <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
           <h1 style={{ marginBottom: 'var(--space-2)' }}>
-            {isRecovering ? 'Recuperar Contraseña' : 'Iniciar Sesión'}
+            {isRecovering 
+              ? 'Recuperar Contraseña' 
+              : step === 1 
+                ? 'Iniciar Sesión' 
+                : 'Ingresa tu Contraseña'}
           </h1>
           <p>
             {isRecovering 
               ? 'Te enviaremos un enlace para restablecerla'
-              : 'Ingresa tus credenciales para continuar'}
+              : step === 1
+                ? 'Ingresa tus credenciales para continuar'
+                : 'Introduce la clave de acceso para tu cuenta'}
           </p>
         </div>
 
@@ -271,6 +617,9 @@ export function LoginPage() {
         {isRecovering && recoverySuccess && (
           <div
             style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
               padding: 'var(--space-3)',
               marginBottom: 'var(--space-4)',
               borderRadius: 'var(--radius-md)',
@@ -281,105 +630,287 @@ export function LoginPage() {
               border: '1px solid var(--color-success)',
             }}
           >
-            Si existe una cuenta con ese correo, te hemos enviado un enlace para restablecer tu contraseña.
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span>Si existe una cuenta con ese correo, te hemos enviado un enlace para restablecer tu contraseña.</span>
+          </div>
+        )}
+
+        {/* Failed error message banner */}
+        {!isRecovering && loginErrorMessage && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: 'var(--space-3)',
+              marginBottom: 'var(--space-4)',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--color-danger-light)',
+              color: 'var(--color-danger)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 'var(--font-weight-medium)',
+              border: '1px solid var(--color-danger)',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>{loginErrorMessage}</span>
+          </div>
+        )}
+
+        {/* Lockout banner */}
+        {!isRecovering && isLockedOut && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: 'var(--space-3)',
+              marginBottom: 'var(--space-4)',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--color-danger-light)',
+              color: 'var(--color-danger)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 'var(--font-weight-medium)',
+              border: '1px solid var(--color-danger)',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>Demasiados intentos fallidos. Por seguridad, el acceso está bloqueado temporalmente por {lockoutTimeLeft} segundos.</span>
+          </div>
+        )}
+
+        {/* Email capsule badge in Step 2 */}
+        {step === 2 && !isRecovering && (
+          <div className="capsule-badge">
+            <span style={{ fontWeight: 'var(--font-weight-semibold)' }}>{getValuesLogin('email')}</span>
+            <button
+              type="button"
+              onClick={handleGoBack}
+              disabled={isLockedOut || isLoggingIn}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--color-primary)',
+                fontSize: 'var(--font-size-xs)',
+                cursor: 'pointer',
+                padding: 0,
+                fontWeight: 'var(--font-weight-bold)',
+                textDecoration: 'underline',
+              }}
+            >
+              Editar
+            </button>
           </div>
         )}
 
         {!isRecovering ? (
-          /* Login Form */
-          <form onSubmit={handleLoginSubmit(onLogin)} noValidate>
-          {loginErrorMessage && (
+          /* Login Form (Step 1 and Step 2 in a horizontal slider) */
+          <form onSubmit={handleLoginSubmit(onLogin)} noValidate style={{ overflow: 'hidden' }}>
             <div
               style={{
-                padding: 'var(--space-3)',
-                marginBottom: 'var(--space-4)',
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: 'var(--color-danger-light)',
-                color: 'var(--color-danger)',
-                fontSize: 'var(--font-size-sm)',
-                fontWeight: 'var(--font-weight-medium)',
-                border: '1px solid var(--color-danger)',
+                display: 'flex',
+                width: '200%',
+                transform: step === 1 ? 'translateX(0%)' : 'translateX(-50%)',
+                transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
-              {loginErrorMessage}
-            </div>
-          )}
-          <div style={{ marginBottom: 'var(--space-4)' }}>
-            <label
-              htmlFor="login-email"
-              style={{ display: 'block', marginBottom: 'var(--space-1)' }}
-            >
-              Correo electrónico
-            </label>
-            <input
-              id="login-email"
-              type="email"
-              placeholder="tu@email.com"
-              autoComplete="email"
-              autoFocus
-              {...registerLogin('email')}
-              style={loginErrors.email ? { borderColor: 'var(--color-danger)' } : undefined}
-            />
-            {loginErrors.email && (
-              <small style={{ color: 'var(--color-danger)', marginTop: 'var(--space-1)', display: 'block' }}>
-                {loginErrors.email.message}
-              </small>
-            )}
-          </div>
-
-          <div style={{ marginBottom: 'var(--space-2)' }}>
-            <label
-              htmlFor="login-password"
-              style={{ display: 'block', marginBottom: 'var(--space-1)' }}
-            >
-              Contraseña
-            </label>
-            <PasswordInput
-              id="login-password"
-              placeholder="••••••••"
-              autoComplete="current-password"
-              {...registerLogin('password')}
-              error={!!loginErrors.password}
-            />
-            {loginErrors.password && (
-              <small style={{ color: 'var(--color-danger)', marginTop: 'var(--space-1)', display: 'block' }}>
-                {loginErrors.password.message}
-              </small>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-6)' }}>
-             <button
-                type="button"
-                onClick={() => setIsRecovering(true)}
+              {/* Step 1: Email */}
+              <div
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--color-primary)',
-                  fontSize: 'var(--font-size-sm)',
-                  cursor: 'pointer',
-                  padding: 0,
-                  textDecoration: 'underline'
+                  width: '50%',
+                  paddingLeft: '4px',
+                  paddingRight: 'var(--space-2)',
+                  opacity: step === 1 ? 1 : 0,
+                  pointerEvents: step === 1 ? 'all' : 'none',
+                  transition: 'opacity 0.3s ease',
+                  boxSizing: 'border-box',
                 }}
               >
-                ¿Olvidaste tu contraseña?
-              </button>
-          </div>
+                <div style={{ marginBottom: 'var(--space-2)' }}>
+                  <label
+                    htmlFor="login-email"
+                    style={{ display: 'block', marginBottom: 'var(--space-1)' }}
+                  >
+                    Correo electrónico
+                  </label>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <input
+                      id="login-email"
+                      type="email"
+                      className={`premium-input ${loginErrors.email ? 'premium-input-error' : ''}`}
+                      placeholder="tu@email.com"
+                      autoComplete="email"
+                      autoFocus
+                      disabled={isLockedOut}
+                      {...registerLogin('email')}
+                      onKeyDown={handleEmailKeyDown}
+                      style={{
+                        paddingRight: emailValue ? '36px' : 'var(--space-3)',
+                      }}
+                    />
+                    {emailValue && !isLockedOut && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setValueLogin('email', '')
+                          document.getElementById('login-email')?.focus()
+                        }}
+                        className="btn-clear-field"
+                        tabIndex={-1}
+                        aria-label="Limpiar campo"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                  {loginErrors.email && (
+                    <small style={{ color: 'var(--color-danger)', marginTop: 'var(--space-1)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      <span>{loginErrors.email.message}</span>
+                    </small>
+                  )}
+                </div>
 
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={isLoggingIn}
-            style={{
-              width: '100%',
-              padding: 'var(--space-3) var(--space-4)',
-              fontSize: 'var(--font-size-base)',
-              opacity: isLoggingIn ? 0.7 : 1,
-            }}
-          >
-            {isLoggingIn ? 'Ingresando...' : 'Ingresar'}
-          </button>
-        </form>
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'var(--space-6)' }}>
+                  <button
+                    type="button"
+                    className="btn-premium-action"
+                    onClick={handleEmailSubmit}
+                    disabled={isLockedOut}
+                    style={{
+                      opacity: isLockedOut ? 0.7 : 1,
+                    }}
+                  >
+                    <span>{isLockedOut ? `Bloqueado (${lockoutTimeLeft}s)` : 'Continuar'}</span>
+                    {!isLockedOut && (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'var(--space-4)' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleRecovering(true)}
+                    disabled={isLockedOut}
+                    className="recovery-link"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                    }}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                </div>
+              </div>
+
+              {/* Step 2: Password */}
+              <div
+                style={{
+                  width: '50%',
+                  paddingLeft: 'var(--space-2)',
+                  paddingRight: '4px',
+                  opacity: step === 2 ? 1 : 0,
+                  pointerEvents: step === 2 ? 'all' : 'none',
+                  transition: 'opacity 0.3s ease',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <div style={{ marginBottom: 'var(--space-3)' }}>
+                  <label
+                    htmlFor="login-password"
+                    style={{ display: 'block', marginBottom: 'var(--space-1)' }}
+                  >
+                    Contraseña
+                  </label>
+                  <PasswordInput
+                    id="login-password"
+                    className={`premium-input ${loginErrors.password ? 'premium-input-error' : ''}`}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    disabled={isLockedOut}
+                    {...registerLogin('password')}
+                    error={!!loginErrors.password}
+                  />
+                  {loginErrors.password && (
+                    <small style={{ color: 'var(--color-danger)', marginTop: 'var(--space-1)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      <span>{loginErrors.password.message}</span>
+                    </small>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'var(--space-6)' }}>
+                  <button
+                    type="submit"
+                    className="btn-premium-action"
+                    disabled={isLoggingIn || isLockedOut}
+                    style={{
+                      opacity: (isLoggingIn || isLockedOut) ? 0.7 : 1,
+                    }}
+                  >
+                    <span>
+                      {isLockedOut 
+                        ? `Bloqueado (${lockoutTimeLeft}s)` 
+                        : isLoggingIn 
+                          ? 'Ingresando...' 
+                          : 'Ingresar'}
+                    </span>
+                    {!isLockedOut && !isLoggingIn && (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'var(--space-4)' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleRecovering(true)}
+                    disabled={isLockedOut || isLoggingIn}
+                    className="recovery-link"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                    }}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
         ) : (
           /* Recovery Form */
           <form onSubmit={handleRecoverySubmit(onRecovery)} noValidate>
@@ -390,19 +921,46 @@ export function LoginPage() {
               >
                 Correo electrónico
               </label>
-              <input
-                id="recovery-email"
-                type="email"
-                placeholder="tu@email.com"
-                autoComplete="email"
-                autoFocus
-                {...registerRecovery('email')}
-                style={recoveryErrors.email ? { borderColor: 'var(--color-danger)' } : undefined}
-                disabled={recoverySuccess}
-              />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input
+                  id="recovery-email"
+                  type="email"
+                  className={`premium-input ${recoveryErrors.email ? 'premium-input-error' : ''}`}
+                  placeholder="tu@email.com"
+                  autoComplete="email"
+                  autoFocus
+                  {...registerRecovery('email')}
+                  style={{
+                    paddingRight: recoveryEmailValue ? '36px' : 'var(--space-3)',
+                  }}
+                  disabled={recoverySuccess}
+                />
+                {recoveryEmailValue && !recoverySuccess && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setValueRecovery('email', '')
+                      document.getElementById('recovery-email')?.focus()
+                    }}
+                    className="btn-clear-field"
+                    tabIndex={-1}
+                    aria-label="Limpiar campo"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                )}
+              </div>
               {recoveryErrors.email && (
-                <small style={{ color: 'var(--color-danger)', marginTop: 'var(--space-1)', display: 'block' }}>
-                  {recoveryErrors.email.message}
+                <small style={{ color: 'var(--color-danger)', marginTop: 'var(--space-1)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  <span>{recoveryErrors.email.message}</span>
                 </small>
               )}
             </div>
@@ -410,14 +968,15 @@ export function LoginPage() {
             {!recoverySuccess && (
                <button
                   type="submit"
-                  className="btn-primary"
+                  className="btn-premium-action"
                   disabled={isResetting}
                   style={{
                     width: '100%',
                     padding: 'var(--space-3) var(--space-4)',
                     fontSize: 'var(--font-size-base)',
                     opacity: isResetting ? 0.7 : 1,
-                    marginBottom: 'var(--space-4)'
+                    marginBottom: 'var(--space-4)',
+                    justifyContent: 'center',
                   }}
                 >
                   {isResetting ? 'Enviando...' : 'Enviar enlace'}
@@ -427,7 +986,7 @@ export function LoginPage() {
             <div style={{ textAlign: 'center' }}>
                <button
                   type="button"
-                  onClick={() => setIsRecovering(false)}
+                  onClick={() => handleToggleRecovering(false)}
                   style={{
                     background: 'none',
                     border: 'none',
@@ -470,6 +1029,7 @@ export function LoginPage() {
           fontSize: 'var(--font-size-xs)',
           color: 'var(--color-text-secondary)',
           gap: 'var(--space-2)',
+          zIndex: 5,
         }}
       >
         <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)' }}>
@@ -477,7 +1037,7 @@ export function LoginPage() {
         </div>
       </div>
 
-      <div className="footer-global">
+      <div className="footer-global" style={{ zIndex: 5 }}>
         <Footer />
       </div>
     </div>
