@@ -98,7 +98,7 @@ export function AiAssistantPage() {
         kind: "general",
         entityId: null,
         modelPreference: preference,
-        title: `Consulta ${new Date().toLocaleDateString()}`,
+        title: null,
       });
       setActiveConversationId(conversation.id);
     } catch (error) {
@@ -174,7 +174,15 @@ export function AiAssistantPage() {
         }}
       >
         <div>
-          <h2 style={{ margin: 0, color: "var(--color-text)" }}>Asistente IA clinico</h2>
+          <div className="ai-assistant-page__title-line">
+            <h2 style={{ margin: 0, color: "var(--color-text)" }}>Asistente IA clinico</h2>
+            <span
+              className="ai-assistant-page__beta-badge"
+              title="Funcion en fase Beta. Las respuestas son referenciales, pueden contener errores y tener limites. Valida siempre con criterio clinico profesional."
+            >
+              Beta
+            </span>
+          </div>
           <p
             style={{
               margin: 0,
@@ -310,7 +318,9 @@ export function AiAssistantPage() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {activeConversation?.title ?? "Selecciona una conversacion"}
+                  {activeConversation
+                    ? activeConversation.title ?? "Nueva consulta"
+                    : "Selecciona una conversacion"}
                 </div>
                 {activeConversation && (
                   <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>

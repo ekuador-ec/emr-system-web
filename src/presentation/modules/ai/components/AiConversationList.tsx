@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { AiConversation } from "@/domain/modules/ai/models/Conversation";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
@@ -74,6 +74,11 @@ export function AiConversationList({
   isLoading,
 }: AiConversationListProps) {
   const groups = useMemo(() => groupConversations(conversations), [conversations]);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+
+  const toggleGroup = (key: string) => {
+    setCollapsedGroups((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   if (isLoading) {
     return (
@@ -100,11 +105,23 @@ export function AiConversationList({
 
   return (
     <div className="ai-conversation-list">
-      {groups.map((group) => (
+      {groups.map((group) => {
+        const isCollapsed = collapsedGroups[group.key] ?? false;
+        return (
         <div key={group.key} className="ai-conversation-list__group">
-          <div className="ai-conversation-list__group-title">
-            {group.label}
-          </div>
+          <button
+            type="button"
+            className="ai-conversation-list__group-toggle"
+            aria-expanded={!isCollapsed}
+            onClick={() => toggleGroup(group.key)}
+          >
+            <span className="ai-conversation-list__group-caret">
+              <Icon name="icon-chevron-down" size={14} />
+            </span>
+            <span className="ai-conversation-list__group-label">{group.label}</span>
+            <span className="ai-conversation-list__group-count">{group.items.length}</span>
+          </button>
+          {!isCollapsed && (
           <ul className="ai-conversation-list__items">
             {group.items.map((c) => {
               const isActive = c.id === activeConversationId;
@@ -122,7 +139,6 @@ export function AiConversationList({
                         {c.title ?? kindLabel(c.kind)}
                       </div>
                       <div className="ai-conversation-list__item-meta">
-                        <span>{kindLabel(c.kind)}</span>
                         <span>{formatRelative(c.updatedAt)}</span>
                       </div>
                     </div>
@@ -143,8 +159,10 @@ export function AiConversationList({
               );
             })}
           </ul>
+          )}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

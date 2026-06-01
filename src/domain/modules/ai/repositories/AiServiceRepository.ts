@@ -37,6 +37,7 @@ export interface SseChatEvents {
   onDelta?: (delta: string) => void;
   onDone?: () => void;
   onCompleted?: (payload: { userMessage: AiMessage; assistantMessage: AiMessage }) => void;
+  onTitle?: (conversation: AiConversation) => void;
   onError?: (error: { code: string; message: string }) => void;
 }
 

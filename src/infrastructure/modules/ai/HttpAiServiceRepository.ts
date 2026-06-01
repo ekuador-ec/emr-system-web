@@ -156,6 +156,11 @@ function dispatchSseEvent(name: string, data: string, events: SseChatEvents): vo
       if (parsed && events.onCompleted) events.onCompleted(parsed);
       return;
     }
+    case "title": {
+      const parsed = safeParse<AiConversation>(data);
+      if (parsed && events.onTitle) events.onTitle(parsed);
+      return;
+    }
     case "error": {
       const parsed = safeParse<{ error: { code: string; message: string } }>(data);
       if (parsed?.error && events.onError) events.onError(parsed.error);

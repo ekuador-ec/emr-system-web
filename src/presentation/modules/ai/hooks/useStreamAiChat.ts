@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { AiMessage } from "@/domain/modules/ai/models/Conversation";
+import type { AiConversation, AiMessage } from "@/domain/modules/ai/models/Conversation";
 import type { SseChatEvents } from "@/domain/modules/ai/repositories/AiServiceRepository";
 import { streamAiChatMessageUseCase } from "@/infrastructure/modules/ai/config";
-import { aiConversationByIdKey } from "@/presentation/modules/ai/hooks/useAiConversations";
+import {
+  aiConversationByIdKey,
+  aiConversationsKey,
+} from "@/presentation/modules/ai/hooks/useAiConversations";
 import { useAiAssistantStore } from "@/presentation/modules/ai/stores/useAiAssistantStore";
 
 interface UseStreamAiChatResult {
@@ -73,6 +76,9 @@ export function useStreamAiChat(conversationId: string | null | undefined): UseS
             assistantMessage,
           );
           resetStreaming();
+        },
+        onTitle: (conversation) => {
+          applyConversationTitle(queryClient, conversation);
         },
         onError: (err) => {
           rollbackOptimistic(queryClient, conversationId, optimistic.id);
@@ -150,6 +156,26 @@ function replaceOptimisticWithReal(
       if (!existing.has(assistantMessage.id)) additions.push(assistantMessage);
       if (additions.length === 0) return current;
       return { ...current, messages: [...filtered, ...additions] };
+    },
+  );
+}
+
+function applyConversationTitle(
+  queryClient: ReturnType<typeof useQueryClient>,
+  conversation: AiConversation,
+): void {
+  queryClient.setQueryData(
+    aiConversationByIdKey(conversation.id),
+    (current: ConversationCache | undefined) => {
+      if (!current) return current;
+      return { ...current, conversation };
+    },
+  );
+  queryClient.setQueryData(
+    aiConversationsKey(),
+    (current: AiConversation[] | undefined) => {
+      if (!current) return current;
+      return current.map((c) => (c.id === conversation.id ? conversation : c));
     },
   );
 }
