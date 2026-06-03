@@ -176,14 +176,14 @@ export function LoginPage() {
     <div className="premium-login-container">
       <style>{`
         .premium-login-container {
-          min-height: 100vh;
-          min-height: 100dvh;
+          height: 100vh;
+          height: 100dvh;
           display: flex;
           flex-direction: column;
           position: relative;
           background: var(--color-bg);
           overflow-x: hidden;
-          overflow-y: auto;
+          overflow-y: hidden;
           width: 100%;
         }
 
@@ -370,6 +370,139 @@ export function LoginPage() {
         .btn-clear-field:active:not(:disabled) {
           transform: scale(0.92);
         }
+
+        .premium-login-main {
+          flex: 1 1 auto;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: var(--space-4);
+          gap: var(--space-5);
+          z-index: 5;
+        }
+
+        .premium-login-footer-spacer {
+          flex: 0 0 auto;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          padding: var(--space-2) var(--space-4);
+          font-size: var(--font-size-xs);
+          color: var(--color-text-secondary);
+          gap: var(--space-2);
+          z-index: 5;
+        }
+
+        .footer-global {
+          flex: 0 0 auto;
+        }
+
+        .footer-global footer {
+          padding: var(--space-2) var(--space-4) !important;
+        }
+
+        .company-mobile-logo {
+          display: none;
+        }
+
+        @media (max-height: 760px) {
+          .premium-login-main {
+            padding-top: var(--space-3);
+            padding-bottom: var(--space-2);
+            gap: var(--space-3);
+          }
+
+          .premium-login-card {
+            padding: var(--space-6);
+          }
+
+          .capsule-badge {
+            margin-bottom: var(--space-4);
+          }
+
+          .premium-login-footer-spacer {
+            padding-top: 0;
+            padding-bottom: var(--space-1);
+          }
+
+          .footer-global footer {
+            padding-top: var(--space-1) !important;
+            padding-bottom: var(--space-2) !important;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .premium-login-container {
+            overflow-y: auto;
+          }
+
+          .premium-login-main {
+            justify-content: center;
+            padding: var(--space-5) var(--space-4) var(--space-2);
+            gap: var(--space-3);
+          }
+
+          .premium-login-card {
+            max-width: min(420px, calc(100vw - var(--space-8)));
+            padding: var(--space-6);
+          }
+
+          .company-login-header {
+            flex-direction: column !important;
+            gap: var(--space-2) !important;
+            min-height: auto !important;
+            padding: var(--space-1) var(--space-4) !important;
+          }
+
+          .company-header-texts {
+            height: auto !important;
+            overflow: visible !important;
+            align-items: center !important;
+            flex: 0 0 auto !important;
+          }
+
+          .company-mobile-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            margin: 0 auto var(--space-2);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.72);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            flex-shrink: 0;
+            padding: 4px;
+            box-sizing: border-box;
+          }
+
+          .company-mobile-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+          }
+        }
+
+        @media (max-width: 640px) and (max-height: 720px) {
+          .premium-login-main {
+            padding-top: var(--space-3);
+          }
+
+          .premium-login-card {
+            padding: var(--space-5);
+          }
+
+          .company-mobile-logo {
+            width: 34px;
+            height: 34px;
+            margin-bottom: var(--space-1);
+          }
+        }
       `}</style>
 
       {/* Decorative ambient gradients */}
@@ -425,20 +558,12 @@ export function LoginPage() {
 
       {/* Main content */}
       <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 'var(--space-4)',
-          gap: 'var(--space-6)',
-          zIndex: 5,
-        }}
+        className="premium-login-main"
       >
         {/* Company header */}
         {(companyLogoUrl || companyType || companyName) && (
           <div
+            className="company-login-header"
             style={{
               display: 'flex',
               flexDirection: 'row',
@@ -487,11 +612,19 @@ export function LoginPage() {
               >
                 {/* Desktop: alineado a la izquierda, Mobile: centrado */}
                 <div className="show-mobile" style={{ width: '100%', alignItems: 'center', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
+                  {companyLogoUrl && (
+                    <div className="company-mobile-logo">
+                      <img
+                        src={companyLogoUrl}
+                        alt="Logo de la empresa"
+                      />
+                    </div>
+                  )}
                   {companyType && (
                     <h2
                       style={{
                         margin: 0,
-                        fontSize: '1.5rem',
+                        fontSize: 'clamp(1.05rem, 5vw, 1.35rem)',
                         fontWeight: 'var(--font-weight-bold)',
                         color: 'var(--color-text-secondary)',
                         lineHeight: 1.1,
@@ -512,7 +645,7 @@ export function LoginPage() {
                   {companyName && (
                     <span
                       style={{
-                        fontSize: '1.25rem',
+                        fontSize: 'clamp(0.95rem, 4.5vw, 1.15rem)',
                         fontWeight: 'var(--font-weight-medium)',
                         color: 'var(--color-text-secondary)',
                         whiteSpace: 'nowrap',
@@ -1020,17 +1153,7 @@ export function LoginPage() {
 
       {/* Footer y logo juntos en mobile, solo logo en mobile, footer global en desktop */}
       <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 'var(--space-4)',
-          fontSize: 'var(--font-size-xs)',
-          color: 'var(--color-text-secondary)',
-          gap: 'var(--space-2)',
-          zIndex: 5,
-        }}
+        className="premium-login-footer-spacer"
       >
         <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)' }}>
           <EkLogo size="sm" />
