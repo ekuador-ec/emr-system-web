@@ -24,13 +24,10 @@ export function Icon({ name, size = 20, className, style }: IconProps) {
       className={className} 
       style={mergedStyle}
       fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
       aria-hidden="true"
     >
-      <use href={`/icons/system-icons.svg#${name}`} xlinkHref={`/icons/system-icons.svg#${name}`} />
+      <use href={`/icons/system-icons.svg?v=1.0.1#${name}`} xlinkHref={`/icons/system-icons.svg?v=1.0.1#${name}`} />
     </svg>
   )
 }
+
