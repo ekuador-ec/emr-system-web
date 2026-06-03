@@ -28,9 +28,17 @@
 }
 
 .f005-atencion__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background-color: var(--em-text-strong);
+  color: var(--em-paper);
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
 }
 
 .f005-atencion__meta {
@@ -43,6 +51,27 @@
 
 .f005-atencion__vitals {
   border-bottom: 1px solid var(--em-border);
+}
+
+/* Vital-signs cells: single-line centered headers and values centered both axes,
+   so every header occupies one row regardless of label length. */
+.f005-atencion__vitals .em-pdf-cell__label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.f005-atencion__vitals .em-pdf-cell__value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.f005-atencion__vitals .em-pdf-cell--compound .em-pdf-compound-row {
+  flex: 1;
 }
 
 .f005-columns {

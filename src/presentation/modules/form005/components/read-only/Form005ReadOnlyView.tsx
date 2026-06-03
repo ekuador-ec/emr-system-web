@@ -69,7 +69,7 @@ function VitalsGrid({ entry }: { entry: Form005Entry }) {
   return (
     <div className="f005-atencion__vitals">
       <EvolutionPdfGrid>
-        <CompoundCell label="Presión Arterial (mmHg)" span={3}>
+        <CompoundCell label="P. arterial (mmHg)" span={3}>
           <MiniCell label="Der." value={formatBloodPressure(entry.bpRight)} />
           <MiniCell label="Izq." value={formatBloodPressure(entry.bpLeft)} />
         </CompoundCell>
@@ -77,18 +77,18 @@ function VitalsGrid({ entry }: { entry: Form005Entry }) {
         <EvolutionPdfCell label="FR (rpm)" value={formatNumeric(entry.respiratoryRate)} span={1} align="center" emphasis="strong" />
         <EvolutionPdfCell label="Tª (°C)" value={formatNumeric(entry.temperature, undefined, 1)} span={1} align="center" emphasis="strong" />
         <EvolutionPdfCell label="Peso (kg)" value={formatNumeric(entry.weight, undefined, 2)} span={1} align="center" />
-        <EvolutionPdfCell label="Estatura (m)" value={formatNumeric(entry.height, undefined, 2)} span={1} align="center" />
+        <EvolutionPdfCell label="Talla (m)" value={formatNumeric(entry.height, undefined, 2)} span={1} align="center" />
         <EvolutionPdfCell label="IMC" value={formatNumeric(entry.bmi, undefined, 2)} span={1} align="center" emphasis="strong" />
-        <EvolutionPdfCell label="Sat. O₂ (%)" value={formatNumeric(entry.oxygenSaturation)} span={1} align="center" />
-        <EvolutionPdfCell label="Ll. Capilar (s)" value={formatNumeric(entry.capillaryRefillTime, undefined, 1)} span={2} align="center" />
-        <CompoundCell label="Glasgow" span={4}>
+        <EvolutionPdfCell label="SatO₂ (%)" value={formatNumeric(entry.oxygenSaturation)} span={1} align="center" />
+        <EvolutionPdfCell label="Ll. cap. (s)" value={formatNumeric(entry.capillaryRefillTime, undefined, 1)} span={2} align="center" />
+        <CompoundCell label="Glasgow" span={6}>
           <MiniCell label="O" value={formatNumeric(entry.glasgowOcular)} />
           <MiniCell label="V" value={formatNumeric(entry.glasgowVerbal)} />
           <MiniCell label="M" value={formatNumeric(entry.glasgowMotor)} />
           <MiniCell label="Total" value={formatNumeric(entry.glasgowTotal)} emphasis />
         </CompoundCell>
-        <EvolutionPdfCell label="Pupila Der." value={formatPupilReaction(entry.rightPupilReaction)} span={4} align="center" />
-        <EvolutionPdfCell label="Pupila Izq." value={formatPupilReaction(entry.leftPupilReaction)} span={4} align="center" />
+        <EvolutionPdfCell label="Pupila der." value={formatPupilReaction(entry.rightPupilReaction)} span={3} align="center" />
+        <EvolutionPdfCell label="Pupila izq." value={formatPupilReaction(entry.leftPupilReaction)} span={3} align="center" />
       </EvolutionPdfGrid>
     </div>
   );
@@ -101,14 +101,17 @@ function AtencionBlock({ entry, index }: { entry: Form005Entry; index: number })
   return (
     <section className="f005-atencion">
       <header className="f005-atencion__head">
-        <span className="f005-atencion__num">Atención N° {index + 1}</span>
+        <span className="f005-atencion__num">{index + 1}</span>
         <span className="f005-atencion__meta">
           <Icon name="icon-calendar-solid" size={12} />
-          {entry.attentionDate ?? "—"} {entry.attentionTime ? entry.attentionTime.slice(0, 5) : ""}
+          Fecha y hora:&nbsp;
+          <strong>
+            {entry.attentionDate ?? "—"} {entry.attentionTime ? entry.attentionTime.slice(0, 5) : ""}
+          </strong>
         </span>
         <span className="f005-atencion__meta">
           <Icon name="icon-user" size={12} />
-          {entry.createdByName ?? "—"}
+          Médico:&nbsp;<strong>{entry.createdByName ?? "—"}</strong>
         </span>
       </header>
 
