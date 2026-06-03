@@ -27,7 +27,7 @@ export function AiAssistantTrigger({
       disabled={disabled || !target}
       title={!target ? "Cargando datos..." : "Abrir asistente clinico IA"}
     >
-      <Icon name="icon-stethoscope" size={16} />
+      <Icon name="icon-ia-chat" size={16} />
       {label}
     </WcButton>
   );

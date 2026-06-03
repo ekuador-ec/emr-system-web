@@ -65,7 +65,7 @@ export function ModelPreferenceSelector({
         title="Modelo preferido para el asistente"
       >
         <span className="ai-model-dropdown__trigger-icon">
-          <Icon name="icon-stethoscope" size={14} />
+          <Icon name="icon-ia-model" size={14} />
         </span>
         <span>Modelo: {optionLabel(value)}</span>
         <span className="ai-model-dropdown__trigger-caret">{isOpen ? "▴" : "▾"}</span>

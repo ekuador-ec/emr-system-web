@@ -1083,7 +1083,7 @@ export function UsersManagementPage() {
                 {!isActivated ? (
                   <div className="users-load-cta">
                     <Icon
-                      name="icon-user-plus-solid"
+                      name="icon-user-config"
                       size={32}
                       className="users-load-cta__icon"
                     />
