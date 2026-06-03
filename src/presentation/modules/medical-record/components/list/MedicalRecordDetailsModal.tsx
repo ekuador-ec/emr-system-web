@@ -252,7 +252,13 @@ export function MedicalRecordDetailsModal({
                 <span style={{ fontWeight: 500, color: "var(--color-text)" }}>
                   {record.patientName}
                 </span>
-                <WcButton variant="terciary" onClick={() => setSelectedPatientId(record.patientId)}>
+                <WcButton
+                  variant="terciary"
+                  onClick={() => {
+                    onClose();
+                    setSelectedPatientId(record.patientId);
+                  }}
+                >
                   <Icon name="icon-card-info" size={16} />
                   Ver Detalle
                 </WcButton>
