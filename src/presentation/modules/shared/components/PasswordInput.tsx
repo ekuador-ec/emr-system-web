@@ -43,11 +43,11 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
         >
           {showPassword ? (
             <svg width="20" height="20">
-              <use href="/icons/system-icons.svg#icon-eye-off" xlinkHref="/icons/system-icons.svg#icon-eye-off" />
+              <use href="/icons/system-icons.svg?v=1.0.1#icon-eye-off" xlinkHref="/icons/system-icons.svg?v=1.0.1#icon-eye-off" />
             </svg>
           ) : (
             <svg width="20" height="20">
-              <use href="/icons/system-icons.svg#icon-eye" xlinkHref="/icons/system-icons.svg#icon-eye" />
+              <use href="/icons/system-icons.svg?v=1.0.1#icon-eye" xlinkHref="/icons/system-icons.svg?v=1.0.1#icon-eye" />
             </svg>
           )}
         </button>

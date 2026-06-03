@@ -123,7 +123,7 @@ export function ChatComposer({
                 aria-expanded={menuOpen}
                 title="Modelo del asistente"
               >
-                <Icon name="icon-stethoscope" size={14} />
+                <Icon name="icon-ia-model" size={14} />
                 <span>{modelLabel(preference)}</span>
                 <span className="ai-composer__model-caret">{menuOpen ? "▴" : "▾"}</span>
               </button>
@@ -153,7 +153,7 @@ export function ChatComposer({
             </div>
           ) : (
             <div className="ai-composer__model-badge" title="Modelo activo">
-              <Icon name="icon-stethoscope" size={13} />
+              <Icon name="icon-ia-model" size={13} />
               <span>{modelLabel(preference)}</span>
             </div>
           )}

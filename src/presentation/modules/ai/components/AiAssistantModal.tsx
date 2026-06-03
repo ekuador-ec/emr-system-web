@@ -198,7 +198,7 @@ export function AiAssistantModal({ payloadBuilder }: AiAssistantModalProps) {
               </>
             ) : (
               <div className="ai-assistant-summary--empty">
-                <Icon name="icon-stethoscope" size={36} />
+                <Icon name="icon-chat-bot" size={36} />
                 <div style={{ fontSize: "0.9rem", maxWidth: "440px" }}>
                   Aun no hay un resumen para {target.label}. Genera uno para que el sistema pueda
                   ofrecer apoyo clinico basado en los datos anonimizados.

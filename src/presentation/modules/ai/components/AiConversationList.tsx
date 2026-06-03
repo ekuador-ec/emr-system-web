@@ -20,7 +20,7 @@ interface ConversationGroup {
 function kindIcon(kind: AiConversation["kind"]): string {
   if (kind === "medical_record") return "icon-medical-record";
   if (kind === "evolution") return "icon-medical-evolution";
-  return "icon-stethoscope";
+  return "icon-ia-chat";
 }
 
 function kindLabel(kind: AiConversation["kind"]): string {

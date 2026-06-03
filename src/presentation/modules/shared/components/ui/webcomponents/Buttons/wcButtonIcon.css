@@ -309,10 +309,6 @@
   width: 16px;
   height: 16px;
   fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
   pointer-events: none;
 }
 
