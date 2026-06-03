@@ -10,26 +10,33 @@
 :root {
   color-scheme: light;
 
-  /* — Colores — */
-  --color-bg: #f4f7fe;
-  --color-surface: #e7edfc;
+  /* — Colores —
+     Escala de elevación (de menor a mayor): bg -> surface -> surface-2.
+     input y border-strong dan definición clara a los campos de formulario. */
+  --color-bg: #e7eefb;
+  --color-surface: #ffffff;
+  --color-surface-2: #f3f6fe;
+  --color-panel: #d9e3fa;
+  --color-input: #ffffff;
+  --color-hover: #eaf1fd;
   --color-primary: #282054;
   --color-primary-foreground: #ffffff;
-  --color-primary-hover: #0041f5;
+  --color-primary-hover: #3a36c9;
   --color-primary-hover-foreground: #ffffff;
-  --color-primary-light: #cee1fa;
-  --color-hover-subtle: #66d3ad;
-  --color-secondary: #64748b;
-  --color-success: #1fb704;
-  --color-success-light: #d6ffe8;
+  --color-primary-light: #e0e7ff;
+  --color-hover-subtle: #eef2f8;
+  --color-secondary: #5b6b86;
+  --color-success: #16a34a;
+  --color-success-light: #dcfce7;
   --color-danger: #dc2626;
   --color-danger-light: #fee2e2;
-  --color-warning: #d9c406;
+  --color-warning: #d97706;
   --color-warning-light: #fef3c7;
   --color-text: #0f172a;
-  --color-text-secondary: #2f4665;
-  --color-border: #c5bff1;
-  --color-icon: #94a9c7;
+  --color-text-secondary: #4f5e7c;
+  --color-border: #d6e0f3;
+  --color-border-strong: #a8b6d6;
+  --color-icon: #8694b6;
 
   /* — Tipografía — */
   --font-heading: "Plus Jakarta Sans", sans-serif;
@@ -73,6 +80,7 @@
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
   --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
   --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.12);
+  --shadow-input: inset 0 1px 2px rgba(15, 23, 42, 0.06);
 
   /* — Transiciones — */
   --transition-fast: 150ms ease;
@@ -84,29 +92,35 @@
 .dark {
   color-scheme: dark;
 
-  --color-bg: #161616;
-  --color-surface:  #222127;
+  --color-bg: #0f1219;
+  --color-surface: #181c25;
+  --color-surface-2: #20252f;
+  --color-panel: #1e232e;
+  --color-input: #1e2532;
+  --color-hover: #232936;
   --color-primary: #ffffff;
-  --color-primary-foreground: #09090b;
-  --color-primary-hover: #442EF2;
+  --color-primary-foreground: #0b0f17;
+  --color-primary-hover: #4f46e5;
   --color-primary-hover-foreground: #ffffff;
-  --color-primary-light: #20314c;
-  --color-hover-subtle: #0f9e8e;
-  --color-secondary: #94a3b8;
-  --color-success: #1cc7b9;
-  --color-success-light: #134e48;
-  --color-danger: #ef4444;
-  --color-danger-light: #451a1a;
-  --color-warning: #f59e0b;
-  --color-warning-light: #451a03;
-  --color-text: #f4f4f5;
-  --color-text-secondary: #a1a1aa;
-  --color-border: #27272a;
-  --color-icon: #a1a1aa;
+  --color-primary-light: #1e2444;
+  --color-hover-subtle: #232936;
+  --color-secondary: #8c9aae;
+  --color-success: #34d399;
+  --color-success-light: #0f2e24;
+  --color-danger: #f87171;
+  --color-danger-light: #3a1a1a;
+  --color-warning: #fbbf24;
+  --color-warning-light: #3a2a0a;
+  --color-text: #e7eaf0;
+  --color-text-secondary: #9aa6b8;
+  --color-border: #2a313d;
+  --color-border-strong: #434d5e;
+  --color-icon: #8893a6;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-input: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* ----- Base Styles ----- */
@@ -402,11 +416,12 @@ select {
   font-family: var(--font-body);
   font-size: var(--font-size-base);
   color: var(--color-text);
-  background-color: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background-color: var(--color-input);
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-lg);
   padding: var(--space-2) var(--space-3);
   outline: none;
+  box-shadow: var(--shadow-input);
   transition:
     border-color var(--transition-fast),
     box-shadow var(--transition-fast);
@@ -472,6 +487,7 @@ select.error:focus {
 /* ----- Card Utility ----- */
 .card {
   background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
   box-shadow: var(--shadow-sm);

@@ -35,7 +35,7 @@ function useMenuGroups(): MenuGroup[] {
       items: [
         { path: '/pacientes', label: 'Pacientes', icon: 'icon-patient' },
         { path: '/historias-clinicas', label: 'Historias Clínicas', icon: 'icon-clinical-history' },
-        { path: '/evoluciones', label: 'Evoluciones Médicas', icon: 'icon-medical-evolution' },
+        { path: '/documentos', label: 'Documentos Clínicos', icon: 'icon-medical-evolution' },
         { path: '/asistente-ia', label: 'Asistente IA', icon: 'icon-stethoscope' },
       ]
     },

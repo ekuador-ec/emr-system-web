@@ -114,7 +114,7 @@ src/
         utils/             Helpers locales del módulo
 ```
 
-Módulos activos: `ai`, `auth`, `catalog`, `dashboard`, `evolution`, `medical-record`, `messaging`, `notifications`, `patient`, `reports`, `shared`, `users`.
+Módulos activos: `ai`, `auth`, `catalog`, `dashboard`, `document`, `evolution`, `form005`, `medical-record`, `messaging`, `notifications`, `patient`, `reports`, `shared`, `users`.
 
 ## Mapa de Rutas (`src/App.tsx`)
 
@@ -125,9 +125,11 @@ Módulos activos: `ai`, `auth`, `catalog`, `dashboard`, `evolution`, `medical-re
 | `/` | `DashboardPage` | Autenticado |
 | `/pacientes` | `PatientsPage` | Autenticado |
 | `/pacientes/:patientId/historia` | `MedicalRecordPage` | Autenticado |
-| `/pacientes/:patientId/historia/evoluciones/:evolutionId` | `EvolutionWorkspacePage` | Autenticado |
+| `/pacientes/:patientId/historia/evoluciones/:evolutionId` | `EvolutionWorkspacePage` (Form 008) | Autenticado |
+| `/pacientes/:patientId/historia/documentos/form005/:documentId` | `Form005WorkspacePage` (Form 005) | Autenticado |
 | `/historias-clinicas` | `MedicalRecordsPage` | Autenticado |
-| `/evoluciones` | `EvolutionsPage` | Autenticado |
+| `/documentos` | `DocumentsPage` (listado unificado 008 + 005) | Autenticado |
+| `/evoluciones` | Redirige a `/documentos` | Autenticado |
 | `/mensajes` | `MessagesPage` | Autenticado |
 | `/reportes` | `ReportsPage` | Autenticado |
 | `/asistente-ia` | `AiAssistantPage` | Autenticado |
@@ -226,10 +228,49 @@ Atenciones / notas evolutivas asociadas a una historia clínica. Incluye flujo e
   - Schemas: `evolution.schema.ts` (validación estricta + relajada para borradores).
   - Utils: `dateRange.ts`.
 
+> **Módulo de Documentos Clínicos (arquitectura "Aditivo + Registry").** El módulo Evolution dejó de ser la única superficie clínica: ahora es **un tipo de documento más** (`FORM_008`). El sistema soporta múltiples formularios MSP mediante dos módulos nuevos (`document` + `form005`) que coexisten con `evolution` SIN migrar ni renombrar `medical_evolutions`. Para agregar un formulario nuevo (p. ej. 042) se replica el patrón de `form005` (tablas propias + módulo propio) y se añade una entrada al registry; nunca se debe forzar un formulario nuevo dentro del esquema 008.
+
+### 6.1. Document (`document`)
+Capa de orquestación transversal que unifica todos los tipos de documento clínico. NO tiene tablas propias de escritura: solo lee la vista unificada y enruta por tipo.
+
+- Domain: `DocumentType` (`FORM_008` | `FORM_005`), `DocumentStatus` (`ABIERTA` | `EN_PROCESO` | `CERRADA`), `ClinicalDocumentListItem`, `DocumentFilters`, `PaginatedResult<T>`, interfaz `ClinicalDocumentRepository`.
+- Application: `ListClinicalDocumentsUseCase` (valida rango ≤ 31 días sin término de búsqueda).
+- Infrastructure: `SupabaseClinicalDocumentRepository` consume la vista `clinical_documents_list_view` (UNION 008 + 005) con filtros server-side por tipo, estado, rango de fechas y búsqueda por paciente/HC, paginación + count exacto.
+- Presentation:
+  - Pages: `DocumentsPage` (`/documentos`): listado unificado con `WcTabsFolder` de 2 pestañas — "Últimas 48 horas" (recientes: filtros cliente por tipo/estado + búsqueda local + tarjeta de total, paginación cliente) y "Consulta avanzada" (búsqueda + rango de fechas server-side + presets 7/15/31 días + filtro por tipo). Reutiliza `EvolutionsPage.css`. Monta `PatientDetailsDrawer` (necesario para que el botón "Ver detalle" abra el drawer en esta pantalla).
+  - Components: `CreateDocumentModal` (selector de tipo con **`WcSelect`** + búsqueda de paciente, crea el documento del tipo elegido y navega a su workspace), `ClinicalDocumentsTable` (tabla unificada con columna Tipo y acciones que enrutan por tipo vía registry), `DocumentTypeMenu` (dropdown reutilizable de "Nuevo documento" que lista `DOCUMENT_TYPES` en un menú con portal — escala a N tipos sin romper el layout; usado en la Historia Clínica).
+  - Registry: `registry/documentRegistry.ts` — **fuente única de verdad** para label, icono, `workspacePath(patientId, documentId)` y `createLabel` por tipo. Cualquier nuevo tipo de documento se registra aquí.
+  - Hooks: `useClinicalDocuments`.
+
+### 6.2. Form005 (`form005`)
+Formulario 005 MSP (Evolución y Prescripciones): **bitácora clínica multi-entrada**. Un documento (hoja) por historia clínica con ciclo `ABIERTA`/`EN_PROCESO`/`CERRADA`, y **muchas atenciones (entradas)**. Cada atención tiene: fecha, hora, **signos vitales** (obligatorios en la 1ª atención, opcionales en las siguientes — reutiliza `TabSignosVitales`), **evolución** (texto), **prescripción** (texto libre) y **autor** (auditoría). **Cada atención es editable únicamente por el usuario que la creó** mientras el documento NO esté `CERRADA` (los demás solo la visualizan); el borrado está bloqueado (auditoría). Al cerrar el documento todas las atenciones quedan inmutables para todos.
+
+- Domain: `Form005Document` (cabecera + ciclo de vida + `entries: Form005Entry[]`), `Form005Entry` (extiende `Form005VitalSigns` + `evolutionNote` + `prescriptions` + `createdBy`/`createdByName`/`createdByRole`/`createdAt`), `Form005VitalSigns`, payloads `CreateForm005Payload` (`{ medicalRecordId }`) y `CreateForm005EntryPayload`, interfaz `Form005Repository`. El estado se reutiliza de `document` (`DocumentStatus`).
+- Application: `CreateForm005UseCase` (crea documento vacío), `AddForm005EntryUseCase` (valida nota obligatoria), `UpdateForm005EntryUseCase` (edición por autor; valida nota), `GetForm005ByIdUseCase`, `GetForm005ByMedicalRecordUseCase`, `CloseForm005UseCase` (gate por rol doctor/admin).
+- Infrastructure: `SupabaseForm005Repository` (`create` doc vacío, `addEntry`/`updateEntry` sobre `form005_entries` con autor, `getById`/`getByMedicalRecordId` con embed de `form005_entries` + `author`), `Form005Mapper` (mapea documento + entradas, conversiones numéricas/null-safe).
+- Presentation:
+  - Pages: `Form005WorkspacePage` (cabecera propia con estado + "Firmar y cerrar" + "Vista previa"; **historial de atenciones colapsable** (acordeón) con preview de la nota y botón "Editar" solo para el autor; **formulario "Nueva atención" / "Editar atención"** en grilla de 3 columnas Fecha/Hora+botón Signos Vitales | Evolución | Prescripciones; los **signos vitales se capturan en un modal** (`Form005VitalsModal`, reutiliza `TabSignosVitales`); **autoguardado estilo Google Docs** (ver `useForm005EntryAutosave`) con `WcAutosavePill` (sin guardar/guardando/guardado), botón "Guardar ahora" (flush) y "Nueva atención"; la atención se crea en BD en cuanto hay nota y luego se actualiza; `useBlocker`/`beforeunload` cuando hay cambios pendientes. La obligatoriedad de signos vitales en la 1ª atención se valida **al cerrar** el documento (no bloquea el autoguardado).
+  - Components: `form/Form005VitalsModal` (modal con `TabSignosVitales`). Vista previa estilo documento (antesala del PDF): `read-only/Form005PdfHeader` + `read-only/Form005ReadOnlyView` (itera atenciones: cada bloque con cabecera N°/fecha/hora/autor, grilla de vitales si existen, y dos columnas Evolución | Prescripciones con texto normal) **reutilizan las primitivas `EvolutionPdf*`** + el CSS `EvolutionReadOnlyView.css` del 008 y el propio `Form005ReadOnlyView.css`; `Form005ReadOnlyModal` (montado en `AppLayout`) carga paciente + historia clínica + `OrganizationConfig`.
+  - Hooks: `useForm005`, `useForm005ByMedicalRecord`, `useCreateForm005`, `useAddForm005Entry` (devuelve `{ document, entryId }`), `useUpdateForm005Entry`, `useCloseForm005` (invalidan también la lista unificada `clinical-documents`); `useForm005EntryAutosave` (debounce servidor 5s + cache local cifrada 800ms vía `draftCache` con clave `emr:draft:f005:<documentId>:<entryId|new>` — cubierta por `clearAllDrafts()` en logout; create-or-update según haya `entryId`; flush en `blur`/`visibilitychange`).
+  - Store: `useForm005UIStore` (target de solo lectura).
+  - Schemas: `form005.schema.ts` (`Form005EntrySchema` relajado + `validateForm005Entry(values, isFirstEntry)`: nota obligatoria siempre, vitales core obligatorios en la primera atención).
+- Backend (`supabase/migrations/`):
+  - `56_form005_documents_schema.sql`: versión inicial (modelo de nota única). **Reemplazado** por el modelo multi-entrada de la 61; en bases nuevas la 61 backfillea y migra el esquema. No reaplicar la 56 sobre una base existente.
+  - `57_clinical_documents_list_view.sql`: vista `clinical_documents_list_view` (UNION ALL de 008 + 005, denormaliza paciente + autores con discriminador `document_type`). GRANT SELECT a `authenticated`.
+  - `58_notify_new_form005_trigger.sql`: trigger `on_form005_created_notify` → `NEW_FORM005` (actor = `opened_by`, payload denormalizado con `actorName`, `patientId`, `patientName`, `patientIdNumber`, `documentStatus`). Reutiliza `notify_users`; mismo patrón que `NEW_EVOLUTION` (28/29/30).
+  - `59_form005_profiles_fk.sql`: reencamina las FK `opened_by`/`closed_by` de `auth.users` a `public.profiles` (nombres `form005_documents_opened_by_fkey` / `..._closed_by_fkey`) para que PostgREST resuelva el embed del opener/closer. Idempotente (`DROP ... IF EXISTS` + `ADD`).
+  - `60_fix_form005_immutability_trigger.sql`: corrige `check_form005_not_closed` para que **no** referencie `NEW.status`/`NEW.closed_at` (esos campos no existen en `form005_prescriptions`, lo que rompía el guardado con `record "new" has no field "status"`). La función ahora solo bloquea escrituras cuando el documento padre está `CERRADA`.
+  - `61_form005_entries.sql`: **modelo multi-entrada**. Crea `form005_entries` (vitales + `evolution_note` + `prescriptions` + `created_by` autor), backfillea cada documento existente como su 1ª atención (concatena las prescripciones previas), elimina las columnas de nota/fecha/vitales de `form005_documents` y dropea `form005_prescriptions`. Triggers: `guard_form005_entry` (append-only: bloquea UPDATE/DELETE siempre, INSERT solo si el documento no está CERRADA, y setea `created_by`), `touch_form005_document_on_entry` (actualiza `updated_at` y pasa el documento a `EN_PROCESO`). RLS (sin UPDATE/DELETE) + realtime.
+  - `62_clinical_documents_list_view_entries.sql`: actualiza `clinical_documents_list_view` para que la fecha/hora del 005 provenga de su atención más reciente (LATERAL sobre `form005_entries`).
+  - `63_form005_entries_author_editable.sql`: cambia el modelo append-only a **editable por autor**. Agrega `updated_at` a `form005_entries`; reescribe `guard_form005_entry` (INSERT bloqueado si CERRADA; UPDATE permitido solo si `auth.uid() = OLD.created_by` y el documento no está CERRADA, protegiendo `id`/`document_id`/`created_by`/`created_at`; DELETE siempre bloqueado); `touch_form005_document_on_entry` ahora también en UPDATE; nueva policy RLS de UPDATE (`created_by = auth.uid()`).
+  - NOTA: la 56 quedó como versión inicial; en bases ya migradas se aplican los incrementos en orden (59, 60, 61, 62, 63). No reaplicar la 56 sobre una base existente.
+- HC: `MedicalRecordEvolutionsList` lista 008 + 005 combinados y usa el dropdown `DocumentTypeMenu` para crear (en vez de un botón por tipo, para no romper el layout al añadir formularios), con enrutado por registry.
+- Notificaciones: tipo `NEW_FORM005` registrado en `notificationRegistry.ts` (icono `icon-clipboard`, ruta al workspace del 005). La metadata añade `documentStatus`.
+
 ### 7. Notifications (`notifications`)
 Centro de notificaciones in-app con conteo de no leídas, marcar como leída individual o masivamente, y actualización en tiempo real.
 
-- Domain: `Notification` (incluye `metadata: NotificationMetadata`), `KnownNotificationType` (`NEW_USER` | `NEW_PATIENT` | `NEW_MEDICAL_RECORD` | `NEW_EVOLUTION` | `NEW_MESSAGE` | `TASK_ASSIGNED` | `SYSTEM_ALERT`), `NotificationType` (unión abierta).
+- Domain: `Notification` (incluye `metadata: NotificationMetadata`), `KnownNotificationType` (`NEW_USER` | `NEW_PATIENT` | `NEW_MEDICAL_RECORD` | `NEW_EVOLUTION` | `NEW_FORM005` | `NEW_MESSAGE` | `TASK_ASSIGNED` | `SYSTEM_ALERT`), `NotificationType` (unión abierta).
 - Application: `NotificationService` (servicio agrupado: `getNotifications`, `markAsRead`, `markAllAsRead`).
 - Infrastructure: `SupabaseNotificationRepository` lee `metadata` desde la fila y deriva `actorName` desde `metadata.actorName`. Ya **no** consulta `profiles` (lo cual fallaba con RLS para no-admins).
 - Backend (`supabase/migrations/`, repo separado):

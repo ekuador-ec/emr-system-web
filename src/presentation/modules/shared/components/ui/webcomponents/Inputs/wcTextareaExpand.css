@@ -1,0 +1,140 @@
+/* Shared textarea (inline + expanded modal). Matches the WcInput look:
+   --color-input background, --color-border-strong border, --shadow-input,
+   and a clean --color-primary-light focus ring (no harsh dark border). */
+
+.wc-ta-expand {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.wc-ta-expand__wrap {
+  position: relative;
+}
+
+.wc-ta-expand__field,
+.wc-ta-expand__modal-field {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-input);
+  color: var(--color-text);
+  box-shadow: var(--shadow-input);
+  font: inherit;
+  resize: none;
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.wc-ta-expand__field {
+  padding: 12px 48px 12px 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.wc-ta-expand__modal-field {
+  flex: 1;
+  min-height: min(55vh, 480px);
+  padding: 14px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  overflow-y: auto;
+}
+
+.wc-ta-expand__field::placeholder,
+.wc-ta-expand__modal-field::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+
+.wc-ta-expand__field:focus,
+.wc-ta-expand__modal-field:focus {
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.wc-ta-expand__field[data-error="true"] {
+  border-color: var(--color-danger);
+}
+
+.wc-ta-expand__field[data-error="true"]:focus {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 20%, transparent);
+}
+
+.wc-ta-expand__field:disabled,
+.wc-ta-expand__modal-field:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Expanded modal ── */
+.wc-ta-expand__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background-color: color-mix(in srgb, var(--color-text) 45%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 4vh, 48px);
+}
+
+.wc-ta-expand__dialog {
+  width: min(900px, 94vw);
+  max-height: 88vh;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-lg, 0 24px 64px rgba(0, 0, 0, 0.28));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  overflow: hidden;
+}
+
+.wc-ta-expand__dialog-header,
+.wc-ta-expand__dialog-footer {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.wc-ta-expand__dialog-header {
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-2);
+}
+
+.wc-ta-expand__dialog-title {
+  font-weight: var(--font-weight-semibold);
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.wc-ta-expand__dialog-footer {
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-3);
+}
+
+.wc-ta-expand__hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.wc-ta-expand__hint kbd {
+  font-family: inherit;
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--color-bg);
+  color: var(--color-text);
+}

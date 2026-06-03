@@ -3,6 +3,7 @@ export type KnownNotificationType =
   | 'NEW_PATIENT'
   | 'NEW_MEDICAL_RECORD'
   | 'NEW_EVOLUTION'
+  | 'NEW_FORM005'
   | 'NEW_MESSAGE'
   | 'TASK_ASSIGNED'
   | 'SYSTEM_ALERT';
@@ -18,6 +19,7 @@ export interface NotificationMetadata {
   patientName?: string | null;
   patientIdNumber?: string | null;
   evolutionStatus?: string | null;
+  documentStatus?: string | null;
   conversationId?: string | null;
   preview?: string | null;
   [key: string]: unknown;

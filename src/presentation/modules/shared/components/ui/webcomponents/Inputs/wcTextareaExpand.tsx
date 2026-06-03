@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
+import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import WcButtonIcon from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButtonIcon";
+import "./wcTextareaExpand.css";
 
 interface WcTextareaExpandProps {
   value: string;
@@ -24,31 +26,32 @@ export function WcTextareaExpand({
   maxRows = 5,
   disabled = false,
   error,
-  label
+  label,
 }: WcTextareaExpandProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modalTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const [parentContainer, setParentContainer] = useState<HTMLElement | null>(null);
 
   const initialRows = rows ?? minRows;
 
-  const autosize = useCallback((ta: HTMLTextAreaElement | null) => {
-    if (!ta) return;
-    const styles = window.getComputedStyle(ta);
-    const lineHeight = parseFloat(styles.lineHeight) || 21;
-    const paddingY =
-      (parseFloat(styles.paddingTop) || 0) + (parseFloat(styles.paddingBottom) || 0);
-    const borderY =
-      (parseFloat(styles.borderTopWidth) || 0) + (parseFloat(styles.borderBottomWidth) || 0);
-    const minHeight = lineHeight * minRows + paddingY + borderY;
-    const maxHeight = lineHeight * maxRows + paddingY + borderY;
-    ta.style.height = "auto";
-    const next = Math.max(minHeight, Math.min(ta.scrollHeight, maxHeight));
-    ta.style.height = `${next}px`;
-    ta.style.overflowY = ta.scrollHeight > maxHeight ? "auto" : "hidden";
-  }, [minRows, maxRows]);
+  const autosize = useCallback(
+    (ta: HTMLTextAreaElement | null) => {
+      if (!ta) return;
+      const styles = window.getComputedStyle(ta);
+      const lineHeight = parseFloat(styles.lineHeight) || 21;
+      const paddingY =
+        (parseFloat(styles.paddingTop) || 0) + (parseFloat(styles.paddingBottom) || 0);
+      const borderY =
+        (parseFloat(styles.borderTopWidth) || 0) + (parseFloat(styles.borderBottomWidth) || 0);
+      const minHeight = lineHeight * minRows + paddingY + borderY;
+      const maxHeight = lineHeight * maxRows + paddingY + borderY;
+      ta.style.height = "auto";
+      const next = Math.max(minHeight, Math.min(ta.scrollHeight, maxHeight));
+      ta.style.height = `${next}px`;
+      ta.style.overflowY = ta.scrollHeight > maxHeight ? "auto" : "hidden";
+    },
+    [minRows, maxRows],
+  );
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange?.(e.target.value);
@@ -59,181 +62,122 @@ export function WcTextareaExpand({
     autosize(textareaRef.current);
   }, [value, autosize]);
 
+  // While expanded: focus the big editor, close on Escape / Ctrl(Cmd)+Enter,
+  // and lock body scroll.
   useEffect(() => {
-    if (isExpanded && modalTextareaRef.current) {
-      modalTextareaRef.current.style.height = "auto";
-      modalTextareaRef.current.style.height = `${modalTextareaRef.current.scrollHeight}px`;
+    if (!isExpanded) return;
+    const ta = modalTextareaRef.current;
+    if (ta) {
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
     }
-  }, [isExpanded, value]);
 
-  useEffect(() => {
-    if (isExpanded && rootRef.current) {
-      const section = rootRef.current.closest("section") as HTMLElement | null;
-      if (section) {
-        section.style.position = "relative";
-        setParentContainer(section);
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsExpanded(false);
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        setIsExpanded(false);
       }
-    }
+    };
+    document.addEventListener("keydown", handleKey);
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [isExpanded]);
 
-  const expandedOverlay = isExpanded && parentContainer
+  const expandedOverlay = isExpanded
     ? createPortal(
         <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundColor: "rgba(255, 255, 255, 0.6)",
-            backdropFilter: "blur(4px)",
-            WebkitBackdropFilter: "blur(4px)",
-            borderRadius: "inherit",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 50,
-            padding: "var(--space-4, 20px)"
-          }}
+          className="wc-ta-expand__overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label={label || "Editor"}
           onClick={() => setIsExpanded(false)}
         >
-          <div
-            style={{
-              width: "90%",
-              maxWidth: "520px",
-              backgroundColor: "var(--color-surface, #ffffff)",
-              border: "1px solid var(--color-border)",
-              borderRadius: "var(--radius-lg, 12px)",
-              padding: "var(--space-4, 20px)",
-              boxShadow: "0 10px 40px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.04)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "var(--space-3, 16px)",
-              maxHeight: "90%",
-              overflow: "hidden"
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ 
-              display: "flex", 
-              justifyContent: "space-between", 
-              alignItems: "center",
-              borderBottom: "1px solid var(--color-border)",
-              paddingBottom: "var(--space-2, 12px)",
-              flexShrink: 0
-            }}>
-              <span style={{ fontWeight: 600, fontSize: "1rem", color: "var(--color-text-primary)" }}>
-                {label || "Descripción Completa"}
-              </span>
-              <button
-                type="button"
+          <div className="wc-ta-expand__dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="wc-ta-expand__dialog-header">
+              <span className="wc-ta-expand__dialog-title">{label || "Edición ampliada"}</span>
+              <WcButtonIcon
+                icon="icon-x"
+                variant="ghost"
+                shape="circle"
+                size="sm"
                 onClick={() => setIsExpanded(false)}
-                style={{
-                  background: "var(--color-surface-hover, #f3f4f6)",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: "6px",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--color-text-secondary)",
-                  transition: "all 0.2s ease"
-                }}
-                title="Cerrar"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "var(--color-danger-light, #fee2e2)";
-                  e.currentTarget.style.color = "var(--color-danger, #ef4444)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "var(--color-surface-hover, #f3f4f6)";
-                  e.currentTarget.style.color = "var(--color-text-secondary)";
-                }}
-              >
-                <Icon name="icon-x" size={16} />
-              </button>
-            </div>
-            
-            <div style={{ overflowY: "auto", padding: "2px", display: "flex", flexDirection: "column" }}>
-              <textarea
-                ref={modalTextareaRef}
-                value={value}
-                onChange={handleInput}
-                placeholder={placeholder}
-                disabled={disabled}
-                autoFocus
-                style={{
-                  width: "100%",
-                  minHeight: "150px",
-                  padding: "12px",
-                  borderRadius: "var(--radius-md, 8px)",
-                  border: "1px solid var(--color-border)",
-                  fontSize: "0.875rem",
-                  resize: "none",
-                  fontFamily: "inherit",
-                  backgroundColor: "var(--color-surface)",
-                  color: "var(--color-text-primary)",
-                  lineHeight: "1.6",
-                  outline: "none",
-                  boxShadow: "inset 0 1px 3px rgba(0,0,0,0.05)",
-                  overflow: "hidden",
-                  transition: "border-color 0.2s",
-                  ...({ fieldSizing: "content" } as React.CSSProperties)
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "var(--color-primary, #3b82f6)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "var(--color-border)";
-                }}
+                title="Cerrar (Esc)"
+                aria-label="Cerrar"
               />
+            </div>
+
+            <textarea
+              ref={modalTextareaRef}
+              className="wc-ta-expand__modal-field"
+              value={value}
+              onChange={(e) => onChange?.(e.target.value)}
+              placeholder={placeholder}
+              disabled={disabled}
+            />
+
+            <div className="wc-ta-expand__dialog-footer">
+              <span className="wc-ta-expand__hint">
+                <kbd>Ctrl</kbd> + <kbd>Enter</kbd> o <kbd>Esc</kbd> para cerrar
+              </span>
+              <WcButton variant="primary" onClick={() => setIsExpanded(false)}>
+                <Icon name="icon-check" size={16} />
+                Listo
+              </WcButton>
             </div>
           </div>
         </div>,
-        parentContainer
+        document.body,
       )
     : null;
 
   return (
-    <div ref={rootRef} style={{ position: "relative", width: "100%", height: "100%" }}>
-      <div style={{ position: "relative" }}>
+    <div className="wc-ta-expand">
+      <div className="wc-ta-expand__wrap">
         <textarea
           ref={textareaRef}
+          className="wc-ta-expand__field"
+          data-error={error ? "true" : undefined}
           value={value}
           onChange={handleInput}
           placeholder={placeholder}
           rows={initialRows}
           disabled={disabled}
-          style={{
-            width: "100%",
-            padding: "12px",
-            paddingRight: "48px",
-            borderRadius: "var(--radius-md, 8px)",
-            border: error ? "1px solid var(--color-danger)" : "1px solid var(--color-border)",
-            fontSize: "0.875rem",
-            resize: "none",
-            fontFamily: "inherit",
-            lineHeight: "1.5",
-            backgroundColor: "var(--color-surface)",
-            color: "var(--color-text-primary)",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
         />
         <WcButtonIcon
           icon="icon-maximize"
           variant="outline"
           shape="circle"
           size="sm"
-          title="Expandir"
           onClick={() => setIsExpanded(true)}
+          disabled={disabled}
+          title="Expandir editor"
+          aria-label="Expandir editor"
           style={{
             position: "absolute",
             right: "8px",
-            bottom: "15px",
+            bottom: "12px",
             zIndex: 2,
           }}
         />
       </div>
-      
+
       {error && (
-        <span style={{ fontSize: "0.75rem", color: "var(--color-danger)", marginTop: "4px", display: "block" }}>
+        <span
+          style={{
+            fontSize: "0.75rem",
+            color: "var(--color-danger)",
+            marginTop: "4px",
+            display: "block",
+          }}
+        >
           {error}
         </span>
       )}

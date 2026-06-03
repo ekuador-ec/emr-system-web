@@ -1,0 +1,11 @@
+/* Compact document-type filter (used inline next to the panel title in the
+   "Últimas 48 horas" tab). Slightly smaller text and padding. */
+.documents-type-filter--compact .wc-select__trigger {
+  font-size: 0.8rem;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.documents-type-filter--compact .wc-select__option-label {
+  font-size: 0.8rem;
+}

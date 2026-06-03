@@ -235,6 +235,7 @@ export function WcSelect({
         <span
           className="wc-select__value"
           data-placeholder={selectedOption ? undefined : "true"}
+          title={selectedOption ? selectedOption.label : undefined}
         >
           {selectedOption ? selectedOption.label : placeholder}
         </span>
@@ -310,6 +311,7 @@ export function WcSelect({
                   data-active={isActive ? "true" : undefined}
                   data-selected={isSelected ? "true" : undefined}
                   data-disabled={option.disabled ? "true" : undefined}
+                  title={option.description ? `${option.label} — ${option.description}` : option.label}
                   onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => commitOption(option)}
                 >
