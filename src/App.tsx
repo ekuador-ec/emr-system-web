@@ -8,7 +8,8 @@ import { PatientsPage } from "@/presentation/modules/patient/pages/PatientsPage"
 import { MedicalRecordPage } from "@/presentation/modules/medical-record/pages/MedicalRecordPage";
 import { MedicalRecordsPage } from "@/presentation/modules/medical-record/pages/MedicalRecordsPage";
 import { EvolutionWorkspacePage } from "@/presentation/modules/evolution/pages/EvolutionWorkspacePage";
-import { EvolutionsPage } from "@/presentation/modules/evolution/pages/EvolutionsPage";
+import { Form005WorkspacePage } from "@/presentation/modules/form005/pages/Form005WorkspacePage";
+import { DocumentsPage } from "@/presentation/modules/document/pages/DocumentsPage";
 import { MessagesPage } from "@/presentation/modules/messaging/pages/MessagesPage";
 import { AiAssistantPage } from "@/presentation/modules/ai/pages/AiAssistantPage";
 import { ProtectedRoute } from "@/presentation/modules/auth/components/ProtectedRoute";
@@ -85,6 +86,16 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: "/pacientes/:patientId/historia/documentos/form005/:documentId",
+    element: (
+      <ProtectedRoute>
+        <AppLayout>
+          <Form005WorkspacePage />
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/historias-clinicas",
     element: (
       <ProtectedRoute>
@@ -95,14 +106,18 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: "/evoluciones",
+    path: "/documentos",
     element: (
       <ProtectedRoute>
         <AppLayout>
-          <EvolutionsPage />
+          <DocumentsPage />
         </AppLayout>
       </ProtectedRoute>
     ),
+  },
+  {
+    path: "/evoluciones",
+    element: <Navigate to="/documentos" replace />,
   },
   {
     path: "/mensajes",

@@ -21,6 +21,8 @@ import { usePatientSubscription } from "@/presentation/modules/patient/hooks/use
 import { useEvolutionSubscription } from "@/presentation/modules/evolution/hooks/useEvolutionSubscription";
 import { useEvolutionUIStore } from "@/presentation/modules/evolution/stores/useEvolutionUIStore";
 import { EvolutionReadOnlyModal } from "@/presentation/modules/evolution/components/read-only/EvolutionReadOnlyModal";
+import { useForm005UIStore } from "@/presentation/modules/form005/stores/useForm005UIStore";
+import { Form005ReadOnlyModal } from "@/presentation/modules/form005/components/read-only/Form005ReadOnlyModal";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import { PatientCreateModal } from "@/presentation/modules/patient/components/Patients/PatientCreateModal";
 import { PatientQuickSearchModal } from "@/presentation/modules/patient/components/Patients/PatientQuickSearchModal";
@@ -45,6 +47,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   } = usePatientStore();
 
   const { readOnlyTarget, closeReadOnlyEvolution } = useEvolutionUIStore();
+  const { readOnlyTarget: form005ReadOnlyTarget, closeReadOnlyForm005 } = useForm005UIStore();
 
   usePresenceTracker(user?.id);
   usePresenceSubscription(Boolean(user?.id));
@@ -145,6 +148,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         patientId={readOnlyTarget?.patientId ?? null}
         evolutionId={readOnlyTarget?.evolutionId ?? null}
         onClose={closeReadOnlyEvolution}
+      />
+
+      <Form005ReadOnlyModal
+        isOpen={form005ReadOnlyTarget !== null}
+        patientId={form005ReadOnlyTarget?.patientId ?? null}
+        documentId={form005ReadOnlyTarget?.documentId ?? null}
+        onClose={closeReadOnlyForm005}
       />
 
       <InviteUserModal

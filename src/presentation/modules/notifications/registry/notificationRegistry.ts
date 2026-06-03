@@ -153,6 +153,33 @@ const NOTIFICATION_REGISTRY: Record<string, NotificationDescriptor> = {
     },
   },
 
+  NEW_FORM005: {
+    icon: 'icon-clipboard',
+    toastVariant: 'success',
+    getContent: (n, uid) => {
+      const patientName = asString(n.metadata.patientName);
+      const status = asString(n.metadata.documentStatus);
+      const description = isSelfActor(n, uid)
+        ? 'Registraste un nuevo Formulario 005 para:'
+        : `${actorLabel(n)} registró un nuevo Formulario 005 para:`;
+      return {
+        title: 'Nuevo Formulario 005',
+        description: patientName ? description : null,
+        primary: patientName ?? (isSelfActor(n, uid) ? 'Has registrado un nuevo Formulario 005.' : `${actorLabel(n)} registró un nuevo Formulario 005.`),
+        secondary: patientIdNumberLabel(n),
+        status: status ? { label: status, tone: evolutionStatusTone(status) } : null,
+      };
+    },
+    getRoute: (n) => {
+      const patientId = asString(n.metadata.patientId);
+      const documentId = asString(n.entityId);
+      if (patientId && documentId) {
+        return `/pacientes/${patientId}/historia/documentos/form005/${documentId}`;
+      }
+      return '/documentos';
+    },
+  },
+
   NEW_MESSAGE: {
     icon: 'icon-messages',
     toastVariant: 'info',

@@ -1,0 +1,91 @@
+/* Form 005 preview - faithful two-column layout (Evolución | Prescripciones).
+   Reuses the --em-* design tokens defined on .em-pdf-view and the
+   .em-pdf-section__header / __number / __titles classes for the column heads. */
+
+.f005-atenciones {
+  display: flex;
+  flex-direction: column;
+}
+
+.f005-atencion {
+  border: 1px solid var(--em-border-strong);
+}
+
+.f005-atencion + .f005-atencion {
+  border-top: none;
+}
+
+.f005-atencion__head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 4px 10px;
+  background-color: var(--em-bg-soft);
+  border-bottom: 1px solid var(--em-border);
+  font-size: 0.62rem;
+  color: var(--em-text-strong);
+}
+
+.f005-atencion__num {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.f005-atencion__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.f005-atencion__vitals {
+  border-bottom: 1px solid var(--em-border);
+}
+
+.f005-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.f005-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.f005-col + .f005-col {
+  border-left: 1px solid var(--em-border-strong);
+}
+
+.f005-col__body {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--em-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 180px;
+}
+
+.f005-col__body--empty {
+  color: var(--em-text-mute);
+  font-style: italic;
+}
+
+.f005-prescriptions {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.f005-prescriptions li {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
