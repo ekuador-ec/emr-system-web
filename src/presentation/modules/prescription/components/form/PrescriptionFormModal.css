@@ -1,0 +1,128 @@
+.prescription-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+}
+
+.prescription-form__row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.prescription-form__row--editors {
+  align-items: start;
+  gap: var(--space-4);
+}
+
+.prescription-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.prescription-form__label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.prescription-form__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+/* CIE-10 picker */
+.prescription-cie10 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.prescription-cie10__chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.prescription-cie10__chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
+.prescription-cie10__chip-code {
+  font-weight: 700;
+  color: var(--color-primary, #1d4ed8);
+}
+
+.prescription-cie10__chip-desc {
+  flex: 1;
+  color: var(--color-text);
+}
+
+.prescription-cie10__search {
+  position: relative;
+  width: 100%;
+}
+
+.prescription-cie10__spinner {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  color: var(--color-text-secondary);
+}
+
+.prescription-cie10__results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  z-index: 50;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.prescription-cie10__result {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  background-color: transparent;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.prescription-cie10__result:hover {
+  background-color: var(--color-bg);
+}
+
+.prescription-cie10__result strong {
+  margin-right: var(--space-2);
+  color: var(--color-primary, #1d4ed8);
+}
+
+@media (max-width: 640px) {
+  .prescription-form__row {
+    grid-template-columns: 1fr;
+  }
+}

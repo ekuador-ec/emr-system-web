@@ -1,0 +1,114 @@
+.prescription-manager__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.prescription-manager__state,
+.prescription-manager__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-4);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.prescription-manager__state {
+  flex-direction: row;
+}
+
+.prescription-manager__list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-5) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.prescription-manager__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+}
+
+.prescription-manager__item-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.prescription-manager__item-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.prescription-manager__item-number {
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.prescription-manager__item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.prescription-manager__item-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.prescription-manager__meta-chip {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.prescription-manager__meta-author {
+  color: var(--color-text-secondary);
+}
+
+.prescription-manager__item-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.prescription-manager__confirm-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+@media (max-width: 640px) {
+  .prescription-manager__item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .prescription-manager__item-actions {
+    justify-content: flex-end;
+  }
+}

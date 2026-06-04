@@ -1,0 +1,360 @@
+/* Print-format toolbar (screen only, lives outside the printable root) */
+.rx-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.rx-toolbar__label {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.rx-toolbar__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.rx-toolbar__hint {
+  flex: 1 1 100%;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.rx-print-root {
+  --rx-paper: #ffffff;
+  --rx-border: #cbd5e1;
+  --rx-border-strong: #1e3a8a;
+  --rx-text: #0f172a;
+  --rx-text-soft: #475569;
+  --rx-accent: #1d4ed8;
+
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+  background-color: var(--color-bg, #f8fafc);
+}
+
+.rx-sheet {
+  display: flex;
+  max-width: 100%;
+  background-color: var(--rx-paper);
+  color: var(--rx-text);
+  box-shadow: 0 24px 48px -24px rgba(15, 23, 42, 0.35);
+  background-repeat: no-repeat;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Side-by-side (landscape look): both halves on one wide sheet.
+   The dividing line is painted as a centered vertical dashed background so it
+   does NOT depend on flex stretch height (which collapses in print). */
+.rx-print-root[data-print-layout="side"] .rx-sheet {
+  flex-direction: row;
+  width: 29.7cm;
+  min-height: 21cm;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--rx-border-strong) 0,
+    var(--rx-border-strong) 4px,
+    transparent 4px,
+    transparent 9px
+  );
+  background-size: 1px 100%;
+  background-position: 50% 0;
+}
+
+/* Stacked (portrait look): halves one below the other */
+.rx-print-root[data-print-layout="stacked"] .rx-sheet {
+  flex-direction: column;
+  width: 21cm;
+  min-height: 29.7cm;
+}
+
+.rx-half {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 50%;
+  min-width: 0;
+  padding: 6mm 5mm;
+  gap: 8px;
+}
+
+.rx-divider {
+  flex: 0 0 auto;
+}
+
+/* Stacked uses an element-based line so it sits exactly between the two
+   halves regardless of their content height. */
+.rx-print-root[data-print-layout="stacked"] .rx-divider {
+  height: 0;
+  border-top: 1px dashed var(--rx-border-strong);
+}
+
+/* Header (repeated on both halves) */
+.rx-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-bottom: 2px solid var(--rx-border-strong);
+  padding-bottom: 8px;
+}
+
+.rx-header__brand {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.rx-header__logo {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rx-accent);
+}
+
+.rx-header__logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.rx-header__institution {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rx-header__company {
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--rx-text);
+}
+
+.rx-header__company-type {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--rx-text-soft);
+  letter-spacing: 0.04em;
+}
+
+.rx-header__number {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.rx-header__number-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rx-text-soft);
+}
+
+.rx-header__number-value {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--rx-accent);
+}
+
+.rx-header__number-validity {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--rx-text-soft);
+}
+
+.rx-header__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 4px 8px;
+}
+
+.rx-header__cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rx-header__cell--full {
+  grid-column: 1 / -1;
+}
+
+.rx-header__label {
+  font-size: 0.58rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--rx-text-soft);
+}
+
+.rx-header__value {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--rx-text);
+  word-break: break-word;
+}
+
+.rx-cie10-list {
+  list-style: none;
+  margin: 1px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.rx-cie10-list li {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--rx-text);
+  word-break: break-word;
+}
+
+.rx-cie10-list strong {
+  color: var(--rx-accent);
+  margin-right: 4px;
+}
+
+/* Body */
+.rx-half__title {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--rx-text);
+}
+
+.rx-half__body {
+  white-space: pre-wrap;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--rx-text);
+}
+
+.rx-half__body--empty {
+  color: var(--rx-text-soft);
+  font-style: italic;
+}
+
+/* Signature: sits right after the text with a small gap to sign/stamp */
+.rx-signature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 14mm;
+}
+
+.rx-signature__line {
+  width: 70%;
+  border-top: 1px solid var(--rx-text);
+  margin-bottom: 4px;
+}
+
+.rx-signature__name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.rx-signature__detail {
+  font-size: 0.68rem;
+  color: var(--rx-text-soft);
+  text-align: center;
+}
+
+.rx-signature__hint {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rx-text-soft);
+  margin-top: 2px;
+}
+
+/* Responsive (modal view only): stack on narrow screens regardless of mode */
+@media (max-width: 900px) {
+  .rx-print-root[data-print-layout] .rx-sheet {
+    flex-direction: column;
+    width: 100%;
+    min-height: 0;
+    background-image: none;
+  }
+
+  .rx-print-root[data-print-layout] .rx-divider {
+    width: auto;
+    height: 0;
+    border-left: none;
+    border-top: 1px dashed var(--rx-border-strong);
+  }
+}
+
+/* Named page boxes so each print layout uses the right orientation */
+@page rx-landscape {
+  size: A4 landscape;
+  margin: 3mm;
+}
+
+@page rx-portrait {
+  size: A4 portrait;
+  margin: 3mm;
+}
+
+/* Print: only the receta is inked; orientation depends on the chosen layout */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  .rx-print-root,
+  .rx-print-root * {
+    visibility: visible !important;
+  }
+
+  .rx-print-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0;
+    background: #ffffff;
+  }
+
+  .rx-sheet {
+    width: 100%;
+    min-height: auto;
+    box-shadow: none;
+  }
+
+  /* Side-by-side -> single landscape page. The vertical divider is a printed
+     background (see base rule + print-color-adjust), so no height hacks needed. */
+  .rx-print-root[data-print-layout="side"] .rx-sheet {
+    page: rx-landscape;
+    flex-direction: row;
+  }
+
+  /* Sequential -> portrait: Rp on top, Indicaciones below, dashed cut line between.
+     Long content flows to the next page automatically. */
+  .rx-print-root[data-print-layout="stacked"] .rx-sheet {
+    page: rx-portrait;
+    flex-direction: column;
+  }
+
+  .rx-toolbar,
+  .wc-modal-header,
+  .wc-modal-footer {
+    display: none !important;
+  }
+}
