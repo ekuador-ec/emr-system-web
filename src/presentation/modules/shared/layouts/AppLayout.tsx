@@ -23,6 +23,9 @@ import { useEvolutionUIStore } from "@/presentation/modules/evolution/stores/use
 import { EvolutionReadOnlyModal } from "@/presentation/modules/evolution/components/read-only/EvolutionReadOnlyModal";
 import { useForm005UIStore } from "@/presentation/modules/form005/stores/useForm005UIStore";
 import { Form005ReadOnlyModal } from "@/presentation/modules/form005/components/read-only/Form005ReadOnlyModal";
+import { usePrescriptionUIStore } from "@/presentation/modules/prescription/stores/usePrescriptionUIStore";
+import { PrescriptionsManagerModal } from "@/presentation/modules/prescription/components/PrescriptionsManagerModal";
+import { PrescriptionReadOnlyModal } from "@/presentation/modules/prescription/components/read-only/PrescriptionReadOnlyModal";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import { PatientCreateModal } from "@/presentation/modules/patient/components/Patients/PatientCreateModal";
 import { PatientQuickSearchModal } from "@/presentation/modules/patient/components/Patients/PatientQuickSearchModal";
@@ -48,6 +51,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   const { readOnlyTarget, closeReadOnlyEvolution } = useEvolutionUIStore();
   const { readOnlyTarget: form005ReadOnlyTarget, closeReadOnlyForm005 } = useForm005UIStore();
+  const {
+    managerTarget: prescriptionManagerTarget,
+    closePrescriptionsManager,
+    readOnlyTarget: prescriptionReadOnlyTarget,
+    closeReadOnlyPrescription,
+  } = usePrescriptionUIStore();
 
   usePresenceTracker(user?.id);
   usePresenceSubscription(Boolean(user?.id));
@@ -155,6 +164,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         patientId={form005ReadOnlyTarget?.patientId ?? null}
         documentId={form005ReadOnlyTarget?.documentId ?? null}
         onClose={closeReadOnlyForm005}
+      />
+
+      <PrescriptionsManagerModal
+        target={prescriptionManagerTarget}
+        onClose={closePrescriptionsManager}
+      />
+
+      <PrescriptionReadOnlyModal
+        isOpen={prescriptionReadOnlyTarget !== null}
+        prescriptionId={prescriptionReadOnlyTarget?.prescriptionId ?? null}
+        patientId={prescriptionReadOnlyTarget?.patientId ?? null}
+        onClose={closeReadOnlyPrescription}
       />
 
       <InviteUserModal

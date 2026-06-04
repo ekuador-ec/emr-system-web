@@ -9,6 +9,7 @@ export interface DocumentTypeDefinition {
   icon: string;
   createLabel: string;
   workspacePath: (patientId: string, documentId: string) => string;
+  supportsPrescriptions?: boolean;
 }
 
 export const DOCUMENT_REGISTRY: Record<DocumentType, DocumentTypeDefinition> = {
@@ -23,6 +24,7 @@ export const DOCUMENT_REGISTRY: Record<DocumentType, DocumentTypeDefinition> = {
     createLabel: "Evolución 008",
     workspacePath: (patientId, documentId) =>
       `/pacientes/${patientId}/historia/evoluciones/${documentId}`,
+    supportsPrescriptions: true,
   },
   FORM_005: {
     type: "FORM_005",
@@ -35,6 +37,7 @@ export const DOCUMENT_REGISTRY: Record<DocumentType, DocumentTypeDefinition> = {
     createLabel: "Formulario 005",
     workspacePath: (patientId, documentId) =>
       `/pacientes/${patientId}/historia/documentos/form005/${documentId}`,
+    supportsPrescriptions: true,
   },
 };
 

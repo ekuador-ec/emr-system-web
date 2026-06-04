@@ -10,6 +10,7 @@ import {
 import { useForm005, useCloseForm005 } from "../hooks/useForm005";
 import { useForm005EntryAutosave, draftKeyFor } from "../hooks/useForm005EntryAutosave";
 import { useForm005UIStore } from "../stores/useForm005UIStore";
+import { usePrescriptionUIStore } from "@/presentation/modules/prescription/stores/usePrescriptionUIStore";
 import { Form005VitalsModal } from "../components/form/Form005VitalsModal";
 import { loadDraft } from "@/infrastructure/core/draftCache";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
@@ -135,6 +136,9 @@ export function Form005WorkspacePage() {
   const { confirm, DialogComponent } = useConfirmDialog();
   const setSelectedPatientId = usePatientStore((state) => state.setSelectedPatientId);
   const openReadOnlyForm005 = useForm005UIStore((state) => state.openReadOnlyForm005);
+  const openPrescriptionsManager = usePrescriptionUIStore(
+    (state) => state.openPrescriptionsManager,
+  );
 
   const entries = useMemo(() => document005?.entries ?? [], [document005]);
   const isClosed = document005?.status === "CERRADA";
@@ -309,6 +313,23 @@ export function Form005WorkspacePage() {
             >
               <Icon name="icon-eye" size={16} />
               Vista previa
+            </WcButton>
+            <WcButton
+              variant="secondary"
+              onClick={() => {
+                if (patientId && documentId) {
+                  openPrescriptionsManager({
+                    patientId,
+                    medicalRecordId: document005.medicalRecordId,
+                    sourceDocumentType: "FORM_005",
+                    sourceDocumentId: documentId,
+                    parentClosed: isClosed,
+                  });
+                }
+              }}
+            >
+              <Icon name="icon-prescription" size={16} />
+              Recetas
             </WcButton>
             {!isClosed && canClose ? (
               <WcButton

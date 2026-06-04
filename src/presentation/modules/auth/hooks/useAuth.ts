@@ -10,6 +10,7 @@ import { clearAllDrafts } from "@/infrastructure/core/draftCache";
 import { useMessagingUIStore } from "@/presentation/modules/messaging/stores/useMessagingUIStore";
 import { useAiAssistantStore } from "@/presentation/modules/ai/stores/useAiAssistantStore";
 import { usePresenceStore } from "@/presentation/modules/users/stores/usePresenceStore";
+import { usePrescriptionUIStore } from "@/presentation/modules/prescription/stores/usePrescriptionUIStore";
 
 const authRepository = new SupabaseAuthRepository();
 const userRepository = new SupabaseUserRepository();
@@ -61,6 +62,7 @@ export function useAuth() {
       useMessagingUIStore.getState().reset();
       useAiAssistantStore.getState().reset();
       usePresenceStore.getState().reset();
+      usePrescriptionUIStore.getState().reset();
       queryClient.clear();
     },
   });

@@ -25,6 +25,7 @@ import "./EvolutionWorkspacePage.css";
 import { PatientDetailsDrawer } from "@/presentation/modules/patient/components/Patients/PatientDetailsDrawer";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import { EvolutionAiAssistant } from "@/presentation/modules/ai/components/EvolutionAiAssistant";
+import { usePrescriptionUIStore } from "@/presentation/modules/prescription/stores/usePrescriptionUIStore";
 
 import { TabAdmision } from "../components/form/TabAdmision";
 import { TabMotivo } from "../components/form/TabMotivo";
@@ -69,6 +70,9 @@ export function EvolutionWorkspacePage() {
   const { addToast } = useToastStore();
   const { confirm, DialogComponent } = useConfirmDialog();
   const setSelectedPatientId = usePatientStore((state) => state.setSelectedPatientId);
+  const openPrescriptionsManager = usePrescriptionUIStore(
+    (state) => state.openPrescriptionsManager,
+  );
 
   const [validationErrors, setValidationErrors] = useState<
     Record<string, { tabIndex: number; messages: string[] }>
@@ -619,9 +623,28 @@ export function EvolutionWorkspacePage() {
         style={{
           display: "flex",
           justifyContent: "flex-end",
+          alignItems: "center",
+          gap: "var(--space-2)",
           margin: "0 0 var(--space-3) 0",
         }}
       >
+        {patient ? (
+          <WcButton
+            variant="secondary"
+            onClick={() =>
+              openPrescriptionsManager({
+                patientId: patient.id,
+                medicalRecordId: evolution.medicalRecordId,
+                sourceDocumentType: "FORM_008",
+                sourceDocumentId: evolution.id,
+                parentClosed: isClosed,
+              })
+            }
+          >
+            <Icon name="icon-prescription" size={16} />
+            Recetas
+          </WcButton>
+        ) : null}
         <EvolutionAiAssistant evolutionId={evolution.id} patientId={patient?.id} />
       </div>
 
