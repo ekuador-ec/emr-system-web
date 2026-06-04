@@ -468,12 +468,12 @@ export function LoginPage() {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
-            margin: 0 auto var(--space-2);
+            width: clamp(68px, 18vw, 92px);
+            height: clamp(68px, 18vw, 92px);
+            margin: 0 auto var(--space-3);
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.72);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             flex-shrink: 0;
             padding: 4px;
@@ -498,9 +498,9 @@ export function LoginPage() {
           }
 
           .company-mobile-logo {
-            width: 34px;
-            height: 34px;
-            margin-bottom: var(--space-1);
+            width: clamp(56px, 15vh, 76px);
+            height: clamp(56px, 15vh, 76px);
+            margin-bottom: var(--space-2);
           }
         }
       `}</style>
