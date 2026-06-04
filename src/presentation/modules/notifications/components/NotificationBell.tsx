@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import './NotificationBell.css';
 import { useNotificationsList, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/presentation/modules/notifications/hooks/useNotifications';
@@ -104,6 +105,8 @@ const getVariantStyles = (type: string, isRead: boolean) => {
 
 export function NotificationBell({ userId, onOpenChange }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [popoverPosition, setPopoverPosition] = useState<{ top: number; right: number }>({ top: 64, right: 12 });
+  const triggerRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -113,9 +116,32 @@ export function NotificationBell({ userId, onOpenChange }: NotificationBellProps
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
+  const updatePopoverPosition = useCallback(() => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    setPopoverPosition({
+      top: rect.bottom + 8,
+      right: Math.max(window.innerWidth - rect.right, 12),
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    updatePopoverPosition();
+    window.addEventListener("resize", updatePopoverPosition);
+    window.addEventListener("scroll", updatePopoverPosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePopoverPosition);
+      window.removeEventListener("scroll", updatePopoverPosition, true);
+    };
+  }, [isOpen, updatePopoverPosition]);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const insideTrigger = triggerRef.current?.contains(target);
+      const insidePopover = popoverRef.current?.contains(target);
+      if (!insideTrigger && !insidePopover) {
         setIsOpen(false);
       }
     }
@@ -307,7 +333,7 @@ export function NotificationBell({ userId, onOpenChange }: NotificationBellProps
   };
 
   return (
-    <div style={{ position: 'relative' }} ref={popoverRef}>
+    <div style={{ position: 'relative' }} ref={triggerRef}>
       <div style={{ position: 'relative', display: 'inline-block' }}>
         <WcButtonIcon
           variant="ghost"
@@ -349,8 +375,21 @@ export function NotificationBell({ userId, onOpenChange }: NotificationBellProps
         )}
       </div>
 
-      {isOpen && (
-        <div className="notification-popover">
+      {isOpen && createPortal(
+        <>
+          <div
+            className="notification-popover-backdrop"
+            onClick={() => setIsOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            className="notification-popover"
+            ref={popoverRef}
+            style={{
+              '--nb-top': `${popoverPosition.top}px`,
+              '--nb-right': `${popoverPosition.right}px`,
+            } as React.CSSProperties}
+          >
           <div style={{
             padding: '16px 20px',
             borderBottom: '1px solid var(--color-border)',
@@ -417,7 +456,9 @@ export function NotificationBell({ userId, onOpenChange }: NotificationBellProps
               })()
             )}
           </div>
-        </div>
+          </div>
+        </>,
+        document.body
       )}
     </div>
   );

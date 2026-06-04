@@ -1,8 +1,9 @@
 .notification-popover {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
+  position: fixed;
+  top: var(--nb-top, 64px);
+  right: var(--nb-right, 12px);
   width: 380px;
+  max-width: calc(100vw - 24px);
   max-height: 580px;
   background: var(--color-surface);
   backdrop-filter: none;
@@ -10,9 +11,13 @@
   border: 1px solid var(--color-border);
   border-radius: 16px;
   box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
-  z-index: 50;
+  z-index: 1100;
   display: flex;
   flex-direction: column;
+}
+
+.notification-popover-backdrop {
+  display: none;
 }
 
 .notification-popover > div:first-child {
@@ -29,7 +34,7 @@
   background-color: var(--hover-bg);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .notification-popover {
     position: fixed;
     top: auto;
@@ -37,13 +42,54 @@
     left: 0;
     right: 0;
     width: 100%;
-    height: 80vh;
-    max-height: 80vh;
+    max-width: 100%;
+    height: 78vh;
+    height: 78dvh;
+    max-height: 78dvh;
     border-radius: 20px 20px 0 0;
-    box-shadow: 0 -8px 24px -4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 -8px 32px -4px rgba(0, 0, 0, 0.18);
     border-bottom: none;
     border-left: none;
     border-right: none;
+    animation: notification-sheet-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .notification-popover-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 1099;
+    animation: notification-backdrop-in 200ms ease;
+  }
+}
+
+@keyframes notification-sheet-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes notification-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-popover,
+  .notification-popover-backdrop {
+    animation: none;
   }
 }
 
