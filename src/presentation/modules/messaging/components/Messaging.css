@@ -315,6 +315,7 @@
 
 .msg-avatar-img,
 .msg-avatar-fallback {
+  display: block;
   width: 44px;
   height: 44px;
   border-radius: var(--radius-full);
@@ -1642,7 +1643,7 @@
    so the user can read and interact with the active conversation
    without anything overlapping it.                                  */
 .msg-bubbles-stack--expanded {
-  z-index: 1000;
+  z-index: 1020;
 }
 
 /* Deck of minimized bubbles: avatars overlap like playing cards.
@@ -1687,6 +1688,16 @@
 .msg-bubble-icon:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+/* Active bubble: the conversation currently open in the chat window.
+   Kept visible in the deck and highlighted with a success-green glow so
+   it is always clear which avatar the open window belongs to.          */
+.msg-bubble-icon.is-active {
+  box-shadow:
+    0 0 0 2px var(--color-success),
+    0 0 18px 3px color-mix(in srgb, var(--color-success) 55%, transparent),
+    0 0 6px 1px color-mix(in srgb, var(--color-success) 40%, transparent);
 }
 
 .msg-bubble-icon .msg-avatar-img,
@@ -1791,6 +1802,22 @@
 
 .msg-bubble-window .msg-composer-error {
   padding: 0 var(--space-3) var(--space-1);
+}
+
+/* On mobile the bubble chat window is centered and grows tall for
+   better readability, while the avatar deck stays anchored at the
+   bottom so the active conversation remains identifiable.           */
+@media (max-width: 768px) {
+  .msg-bubble-window {
+    position: fixed;
+    top: var(--space-3);
+    left: var(--space-2);
+    right: var(--space-2);
+    bottom: 88px;
+    width: auto;
+    height: auto;
+    max-height: none;
+  }
 }
 
 @keyframes msgFloatIn {

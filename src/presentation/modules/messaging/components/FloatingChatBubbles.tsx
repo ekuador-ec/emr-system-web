@@ -50,8 +50,12 @@ export function FloatingChatBubbles() {
   if (visibleBubbles.length === 0) return null;
 
   const expandedBubble = visibleBubbles.find((b) => !b.isMinimized) ?? null;
-  const minimizedBubbles = visibleBubbles.filter((b) => b.isMinimized);
   const hasExpanded = expandedBubble !== null;
+
+  // The avatar bubble always stays visible in the deck (highlighted when its
+  // chat is open) so it is clear which conversation the open window belongs
+  // to, and the chat window opens above it.
+  const deckBubbles = visibleBubbles.map((b) => b.conversationId);
 
   const stackClass = [
     "msg-bubbles-stack",
@@ -69,26 +73,32 @@ export function FloatingChatBubbles() {
           currentUserId={user.id}
         />
       )}
-      {minimizedBubbles.length > 0 && (
-        <MinimizedBubblesDeck
-          bubbles={minimizedBubbles.map((b) => b.conversationId)}
-          currentUserId={user.id}
-          anchor={isMobile ? "left" : "right"}
-          isMobile={isMobile}
-        />
-      )}
+      <MinimizedBubblesDeck
+        bubbles={deckBubbles}
+        activeConversationId={expandedBubble?.conversationId ?? null}
+        currentUserId={user.id}
+        anchor={isMobile ? "left" : "right"}
+        isMobile={isMobile}
+      />
     </div>
   );
 }
 
 interface DeckProps {
   bubbles: string[];
+  activeConversationId: string | null;
   currentUserId: string;
   anchor: "left" | "right";
   isMobile: boolean;
 }
 
-function MinimizedBubblesDeck({ bubbles, currentUserId, anchor, isMobile }: DeckProps) {
+function MinimizedBubblesDeck({
+  bubbles,
+  activeConversationId,
+  currentUserId,
+  anchor,
+  isMobile,
+}: DeckProps) {
   const [isFanned, setIsFanned] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -131,7 +141,10 @@ function MinimizedBubblesDeck({ bubbles, currentUserId, anchor, isMobile }: Deck
             className="msg-bubble-deck-item"
             style={{
               ...positionStyle,
-              zIndex: bubbles.length - idx,
+              zIndex:
+                conversationId === activeConversationId
+                  ? bubbles.length + 1
+                  : bubbles.length - idx,
             }}
           >
             <MinimizedBubbleIcon
@@ -139,6 +152,7 @@ function MinimizedBubblesDeck({ bubbles, currentUserId, anchor, isMobile }: Deck
               currentUserId={currentUserId}
               showCloseAlways={isFanned}
               requireFanFirst={requireFanFirst}
+              isActive={conversationId === activeConversationId}
             />
           </div>
         );
@@ -152,6 +166,7 @@ interface BubbleProps {
   currentUserId: string;
   showCloseAlways?: boolean;
   requireFanFirst?: boolean;
+  isActive?: boolean;
 }
 
 function useBubbleConversation(conversationId: string, currentUserId: string) {
@@ -177,6 +192,7 @@ function MinimizedBubbleIcon({
   currentUserId,
   showCloseAlways = false,
   requireFanFirst = false,
+  isActive = false,
 }: BubbleProps) {
   const { conversation, presenceByUserId } = useBubbleConversation(conversationId, currentUserId);
   const { toggleBubbleMinimized, closeBubble } = useMessagingUIStore();
@@ -195,17 +211,28 @@ function MinimizedBubbleIcon({
     toggleBubbleMinimized(conversationId);
   };
 
+  const className = [
+    "msg-bubble-icon",
+    showCloseAlways ? "show-close" : "",
+    isActive ? "is-active" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div
-      className={`msg-bubble-icon${showCloseAlways ? " show-close" : ""}`}
+      className={className}
       title={name}
       onClick={handleActivate}
       role="button"
       tabIndex={0}
+      aria-pressed={isActive}
       aria-label={
         requireFanFirst
           ? `Mostrar chats abiertos`
-          : `Abrir chat con ${name}`
+          : isActive
+            ? `Minimizar chat con ${name}`
+            : `Abrir chat con ${name}`
       }
     >
       <UserAvatar
