@@ -893,6 +893,14 @@
   }
 }
 
+/* While the messaging hub popover is open, lift the whole cluster above
+   the profile hub so its header actions stay accessible. The raise only
+   applies while open, so the closed trigger never sits above the profile
+   popover.                                                              */
+.msg-float-container.is-hub-open {
+  z-index: 1020;
+}
+
 .msg-float-trigger {
   width: 52px;
   height: 52px;
@@ -1013,6 +1021,24 @@
   height: 4px;
   background: linear-gradient(90deg, #6366f1, #14b8a6, #f43f5e);
   z-index: 10;
+}
+
+/* On mobile the hub popover is centered and grows to the available
+   height, sitting above the floating trigger.                          */
+@media (max-width: 768px) {
+  .msg-float-hub {
+    position: fixed;
+    top: var(--space-3);
+    left: var(--space-2);
+    right: var(--space-2);
+    bottom: calc(96px + 52px + var(--space-3));
+    width: auto;
+    max-height: none;
+  }
+
+  .msg-float-hub-body {
+    overscroll-behavior: contain;
+  }
 }
 
 .msg-float-hub-header {

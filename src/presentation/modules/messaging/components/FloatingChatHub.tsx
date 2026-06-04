@@ -112,7 +112,7 @@ export function FloatingChatHub() {
 
   return (
     <>
-      <div ref={panelRef} className="msg-float-container">
+      <div ref={panelRef} className={`msg-float-container${isHubOpen ? " is-hub-open" : ""}`}>
         {isHubOpen && (
           <div className="msg-float-hub">
             <div className="msg-float-hub-header">
