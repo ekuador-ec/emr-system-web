@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/presentation/modules/auth/hooks/useAuth'
 import { useUnreadMessagesTotal } from '@/presentation/modules/messaging/hooks/useUnreadMessagesTotal'
@@ -153,6 +154,15 @@ export function Sidebar() {
     setIsMobileOpen(false)
   }, [location.pathname])
 
+  useEffect(() => {
+    if (!isMobileOpen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isMobileOpen])
+
   const handleMouseEnter = useCallback(() => {
     if (isPinned) return
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)
@@ -177,21 +187,16 @@ export function Sidebar() {
     setIsHovering(false)
   }
 
-  const isExpanded = isPinned || isHovering || isMobileOpen
+  const isExpanded = isPinned || isHovering
 
   return (
     <>
-      <div
-        className={`mobile-overlay ${isMobileOpen ? 'active' : ''}`}
-        onClick={() => setIsMobileOpen(false)}
-      />
-
       <div
         className="sidebar-wrapper"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <aside className={`sidebar ${isExpanded ? 'pinned' : 'collapsed'} ${isMobileOpen ? 'mobile-open' : ''}`}>
+        <aside className={`sidebar ${isExpanded ? 'pinned' : 'collapsed'}`}>
           <SidebarContent isExpanded={isExpanded} />
         </aside>
 
@@ -206,12 +211,29 @@ export function Sidebar() {
       </div>
 
       <button
-        className="mobile-toggle-btn"
+        className={`mobile-toggle-btn ${isMobileOpen ? 'is-open' : ''}`}
         onClick={() => setIsMobileOpen(prev => !prev)}
-        aria-label="Abrir menú"
+        aria-label={isMobileOpen ? 'Cerrar menú' : 'Abrir menú'}
       >
-        <Icon name="icon-menu" size={24} />
+        <Icon name={isMobileOpen ? 'icon-x' : 'icon-menu'} size={24} />
       </button>
+
+      {createPortal(
+        <>
+          <div
+            className={`mobile-overlay ${isMobileOpen ? 'active' : ''}`}
+            onClick={() => setIsMobileOpen(false)}
+            aria-hidden="true"
+          />
+          <aside
+            className={`sidebar-mobile-sheet ${isMobileOpen ? 'open' : ''}`}
+            aria-hidden={!isMobileOpen}
+          >
+            <SidebarContent isExpanded />
+          </aside>
+        </>,
+        document.body
+      )}
     </>
   )
 }
