@@ -15,6 +15,7 @@ interface WcTextareaExpandProps {
   disabled?: boolean;
   error?: string;
   label?: string;
+  expandTabIndex?: number;
 }
 
 export function WcTextareaExpand({
@@ -27,6 +28,7 @@ export function WcTextareaExpand({
   disabled = false,
   error,
   label,
+  expandTabIndex,
 }: WcTextareaExpandProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -158,6 +160,7 @@ export function WcTextareaExpand({
           size="sm"
           onClick={() => setIsExpanded(true)}
           disabled={disabled}
+          tabIndex={expandTabIndex}
           title="Expandir editor"
           aria-label="Expandir editor"
           style={{
