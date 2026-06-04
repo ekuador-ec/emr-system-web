@@ -173,6 +173,14 @@ export function FloatingProfileHub() {
         </div>
 
         {isOpen && (
+          <div
+            className="floating-hub__menu-backdrop"
+            onClick={() => setIsOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
+        {isOpen && (
           <div className="floating-hub__menu" role="menu">
             <div className="floating-hub__menu-header">
               <span className="floating-hub__menu-header-avatar">
