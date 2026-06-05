@@ -65,8 +65,8 @@ export class Form005Mapper {
       glasgowMotor: item.glasgow_motor,
       glasgowTotal: item.glasgow_total,
       createdBy: item.created_by ?? null,
-      createdByName: fullName(item.author),
-      createdByRole: item.author?.role ?? null,
+      createdByName: item.created_by_name ?? fullName(item.author),
+      createdByRole: item.created_by_role ?? item.author?.role ?? null,
       createdAt: item.created_at,
       updatedAt: item.updated_at ?? null,
     };

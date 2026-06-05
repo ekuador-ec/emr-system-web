@@ -16,8 +16,7 @@ const SELECT_DETAIL = `
   opener:profiles!form005_documents_opened_by_fkey(first_name, last_name),
   closer:profiles!form005_documents_closed_by_fkey(first_name, last_name),
   form005_entries(
-    *,
-    author:profiles!form005_entries_created_by_fkey(first_name, last_name, role)
+    *
   )
 `;
 
