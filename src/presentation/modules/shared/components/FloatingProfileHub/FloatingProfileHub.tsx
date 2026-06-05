@@ -128,7 +128,7 @@ export function FloatingProfileHub() {
 
   return (
     <>
-      <div ref={wrapperRef} className="floating-hub">
+      <div ref={wrapperRef} className={`floating-hub${isOpen ? " is-menu-open" : ""}`}>
         <div className="floating-hub__cluster">
           <NotificationBell
             userId={user.id}

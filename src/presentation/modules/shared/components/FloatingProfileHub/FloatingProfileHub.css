@@ -2,11 +2,19 @@
   position: fixed;
   top: var(--space-3);
   right: var(--space-3);
-  z-index: 1010;
+  z-index: 50;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: var(--space-2);
+}
+
+/* While the profile menu is open, lift the hub above the messaging
+   launcher so its popover/sheet stays on top. The raise only applies
+   while open, so the closed hub never covers overlays such as the
+   patient details drawer.                                             */
+.floating-hub.is-menu-open {
+  z-index: 1020;
 }
 
 .floating-hub__cluster {
