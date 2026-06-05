@@ -3,6 +3,7 @@ import type {
   CreatePrescriptionPayload,
   MedicalPrescription,
   PrescriptionDiagnosisInput,
+  PrescriptionDocumentCount,
   UpdatePrescriptionPayload,
 } from "@/domain/modules/prescription/models/MedicalPrescription";
 import type { DocumentType } from "@/domain/modules/document/models/ClinicalDocument";
@@ -169,5 +170,28 @@ export class SupabasePrescriptionRepository implements PrescriptionRepository {
     if (error) throw new Error(`Error fetching prescriptions: ${error.message}`);
 
     return (data ?? []).map(PrescriptionMapper.toDomain);
+  }
+
+  async getCountsByMedicalRecord(medicalRecordId: string): Promise<PrescriptionDocumentCount[]> {
+    const { data, error } = await supabase
+      .from("medical_prescriptions")
+      .select("source_document_type, source_document_id")
+      .eq("medical_record_id", medicalRecordId);
+
+    if (error) throw new Error(`Error fetching prescription counts: ${error.message}`);
+
+    const counts = new Map<string, PrescriptionDocumentCount>();
+    for (const row of data ?? []) {
+      const sourceDocumentType = row.source_document_type as DocumentType;
+      const sourceDocumentId = row.source_document_id as string;
+      const key = `${sourceDocumentType}:${sourceDocumentId}`;
+      const existing = counts.get(key);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        counts.set(key, { sourceDocumentType, sourceDocumentId, count: 1 });
+      }
+    }
+    return Array.from(counts.values());
   }
 }

@@ -5,6 +5,7 @@ import { EmitPrescriptionUseCase } from "@/application/modules/prescription/use-
 import { DeletePrescriptionUseCase } from "@/application/modules/prescription/use-cases/DeletePrescriptionUseCase";
 import { GetPrescriptionByIdUseCase } from "@/application/modules/prescription/use-cases/GetPrescriptionByIdUseCase";
 import { ListPrescriptionsByDocumentUseCase } from "@/application/modules/prescription/use-cases/ListPrescriptionsByDocumentUseCase";
+import { GetPrescriptionCountsByMedicalRecordUseCase } from "@/application/modules/prescription/use-cases/GetPrescriptionCountsByMedicalRecordUseCase";
 import { SupabasePrescriptionRepository } from "@/infrastructure/modules/prescription/repositories/SupabasePrescriptionRepository";
 import type {
   CreatePrescriptionPayload,
@@ -21,15 +22,46 @@ const getPrescriptionByIdUseCase = new GetPrescriptionByIdUseCase(prescriptionRe
 const listPrescriptionsByDocumentUseCase = new ListPrescriptionsByDocumentUseCase(
   prescriptionRepository,
 );
+const getPrescriptionCountsUseCase = new GetPrescriptionCountsByMedicalRecordUseCase(
+  prescriptionRepository,
+);
 
 export const prescriptionKeys = {
   all: ["prescriptions"] as const,
   lists: () => [...prescriptionKeys.all, "list"] as const,
   listByDocument: (type: DocumentType, id: string) =>
     [...prescriptionKeys.lists(), { type, id }] as const,
+  counts: () => [...prescriptionKeys.all, "counts"] as const,
+  countsByMedicalRecord: (medicalRecordId: string) =>
+    [...prescriptionKeys.counts(), medicalRecordId] as const,
   details: () => [...prescriptionKeys.all, "detail"] as const,
   detail: (id: string) => [...prescriptionKeys.details(), id] as const,
 };
+
+export type PrescriptionCountMap = Record<string, number>;
+
+function buildCountKey(type: DocumentType, id: string): string {
+  return `${type}:${id}`;
+}
+
+export function usePrescriptionCountsByMedicalRecord(medicalRecordId: string | null) {
+  return useQuery({
+    queryKey: prescriptionKeys.countsByMedicalRecord(medicalRecordId ?? ""),
+    queryFn: () => getPrescriptionCountsUseCase.execute(medicalRecordId!),
+    enabled: Boolean(medicalRecordId),
+    select: (counts): PrescriptionCountMap => {
+      const map: PrescriptionCountMap = {};
+      for (const entry of counts) {
+        map[buildCountKey(entry.sourceDocumentType, entry.sourceDocumentId)] = entry.count;
+      }
+      return map;
+    },
+  });
+}
+
+export function prescriptionCountKey(type: DocumentType, id: string): string {
+  return buildCountKey(type, id);
+}
 
 export function usePrescriptionsByDocument(
   sourceDocumentType: DocumentType | null,
@@ -61,6 +93,7 @@ function invalidateDocument(
 ) {
   queryClient.invalidateQueries({ queryKey: prescriptionKeys.listByDocument(type, id) });
   queryClient.invalidateQueries({ queryKey: prescriptionKeys.lists() });
+  queryClient.invalidateQueries({ queryKey: prescriptionKeys.counts() });
 }
 
 export function useCreatePrescription() {

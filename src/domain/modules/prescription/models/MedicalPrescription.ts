@@ -38,6 +38,12 @@ export interface PrescriptionDiagnosisInput {
   cie10Description: string;
 }
 
+export interface PrescriptionDocumentCount {
+  sourceDocumentType: DocumentType;
+  sourceDocumentId: string;
+  count: number;
+}
+
 export interface CreatePrescriptionPayload {
   medicalRecordId: string;
   sourceDocumentType: DocumentType;

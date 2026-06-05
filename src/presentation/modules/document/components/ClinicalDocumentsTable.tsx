@@ -7,7 +7,8 @@ import type { UserRole } from "@/domain/modules/users/models/User";
 import { usePatientStore } from "@/presentation/modules/patient/stores/usePatientStore";
 import { useEvolutionUIStore } from "@/presentation/modules/evolution/stores/useEvolutionUIStore";
 import { useForm005UIStore } from "@/presentation/modules/form005/stores/useForm005UIStore";
-import { getDocumentDefinition } from "@/presentation/modules/document/registry/documentRegistry";
+import { usePrescriptionUIStore } from "@/presentation/modules/prescription/stores/usePrescriptionUIStore";
+import { DOCUMENT_ICON, getDocumentDefinition } from "@/presentation/modules/document/registry/documentRegistry";
 import {
   WcTables,
   TableActionCell,
@@ -69,6 +70,9 @@ export function ClinicalDocumentsTable({
   const { setSelectedPatientId } = usePatientStore();
   const openReadOnlyEvolution = useEvolutionUIStore((state) => state.openReadOnlyEvolution);
   const openReadOnlyForm005 = useForm005UIStore((state) => state.openReadOnlyForm005);
+  const openPrescriptionsManager = usePrescriptionUIStore(
+    (state) => state.openPrescriptionsManager,
+  );
 
   if (!result) return null;
 
@@ -85,7 +89,7 @@ export function ClinicalDocumentsTable({
         const def = getDocumentDefinition(row.documentType as ClinicalDocumentListItem["documentType"]);
         return (
           <WcTag variant="neutral" size="sm">
-            <Icon name={def.icon} size={12} />
+            <Icon name={DOCUMENT_ICON} size={12} />
             {def.code}
           </WcTag>
         );
@@ -198,6 +202,24 @@ export function ClinicalDocumentsTable({
               variant="secondary"
               shape="square"
               size="md"
+              icon="icon-prescription"
+              className="evolution-table-action-icon"
+              title="Recetas médicas"
+              aria-label="Recetas médicas"
+              onClick={() =>
+                openPrescriptionsManager({
+                  patientId,
+                  medicalRecordId: String(row.medicalRecordId ?? ""),
+                  sourceDocumentType: documentType,
+                  sourceDocumentId: documentId,
+                  parentClosed: row.status === "CERRADA",
+                })
+              }
+            />
+            <WcButtonIcon
+              variant="secondary"
+              shape="square"
+              size="md"
               icon="icon-eye"
               className="evolution-table-action-icon"
               title="Ver detalle (solo lectura)"
@@ -229,6 +251,7 @@ export function ClinicalDocumentsTable({
   const rows: WcTableRow[] = documents.map((doc) => ({
     id: doc.id,
     documentType: doc.documentType,
+    medicalRecordId: doc.medicalRecordId,
     status: doc.status,
     patientName: doc.patientName,
     patientIdNumber: doc.patientIdNumber,

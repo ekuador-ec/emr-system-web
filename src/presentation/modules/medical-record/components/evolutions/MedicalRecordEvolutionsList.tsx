@@ -10,7 +10,12 @@ import {
 } from "@/presentation/modules/form005/hooks/useForm005";
 import { useEvolutionUIStore } from "@/presentation/modules/evolution/stores/useEvolutionUIStore";
 import { useForm005UIStore } from "@/presentation/modules/form005/stores/useForm005UIStore";
-import { getDocumentDefinition } from "@/presentation/modules/document/registry/documentRegistry";
+import { usePrescriptionUIStore } from "@/presentation/modules/prescription/stores/usePrescriptionUIStore";
+import {
+  usePrescriptionCountsByMedicalRecord,
+  prescriptionCountKey,
+} from "@/presentation/modules/prescription/hooks/usePrescriptions";
+import { DOCUMENT_ICON, getDocumentDefinition } from "@/presentation/modules/document/registry/documentRegistry";
 import { DocumentTypeMenu } from "@/presentation/modules/document/components/DocumentTypeMenu";
 import type { DocumentType } from "@/domain/modules/document/models/ClinicalDocument";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
@@ -47,6 +52,10 @@ export function MedicalRecordEvolutionsList({ medicalRecordId }: MedicalRecordEv
   const { confirm, DialogComponent } = useConfirmDialog();
   const openReadOnlyEvolution = useEvolutionUIStore((state) => state.openReadOnlyEvolution);
   const openReadOnlyForm005 = useForm005UIStore((state) => state.openReadOnlyForm005);
+  const openPrescriptionsManager = usePrescriptionUIStore(
+    (state) => state.openPrescriptionsManager,
+  );
+  const { data: prescriptionCounts } = usePrescriptionCountsByMedicalRecord(medicalRecordId);
 
   const isLoading = isLoading008 || isLoading005;
   const isCreating = createEvolution.isPending || createForm005.isPending;
@@ -201,6 +210,9 @@ export function MedicalRecordEvolutionsList({ medicalRecordId }: MedicalRecordEv
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
             {documents.map((row) => {
               const def = getDocumentDefinition(row.type);
+              const prescriptionCount =
+                prescriptionCounts?.[prescriptionCountKey(row.type, row.id)] ?? 0;
+              const hasPrescriptions = prescriptionCount > 0;
               return (
                 <div
                   key={`${row.type}-${row.id}`}
@@ -222,7 +234,7 @@ export function MedicalRecordEvolutionsList({ medicalRecordId }: MedicalRecordEv
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-1)", flexWrap: "wrap" }}>
                       <WcTag variant="neutral" size="sm">
-                        <Icon name={def.icon} size={12} />
+                        <Icon name={DOCUMENT_ICON} size={12} />
                         {def.shortLabel}
                       </WcTag>
                       <span style={{ fontWeight: 600, color: "var(--color-text)" }}>
@@ -256,6 +268,30 @@ export function MedicalRecordEvolutionsList({ medicalRecordId }: MedicalRecordEv
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+                    <WcButtonIcon
+                      variant="terciary"
+                      shape="square"
+                      size="sm"
+                      icon="icon-prescription"
+                      disabled={!hasPrescriptions}
+                      title={
+                        hasPrescriptions
+                          ? `Ver recetas (${prescriptionCount})`
+                          : "Sin recetas asociadas"
+                      }
+                      aria-label="Ver recetas asociadas"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (!patientId || !hasPrescriptions) return;
+                        openPrescriptionsManager({
+                          patientId,
+                          medicalRecordId,
+                          sourceDocumentType: row.type,
+                          sourceDocumentId: row.id,
+                          parentClosed: row.status === "CERRADA",
+                        });
+                      }}
+                    />
                     <WcButtonIcon
                       variant="terciary"
                       shape="square"
