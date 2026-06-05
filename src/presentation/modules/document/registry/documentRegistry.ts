@@ -1,5 +1,12 @@
 import type { DocumentType } from "@/domain/modules/document/models/ClinicalDocument";
 
+/**
+ * Single, generic icon used for every clinical document in listings and
+ * notifications. The document name/code is always shown next to it, so there
+ * is no ambiguity and the layout stays stable as new document types are added.
+ */
+export const DOCUMENT_ICON = "icon-medical-document";
+
 export interface DocumentTypeDefinition {
   type: DocumentType;
   code: string;

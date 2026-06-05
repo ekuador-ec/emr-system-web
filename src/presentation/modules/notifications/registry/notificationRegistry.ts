@@ -127,7 +127,7 @@ const NOTIFICATION_REGISTRY: Record<string, NotificationDescriptor> = {
   },
 
   NEW_EVOLUTION: {
-    icon: 'icon-medical-evolution',
+    icon: 'icon-medical-document',
     toastVariant: 'success',
     getContent: (n, uid) => {
       const patientName = asString(n.metadata.patientName);
@@ -154,7 +154,7 @@ const NOTIFICATION_REGISTRY: Record<string, NotificationDescriptor> = {
   },
 
   NEW_FORM005: {
-    icon: 'icon-clipboard',
+    icon: 'icon-medical-document',
     toastVariant: 'success',
     getContent: (n, uid) => {
       const patientName = asString(n.metadata.patientName);

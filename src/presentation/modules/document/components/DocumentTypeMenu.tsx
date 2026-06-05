@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
-import { DOCUMENT_TYPES } from "@/presentation/modules/document/registry/documentRegistry";
+import { DOCUMENT_ICON, DOCUMENT_TYPES } from "@/presentation/modules/document/registry/documentRegistry";
 import type { DocumentType } from "@/domain/modules/document/models/ClinicalDocument";
 
 interface DocumentTypeMenuProps {
@@ -129,7 +129,7 @@ export function DocumentTypeMenu({
                     e.currentTarget.style.backgroundColor = "transparent";
                   }}
                 >
-                  <Icon name={def.icon} size={18} />
+                  <Icon name={DOCUMENT_ICON} size={18} style={{ flexShrink: 0 }} />
                   <span style={{ display: "flex", flexDirection: "column", gap: "1px", minWidth: 0 }}>
                     <span style={{ fontWeight: "var(--font-weight-semibold)", fontSize: "var(--font-size-sm)" }}>
                       {def.shortLabel}
