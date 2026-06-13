@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import WcButton from "@/presentation/modules/shared/components/ui/webcomponents/Buttons/wcButton";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
 import { useToastStore } from "@/presentation/modules/shared/components/Toaster";
 import { useConfirmDialog } from "@/presentation/modules/shared/components/ui/useConfirmDialog";
 import { ChatPanel } from "@/presentation/modules/ai/components/ChatPanel";
-import { AiConversationList } from "@/presentation/modules/ai/components/AiConversationList";
 import { AiContextBanner } from "@/presentation/modules/ai/components/AiContextBanner";
+import { AiConversationsModal } from "@/presentation/modules/ai/components/AiConversationsModal";
 import {
   useAiConversation,
   useAiConversations,
@@ -23,6 +22,14 @@ const KIND_LABEL: Record<string, string> = {
   general: "Consulta general",
 };
 
+interface RailButton {
+  icon: string;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  active?: boolean;
+}
+
 export function AiAssistantPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,8 +42,8 @@ export function AiAssistantPage() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(
     initialIdFromUrl,
   );
-  const [isMobileListOpen, setIsMobileListOpen] = useState(false);
-  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+  const [isConvModalOpen, setIsConvModalOpen] = useState(false);
+  const ensuredRef = useRef(false);
 
   const [isGuardrailDismissed, setIsGuardrailDismissed] = useState(() => {
     return localStorage.getItem("emr:ai-assistant:guardrail-dismissed") === "true";
@@ -46,21 +53,6 @@ export function AiAssistantPage() {
     setIsGuardrailDismissed(true);
     localStorage.setItem("emr:ai-assistant:guardrail-dismissed", "true");
   };
-
-  useEffect(() => {
-    if (!isMobileListOpen) return;
-    const handler = (e: MouseEvent | TouchEvent) => {
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
-        setIsMobileListOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler, true);
-    document.addEventListener("touchstart", handler, true);
-    return () => {
-      document.removeEventListener("mousedown", handler, true);
-      document.removeEventListener("touchstart", handler, true);
-    };
-  }, [isMobileListOpen]);
 
   const conversationsQuery = useAiConversations(aiServiceConfigured);
   const activeQuery = useAiConversation(activeConversationId);
@@ -120,6 +112,7 @@ export function AiAssistantPage() {
         await deleteMutation.mutateAsync(conversationId);
         if (activeConversationId === conversationId) {
           setActiveConversationId(null);
+          ensuredRef.current = false;
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : "Error desconocido";
@@ -130,19 +123,37 @@ export function AiAssistantPage() {
   );
 
   const activeConversation = activeQuery.data?.conversation ?? null;
+  const activeMessages = activeQuery.data?.messages ?? [];
+  const activeIsEmptyGeneral =
+    !!activeConversation &&
+    activeConversation.kind === "general" &&
+    activeMessages.length === 0;
+
+  const handleNewChatClick = useCallback(() => {
+    if (activeIsEmptyGeneral) return;
+    void handleNewGeneralChat();
+  }, [activeIsEmptyGeneral, handleNewGeneralChat]);
+
+  useEffect(() => {
+    if (!aiServiceConfigured) return;
+    if (conversationsQuery.isLoading) return;
+    if (activeConversationId) return;
+    if (conversations.length > 0) return;
+    if (ensuredRef.current || startMutation.isPending) return;
+    ensuredRef.current = true;
+    void handleNewGeneralChat();
+  }, [
+    conversationsQuery.isLoading,
+    activeConversationId,
+    conversations.length,
+    startMutation.isPending,
+    handleNewGeneralChat,
+  ]);
 
   if (!aiServiceConfigured) {
     return (
       <div className="ai-assistant-page">
-        <div
-          style={{
-            padding: "var(--space-6)",
-            border: "1px solid var(--color-border)",
-            borderRadius: "var(--radius-md, 8px)",
-            backgroundColor: "var(--color-surface)",
-            color: "var(--color-text-secondary)",
-          }}
-        >
+        <div className="ai-assistant-page__not-configured">
           El asistente IA no esta configurado. Faltan las variables de entorno
           <code> VITE_AI_SERVICE_URL </code> y <code> VITE_AI_SERVICE_API_KEY </code>.
           Contacta al administrador del sistema.
@@ -162,184 +173,110 @@ export function AiAssistantPage() {
       : "El asistente tiene el contexto del resumen clinico cargado. Pregunta lo que quieras profundizar."
     : "Selecciona una conversacion o inicia una nueva.";
 
+  const railButtons: RailButton[] = [
+    {
+      icon: "icon-message-plus",
+      label: "Nueva conversación",
+      onClick: handleNewChatClick,
+      disabled: startMutation.isPending,
+    },
+    {
+      icon: "icon-messages",
+      label: "Conversaciones",
+      onClick: () => setIsConvModalOpen(true),
+      active: isConvModalOpen,
+    },
+  ];
+
   return (
     <div className="ai-assistant-page">
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "var(--space-3)",
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <div className="ai-assistant-page__title-line">
-            <h2 style={{ margin: 0, color: "var(--color-text)" }}>Asistente IA clinico</h2>
-            <span
-              className="ai-assistant-page__beta-badge"
-              title="Funcion en fase Beta. Las respuestas son referenciales, pueden contener errores y tener limites. Valida siempre con criterio clinico profesional."
+      <nav className="ai-rail" aria-label="Acciones del asistente">
+        <div className="ai-rail__group">
+          {railButtons.map((btn) => (
+            <button
+              key={btn.label}
+              type="button"
+              className={`ai-rail__btn ${btn.active ? "is-active" : ""}`}
+              onClick={btn.onClick}
+              disabled={btn.disabled}
+              aria-label={btn.label}
             >
-              Beta
-            </span>
-          </div>
-          <p
-            style={{
-              margin: 0,
-              marginTop: "4px",
-              fontSize: "0.85rem",
-              color: "var(--color-text-secondary)",
-            }}
-          >
-            Consulta dudas medicas o continua conversaciones abiertas sobre historias clinicas y evoluciones.
-          </p>
+              <Icon name={btn.icon} size={20} />
+              <span className="ai-rail__tooltip">{btn.label}</span>
+            </button>
+          ))}
         </div>
-        <WcButton variant="terciary" onClick={() => navigate(-1)}>
-          <Icon name="icon-arrow-left" size={16} />
-          Volver
-        </WcButton>
-      </div>
+        <div className="ai-rail__group">
+          <button
+            type="button"
+            className="ai-rail__btn"
+            onClick={() => navigate(-1)}
+            aria-label="Volver"
+          >
+            <Icon name="icon-arrow-left" size={20} />
+            <span className="ai-rail__tooltip">Volver</span>
+          </button>
+        </div>
+      </nav>
 
-      {!isGuardrailDismissed && (
-        <div className="ai-assistant-page__guardrail">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--space-4)" }}>
-            <div style={{ flex: 1 }}>
-              <strong style={{ color: "var(--color-text)" }}>Aviso importante:</strong> el asistente solo responde
-              consultas médicas, clínicas y de salud. No reemplaza el juicio clínico ni la evaluación
-              presencial del paciente. Las conversaciones generales no se vinculan a ningún paciente y
-              no deben contener datos identificables (nombres, cédulas, direcciones).
-            </div>
+      <section className="ai-chat-area">
+        <header className="ai-chat-area__topbar">
+          <div className="ai-chat-area__title">
+            {activeConversation
+              ? activeConversation.title ?? KIND_LABEL[activeConversation.kind] ?? "Nueva consulta"
+              : "Asistente IA"}
+          </div>
+          <span
+            className="ai-chat-area__beta"
+            title="Funcion en fase Beta. Las respuestas son referenciales, pueden contener errores y tener limites."
+          >
+            Beta
+          </span>
+        </header>
+
+        {!isGuardrailDismissed && (
+          <div className="ai-chat-area__guardrail">
+            <span>
+              El asistente solo responde consultas médicas y no reemplaza el juicio clínico. No incluyas
+              datos identificables del paciente en consultas generales.
+            </span>
             <button
               type="button"
               onClick={handleDismissGuardrail}
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "var(--color-text-secondary)",
-                cursor: "pointer",
-                padding: "2px",
-                display: "inline-flex",
-                alignItems: "center",
-                opacity: 0.7,
-                transition: "opacity 0.15s ease",
-              }}
+              className="ai-chat-area__guardrail-close"
               title="Cerrar aviso"
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.7")}
+              aria-label="Cerrar aviso"
             >
-              <Icon name="icon-x" size={16} />
+              <Icon name="icon-x" size={14} />
             </button>
           </div>
+        )}
+
+        {activeConversation && <AiContextBanner conversation={activeConversation} />}
+
+        <div className="ai-chat-area__body">
+          <ChatPanel
+            conversationId={activeConversationId}
+            emptyTitle={emptyTitleForActive}
+            emptyHint={emptyHintForActive}
+          />
         </div>
-      )}
+      </section>
 
-      <div className="ai-assistant-page__layout">
-        <aside className="ai-assistant-page__sidebar">
-          <div className="ai-assistant-page__sidebar-header">
-            <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text)" }}>
-              Conversaciones
-            </div>
-            <WcButton
-              variant="primary"
-              onClick={() => void handleNewGeneralChat()}
-              disabled={startMutation.isPending}
-            >
-              <Icon name="icon-plus-solid" size={14} />
-              Nueva
-            </WcButton>
-          </div>
-          <div className="ai-assistant-page__sidebar-body">
-            <AiConversationList
-              conversations={conversations}
-              activeConversationId={activeConversationId}
-              onSelect={handleSelect}
-              onDelete={(id) => void handleDelete(id)}
-              isLoading={conversationsQuery.isLoading}
-            />
-          </div>
-        </aside>
-
-        <section className="ai-assistant-page__main">
-          <div className="ai-assistant-page__main-header">
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0, flex: 1 }}>
-              {/* Dropdown for conversations on mobile */}
-              <div className="ai-mobile-conversations-dropdown" ref={mobileMenuRef}>
-                <button
-                  type="button"
-                  className={`ai-mobile-conversations-btn ${isMobileListOpen ? "is-open" : ""}`}
-                  onClick={() => setIsMobileListOpen((v) => !v)}
-                  title="Listado de conversaciones"
-                >
-                  <Icon name="icon-messages" size={16} />
-                  <span>Chats</span>
-                  <span className="ai-mobile-conversations-caret">{isMobileListOpen ? "▴" : "▾"}</span>
-                </button>
-                {isMobileListOpen && (
-                  <div className="ai-mobile-conversations-popover card">
-                    <div className="ai-mobile-conversations-popover__header">
-                      <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Conversaciones</span>
-                      <WcButton
-                        variant="primary"
-                        onClick={() => {
-                          void handleNewGeneralChat();
-                          setIsMobileListOpen(false);
-                        }}
-                        disabled={startMutation.isPending}
-                        style={{ padding: "4px 8px", fontSize: "0.75rem", minHeight: "28px" }}
-                      >
-                        <Icon name="icon-plus-solid" size={10} />
-                        Nueva
-                      </WcButton>
-                    </div>
-                    <div className="ai-mobile-conversations-popover__body">
-                      <AiConversationList
-                        conversations={conversations}
-                        activeConversationId={activeConversationId}
-                        onSelect={(id) => {
-                          handleSelect(id);
-                          setIsMobileListOpen(false);
-                        }}
-                        onDelete={(id) => void handleDelete(id)}
-                        isLoading={conversationsQuery.isLoading}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div
-                  style={{
-                    fontSize: "0.95rem",
-                    fontWeight: 600,
-                    color: "var(--color-text)",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {activeConversation
-                    ? activeConversation.title ?? "Nueva consulta"
-                    : "Selecciona una conversacion"}
-                </div>
-                {activeConversation && (
-                  <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                    {KIND_LABEL[activeConversation.kind] ?? activeConversation.kind}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          {activeConversation && <AiContextBanner conversation={activeConversation} />}
-          <div className="ai-assistant-page__main-body">
-            <ChatPanel
-              conversationId={activeConversationId}
-              emptyTitle={emptyTitleForActive}
-              emptyHint={emptyHintForActive}
-            />
-          </div>
-        </section>
-      </div>
+      <AiConversationsModal
+        isOpen={isConvModalOpen}
+        onClose={() => setIsConvModalOpen(false)}
+        conversations={conversations}
+        activeConversationId={activeConversationId}
+        onSelect={handleSelect}
+        onDelete={(id) => void handleDelete(id)}
+        onNew={() => {
+          setIsConvModalOpen(false);
+          void handleNewGeneralChat();
+        }}
+        isLoading={conversationsQuery.isLoading}
+        isCreating={startMutation.isPending}
+      />
       {DialogComponent}
     </div>
   );

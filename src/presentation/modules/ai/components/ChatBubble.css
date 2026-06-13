@@ -1,6 +1,6 @@
 .ai-chat-bubble-row {
   display: flex;
-  margin: 16px 0;
+  margin: 26px 0;
   width: 100%;
 }
 
@@ -21,17 +21,20 @@
 }
 
 .ai-chat-bubble--user {
-  background-color: var(--color-primary);
-  color: var(--color-primary-foreground, #ffffff);
+  background-color: color-mix(in srgb, var(--color-secondary) 16%, var(--color-surface));
+  color: var(--color-text);
   padding: 10px 16px;
-  border-radius: 18px 18px 4px 18px;
-  box-shadow: var(--shadow-sm);
+  border-radius: 20px;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
+.dark .ai-chat-bubble--user {
+  background-color: color-mix(in srgb, var(--color-secondary) 22%, var(--color-surface));
+}
+
 .ai-chat-bubble--user .ai-chat-bubble__meta {
-  color: color-mix(in srgb, var(--color-primary-foreground, #ffffff) 70%, transparent);
+  color: var(--color-text-secondary);
 }
 
 .ai-chat-bubble--assistant {

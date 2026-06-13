@@ -94,119 +94,66 @@ export function ChatPanel({
     [conversationId, updatePrefMutation, setGlobalPreference],
   );
 
-
   const welcomeName = user?.firstName ? `, ${user.firstName}` : "";
-  const displayTitle = emptyTitle === "Hola, en que puedo ayudarte?"
-    ? `Hola${welcomeName}`
-    : emptyTitle;
-  const displaySubtitle = emptyTitle === "Hola, en que puedo ayudarte?"
-    ? "¿Cómo puedo ayudarte hoy?"
-    : "";
+  const displayTitle =
+    emptyTitle === "Hola, en que puedo ayudarte?" ? `Hola${welcomeName}` : emptyTitle;
+  const displaySubtitle =
+    emptyTitle === "Hola, en que puedo ayudarte?" ? "¿Cómo puedo ayudarte hoy?" : "";
 
-  if (!conversationId) {
+  const activePreference: AiModelPreference = conversation?.modelPreference ?? globalPreference;
+
+  const composer = (
+    <ChatComposer
+      value={draft}
+      onChange={setDraft}
+      onSubmit={handleSend}
+      onAbort={chat.abort}
+      isStreaming={chat.isStreaming}
+      disabled={!conversationId}
+      preference={activePreference}
+      onChangePreference={allowModelChange ? handleChangePreference : undefined}
+      isUpdatingPreference={updatePrefMutation.isPending}
+      textareaRef={textareaRef}
+      placeholder={conversationId ? undefined : "Iniciando conversación..."}
+    />
+  );
+
+  const hasConversationContent = messages.length > 0 || chat.isStreaming;
+
+  if (!hasConversationContent) {
     return (
-      <div className="ai-chat-empty">
-        <div className="ai-chat-empty__orb-container">
-          <div className="ai-chat-empty__orb-glow" />
-          <div className="ai-chat-empty__orb" />
+      <div className="ai-chat-welcome">
+        <div className="ai-chat-welcome__inner">
+          <h1 className="ai-chat-welcome__title">{displayTitle}</h1>
+          {displaySubtitle && <p className="ai-chat-welcome__subtitle">{displaySubtitle}</p>}
+          <div className="ai-chat-welcome__composer">{composer}</div>
+          <p className="ai-chat-welcome__hint">{emptyHint}</p>
         </div>
-        <div className="ai-chat-empty__title">
-          {displayTitle}
-          {displaySubtitle && (
-            <div style={{ fontSize: "1.4rem", fontWeight: 600, opacity: 0.85, marginTop: "4px" }}>
-              {displaySubtitle}
-            </div>
-          )}
-        </div>
-        <div className="ai-chat-empty__hint">{emptyHint}</div>
       </div>
     );
   }
 
-  const activePreference: AiModelPreference =
-    conversation?.modelPreference ?? globalPreference;
-
-
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        flex: 1,
-        minHeight: 0,
-        position: "relative",
-      }}
-    >
-      <div
-        ref={messagesRef}
-        onScroll={handleScroll}
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "12px 16px 0 16px",
-          minHeight: 0,
-        }}
-      >
-        <div style={{ maxWidth: "840px", margin: "0 auto", width: "100%" }}>
-          {conversationQuery.isLoading ? (
-            <div style={{ color: "var(--color-text-secondary)", padding: "var(--space-3)" }}>
-              Cargando mensajes...
-            </div>
-          ) : messages.length === 0 && !chat.isStreaming ? (
-            <div className="ai-chat-empty" style={{ height: "auto", padding: "var(--space-6) 0" }}>
-              <div className="ai-chat-empty__orb-container">
-                <div className="ai-chat-empty__orb-glow" />
-                <div className="ai-chat-empty__orb" />
-              </div>
-              <div className="ai-chat-empty__title">
-                {displayTitle}
-                {displaySubtitle && (
-                  <div style={{ fontSize: "1.4rem", fontWeight: 600, opacity: 0.85, marginTop: "4px" }}>
-                    {displaySubtitle}
-                  </div>
-                )}
-              </div>
-              <div className="ai-chat-empty__hint">{emptyHint}</div>
-            </div>
-          ) : (
-            <>
-              {messages.map((m) => (
-                <ChatBubble
-                  key={m.id}
-                  role={m.role}
-                  content={m.content}
-                  isOptimistic={m.id.startsWith(OPTIMISTIC_PREFIX)}
-                />
-              ))}
-              {chat.isStreaming && (
-                <ChatBubble
-                  role="assistant"
-                  content={chat.streamingDraft || ""}
-                  isStreaming
-                />
-              )}
-            </>
+    <div className="ai-chat-thread">
+      <div ref={messagesRef} onScroll={handleScroll} className="ai-chat-thread__messages">
+        <div className="ai-chat-thread__inner">
+          {messages.map((m) => (
+            <ChatBubble
+              key={m.id}
+              role={m.role}
+              content={m.content}
+              isOptimistic={m.id.startsWith(OPTIMISTIC_PREFIX)}
+            />
+          ))}
+          {chat.isStreaming && (
+            <ChatBubble role="assistant" content={chat.streamingDraft || ""} isStreaming />
           )}
-          {chat.error && (
-            <div
-              style={{
-                margin: "var(--space-2) 0",
-                padding: "var(--space-2) var(--space-3)",
-                color: "var(--color-danger)",
-                backgroundColor: "color-mix(in srgb, var(--color-danger) 8%, transparent)",
-                border: "1px solid color-mix(in srgb, var(--color-danger) 30%, transparent)",
-                borderRadius: 8,
-                fontSize: "0.85rem",
-              }}
-            >
-              {chat.error}
-            </div>
-          )}
+          {chat.error && <div className="ai-chat-thread__error">{chat.error}</div>}
         </div>
       </div>
 
-      <div style={{ padding: "12px 16px 14px 16px", position: "relative" }}>
-        <div style={{ maxWidth: "840px", margin: "0 auto", width: "100%", position: "relative" }}>
+      <div className="ai-chat-input-dock">
+        <div className="ai-chat-input-dock__inner">
           {showScrollBottomBtn && (
             <button
               type="button"
@@ -218,17 +165,7 @@ export function ChatPanel({
               <Icon name="icon-chevron-down" size={22} />
             </button>
           )}
-          <ChatComposer
-            value={draft}
-            onChange={setDraft}
-            onSubmit={handleSend}
-            onAbort={chat.abort}
-            isStreaming={chat.isStreaming}
-            preference={activePreference}
-            onChangePreference={allowModelChange ? handleChangePreference : undefined}
-            isUpdatingPreference={updatePrefMutation.isPending}
-            textareaRef={textareaRef}
-          />
+          {composer}
           <div className="ai-chat-disclaimer">
             El asistente de IA proporciona respuestas de carácter referencial y puede cometer errores. Todo criterio clínico sugerido debe ser validado por un profesional médico y respaldado mediante los exámenes de diagnóstico correspondientes.
           </div>

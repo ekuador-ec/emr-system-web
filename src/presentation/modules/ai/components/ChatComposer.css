@@ -65,6 +65,7 @@
   justify-content: center;
   width: 32px;
   height: 32px;
+  flex-shrink: 0;
   padding: 0;
   border-radius: 50%;
   border: 1px solid transparent;
@@ -177,6 +178,7 @@
   justify-content: center;
   width: 36px;
   height: 36px;
+  flex-shrink: 0;
   border-radius: 50%;
   border: none;
   background-color: var(--color-primary);
@@ -212,6 +214,12 @@
 
 .ai-composer__send-icon {
   transform: translateY(-0.5px);
+}
+
+.ai-composer__send svg,
+.ai-composer__tool svg {
+  flex-shrink: 0;
+  display: block;
 }
 
 .ai-composer__model-badge {
