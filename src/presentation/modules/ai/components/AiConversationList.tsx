@@ -135,12 +135,15 @@ export function AiConversationList({
                       <Icon name={kindIcon(c.kind)} size={16} />
                     </div>
                     <div className="ai-conversation-list__item-content">
-                      <div className="ai-conversation-list__item-title">
+                      <span
+                        className="ai-conversation-list__item-title"
+                        title={c.title ?? kindLabel(c.kind)}
+                      >
                         {c.title ?? kindLabel(c.kind)}
-                      </div>
-                      <div className="ai-conversation-list__item-meta">
-                        <span>{formatRelative(c.updatedAt)}</span>
-                      </div>
+                      </span>
+                      <span className="ai-conversation-list__item-time">
+                        {formatRelative(c.updatedAt)}
+                      </span>
                     </div>
                     <div className="ai-conversation-list__item-delete">
                       <WcButtonIcon

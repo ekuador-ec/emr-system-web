@@ -27,16 +27,34 @@
 .ai-composer__textarea {
   width: 100%;
   min-height: 28px;
-  max-height: 220px;
+  max-height: 240px;
   resize: none;
   border: none;
   outline: none;
+  box-shadow: none;
   background: transparent;
   color: var(--color-text);
   font-family: inherit;
   font-size: 0.98rem;
-  line-height: 1.5;
-  padding: 4px 0 8px 0;
+  line-height: 1.55;
+  padding: 6px 8px 10px 8px;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .ai-composer__textarea {
+    font-size: 16px;
+    line-height: 1.5;
+    max-height: 45vh;
+  }
+}
+
+.ai-composer__textarea:hover,
+.ai-composer__textarea:focus,
+.ai-composer__textarea:focus-visible {
+  border: none;
+  outline: none;
+  box-shadow: none;
 }
 
 .ai-composer__textarea::placeholder {

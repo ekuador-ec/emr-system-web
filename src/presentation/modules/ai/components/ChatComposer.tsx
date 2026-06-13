@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ChangeEvent, RefObject } from "react";
 import type { AiModelPreference } from "@/domain/modules/ai/models/Summary";
 import { Icon } from "@/presentation/modules/shared/components/Sidebar/icons/Icon";
@@ -53,12 +53,21 @@ export function ChatComposer({
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  useLayoutEffect(() => {
+  const autoResize = useCallback(() => {
     const ta = taRef.current;
     if (!ta) return;
     ta.style.height = "auto";
-    ta.style.height = `${Math.min(ta.scrollHeight, 220)}px`;
-  }, [value, taRef]);
+    ta.style.height = `${ta.scrollHeight}px`;
+  }, [taRef]);
+
+  useLayoutEffect(() => {
+    autoResize();
+  }, [value, autoResize]);
+
+  useEffect(() => {
+    window.addEventListener("resize", autoResize);
+    return () => window.removeEventListener("resize", autoResize);
+  }, [autoResize]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -84,6 +93,7 @@ export function ChatComposer({
 
   const handleTextareaChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     onChange(event.target.value);
+    autoResize();
   };
 
   const canSend = !isStreaming && value.trim().length > 0 && !disabled;

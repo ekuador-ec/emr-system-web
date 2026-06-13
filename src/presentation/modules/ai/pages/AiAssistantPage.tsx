@@ -45,13 +45,10 @@ export function AiAssistantPage() {
   const [isConvModalOpen, setIsConvModalOpen] = useState(false);
   const ensuredRef = useRef(false);
 
-  const [isGuardrailDismissed, setIsGuardrailDismissed] = useState(() => {
-    return localStorage.getItem("emr:ai-assistant:guardrail-dismissed") === "true";
-  });
+  const [isGuardrailDismissed, setIsGuardrailDismissed] = useState(false);
 
   const handleDismissGuardrail = () => {
     setIsGuardrailDismissed(true);
-    localStorage.setItem("emr:ai-assistant:guardrail-dismissed", "true");
   };
 
   const conversationsQuery = useAiConversations(aiServiceConfigured);
@@ -236,7 +233,12 @@ export function AiAssistantPage() {
 
         {!isGuardrailDismissed && (
           <div className="ai-chat-area__guardrail">
-            <span>
+            <Icon
+              name="icon-warning"
+              size={16}
+              className="ai-chat-area__guardrail-icon"
+            />
+            <span className="ai-chat-area__guardrail-text">
               El asistente solo responde consultas médicas y no reemplaza el juicio clínico. No incluyas
               datos identificables del paciente en consultas generales.
             </span>
@@ -259,6 +261,7 @@ export function AiAssistantPage() {
             conversationId={activeConversationId}
             emptyTitle={emptyTitleForActive}
             emptyHint={emptyHintForActive}
+            placeholder="Pregunta cualquier tema o recomendación médica"
           />
         </div>
       </section>

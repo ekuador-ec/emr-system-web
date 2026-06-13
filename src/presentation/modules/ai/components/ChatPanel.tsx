@@ -17,6 +17,7 @@ interface ChatPanelProps {
   emptyTitle?: string;
   emptyHint?: string;
   allowModelChange?: boolean;
+  placeholder?: string;
 }
 
 const OPTIMISTIC_PREFIX = "optimistic-";
@@ -26,6 +27,7 @@ export function ChatPanel({
   emptyTitle = "Hola, en que puedo ayudarte?",
   emptyHint = "Pregunta lo que necesites profundizar.",
   allowModelChange = true,
+  placeholder,
 }: ChatPanelProps) {
   const { user } = useAuth();
   const conversationQuery = useAiConversation(conversationId);
@@ -114,7 +116,7 @@ export function ChatPanel({
       onChangePreference={allowModelChange ? handleChangePreference : undefined}
       isUpdatingPreference={updatePrefMutation.isPending}
       textareaRef={textareaRef}
-      placeholder={conversationId ? undefined : "Iniciando conversación..."}
+      placeholder={placeholder}
     />
   );
 
